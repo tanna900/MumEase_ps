@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="m-0">🧾 فواتير المشتريات (شيتات الإكسيل)</h4>
+</div>
+
+{% if msg %}
+  <div class="alert {% if '✅' in msg %}alert-success{% elif '⚠️' in msg %}alert-warning{% elif '🗑️' in msg %}alert-info{% else %}alert-secondary{% endif %}">
+    {{ msg }}
+  </div>
+{% endif %}
+
+<!-- فورم رفع شيت مشتريات جديد -->
+<div class="card mb-3">
+  <div class="card-header">
+    رفع شيت مشتريات جديد
+  </div>
+  <div class="card-body">
+    <form method="post" action="/purchases/upload" enctype="multipart/form-data" class="row g-2">
+      <div class="col-md-3">
+        <label class="form-label">ملف الإكسيل</label>
+        <input type="file" name="file" class="form-control" accept=".xlsx,.xls" required>
+        <div class="form-text small text-muted">
+          استخدم قالب الإكسيل المحدد للأعمدة: باركود، اسم، لون، مقاس، كمية، تكلفة، سعر بيع.
+        </div>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">تاريخ الشراء</label>
+        <input type="date" name="date" class="form-control" value="{{ (''|date('Y-m-d')) if false else '' }}">
+        <div class="form-text small text-muted">لو سيبتها فاضية، هتتسجل بتاريخ اليوم.</div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">المصنع</label>
+        <select name="factory_id" class="form-select">
+          <option value="0">بدون</option>
+          {# هتقدر تضيف هنا أسماء المصانع لو حبيت من راوتر تاني #}
+          {# أو ممكن تخليها ثابتة لو مش هتستخدم جدول factories #}
+        </select>
+        <div class="form-text small text-muted">لو اخترت مصنع، المشتريات هتتحسب في حساب المصنع.</div>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">رقم فاتورة الشراء (اختياري)</label>
+        <input type="text" name="code" class="form-control" placeholder="لو سيبته فاضي، هيتولد تلقائي">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">ملاحظات (اختياري)</label>
+        <input type="text" name="note" class="form-control" placeholder="مثال: شحنة تيشرتات من المصنع X">
+      </div>
+      <div class="col-12 mt-2 d-flex gap-2">
+        <button class="btn btn-success">📥 تسجيل فاتورة المشتريات</button>
+        <a href="/static/templates/purchase_template.xlsx" class="btn btn-outline-secondary" target="_blank">
+          📄 تحميل قالب الإكسيل
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- جدول فواتير المشتريات -->
+<div class="card">
+  <div class="card-header">
+    قائمة فواتير المشتريات
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive mb-0">
+      <table class="table table-bordered table-striped mb-0 align-middle">
+        <thead>
+          <tr>
+            <th style="width:80px;">الكود</th>
+            <th style="width:120px;">تاريخ الشراء</th>
+            <th>المصنع</th>
+            <th class="text-end" style="width:130px;">عدد القطع</th>
+            <th class="text-end" style="width:160px;">إجمالي التكلفة</th>
+            <th style="width:240px;">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for p in purchases %}
+          <tr>
+            <td>{{ p.code or p.id }}</td>
+            <td>{{ p.date or '-' }}</td>
+            <td>
+              {% if p.factory_id %}
+                {{ factories_map.get(p.factory_id, 'غير معرّف') }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td class="text-end">{{ '%.2f'|format(p.total_qty or 0) }}</td>
+            <td class="text-end">{{ '%.2f'|format(p.total_cost or 0) }}</td>
+            <td>
+              <a href="/purchases/{{ p.id }}" class="btn btn-sm btn-outline-dark">
+                عرض
+              </a>
+
+              <form method="post" action="/purchases/{{ p.id }}/delete"
+                    style="display:inline;"
+                    onsubmit="return confirm('هتحذف الفاتورة وهيرجع المخزون زي ما كان قبلها. متأكد؟');">
+                <button class="btn btn-sm btn-outline-danger">
+                  حذف
+                </button>
+              </form>
+
+              <!-- زر تعديل: يفتح صفحة التفاصيل وفيها فورم تعديل -->
+              <a href="/purchases/{{ p.id }}?edit=1" class="btn btn-sm btn-outline-primary">
+                تعديل
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+        {% if not purchases or purchases|length == 0 %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-4">
+              لا توجد فواتير مشتريات حتى الآن.
+            </td>
+          </tr>
+        {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

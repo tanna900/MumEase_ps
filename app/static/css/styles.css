@@ -1,0 +1,289 @@
+/* ===== ألوان وثيم التطبيق (كما هي) ===== */
+:root{
+  --app-bg: #f7fafc;
+  --app-primary: #6f42c1;
+  --app-accent: #20c997;
+  --app-card: #ffffff;
+  --app-text: #222;
+}
+body{
+  background:
+    radial-gradient(1200px 600px at 100% -10%, rgba(111,66,193,.08), transparent 60%),
+    radial-gradient(1000px 500px at -10% 110%, rgba(32,201,151,.08), transparent 60%),
+    var(--app-bg);
+  color: var(--app-text);
+}
+.app-navbar{
+  background: linear-gradient(90deg, var(--app-primary), var(--app-accent));
+  box-shadow: 0 6px 18px rgba(0,0,0,.12);
+}
+.card, .table, .form-control, .form-select, .btn{
+  border-radius: .65rem !important;
+}
+@media print{
+  .navbar, footer { display:none !important; }
+  main.container { max-width: 100% !important; }
+}
+
+/* ===== إضافات خاصة بقائمة البحث داخل الدروب-داون (Tom Select) ===== */
+/* تكبير القائمة وتأكيد ظهورها فوق أي عناصر (الأزرار/الكروت) */
+.ts-dropdown{
+  max-height: 60vh !important;   /* طول مريح للتمرير */
+  overflow: auto !important;      /* تمكين السكرول */
+  z-index: 5000 !important;       /* فوق كل العناصر */
+  /* ما بنحطّش عرض هنا لأننا بنظبط الـ width بالـ JS حسب عرض الـ select */
+}
+
+/* عرض مبدئي مريح لحقل الاختيار نفسه */
+.ts-control{
+  min-width: 300px;               /* لا يؤثر على باقي الفورمات */
+}
+
+/* تحسين مظهر العناصر داخل القائمة بدون ما نغيّر ألوانك العامة */
+.ts-dropdown .option{
+  padding: .45rem .75rem;
+  line-height: 1.1;
+}
+.ts-dropdown .active{             /* العنصر المظلل أثناء التنقل */
+  background: rgba(111,66,193,.08);
+}
+
+/* دعم اتجاه RTL بشكل لطيف داخل Tom Select */
+html[dir="rtl"] .ts-control, 
+html[dir="rtl"] .ts-dropdown{
+  text-align: right;
+}
+
+/* 🌙 Dark Mode */
+body.dark-mode {
+  background-color: #121212;
+  color: #eee;
+}
+
+body.dark-mode .card {
+  background-color: #1e1e1e;
+  color: #ddd;
+}
+
+body.dark-mode .navbar {
+  background-color: #222 !important;
+}
+
+body.dark-mode table {
+  color: #ddd;
+}
+
+body.dark-mode .btn {
+  border-color: #555;
+}
+
+body.dark-mode .btn-outline-primary {
+  color: #bbb;
+  border-color: #888;
+}
+
+body.dark-mode .form-control, 
+body.dark-mode .form-select {
+  background-color: #2a2a2a;
+  color: #eee;
+  border: 1px solid #555;
+}
+
+/* ===== تحسين التباين للدارك مود (إضافة فقط) ===== */
+
+/* ضبط المتغيرات العامة */
+body.dark-mode {
+  --app-bg: #121212;
+  --app-text: #e6e6e6;
+  --app-card: #1e1e1e;
+}
+
+/* أي نصوص غامقة أو ثابتة */
+body.dark-mode .text-dark,
+body.dark-mode .text-black,
+body.dark-mode h1, 
+body.dark-mode h2, 
+body.dark-mode h3, 
+body.dark-mode h4, 
+body.dark-mode h5, 
+body.dark-mode h6,
+body.dark-mode label,
+body.dark-mode .dropdown-item {
+  color: #e6e6e6 !important;
+}
+
+/* نصوص الـ muted */
+body.dark-mode .text-muted {
+  color: #aaaaaa !important;
+}
+
+/* خلفيات بيضاء */
+body.dark-mode .bg-white {
+  background-color: #1a1a1a !important;
+  color: #e6e6e6 !important;
+}
+
+/* جداول */
+body.dark-mode .table thead th {
+  color: #f0f0f0 !important;
+  background-color: #222 !important;
+}
+body.dark-mode .table tbody tr {
+  border-color: #333 !important;
+}
+
+/* القوائم المنسدلة */
+body.dark-mode .dropdown-menu {
+  background-color: #1b1b1b;
+  color: #e6e6e6;
+  border-color: #2b2b2b;
+}
+body.dark-mode .dropdown-item:hover {
+  background-color: #2a2a2a;
+  color: #fff;
+}
+body.dark-mode .dropdown-divider {
+  border-top-color: #2b2b2b;
+}
+
+/* [FACTORY ACCOUNTS START] */
+.badge.bg-danger { filter: saturate(1.2); }
+.badge.bg-success { filter: saturate(1.2); }
+/* [FACTORY ACCOUNTS END] */
+
+/* ===== تحسينات ديسكتوب للداشبورد — ADD ONLY ===== */
+
+/* الكروت الكبيرة (KPIs) */
+.row.g-2 > .col-md-3 {
+  flex: 1 1 0;
+  max-width: 25%;
+}
+.card.p-2.h-100 {
+  min-height: 140px;
+  padding: 1.2rem !important;
+}
+
+/* الأرقام تبقى أوضح */
+.card .fs-4.fw-bold {
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+}
+
+/* الظل والهوفر */
+.card.p-2.h-100 {
+  border: 1px solid rgba(0,0,0,.08);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.card.p-2.h-100:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0,0,0,.15);
+}
+
+/* donut chart يبان أكبر في الديسكتوب */
+#ordersDonut {
+  height: 280px !important;
+  width: 100% !important;
+  max-width: 380px;
+  margin: auto;
+}
+
+/* البطاقات الصغيرة يمين الدونات */
+#stat_total, #stat_paid, #stat_unpaid, #stat_return {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* جدول الأكثر مبيعًا */
+.table.table-sm.align-middle.mb-0 thead th {
+  font-size: .9rem;
+  background: rgba(0,0,0,.03);
+}
+.table.table-sm.align-middle.mb-0 tbody tr:hover {
+  background: rgba(0,0,0,.05);
+}
+
+/* =========================
+   Home Dashboard Enhancements
+========================= */
+
+.app-brand-icon{
+  font-size: 44px;
+  color: var(--app-primary);
+}
+
+.dashboard-kpis .kpi-card{
+  border: 1px solid rgba(0,0,0,.08);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.dashboard-kpis .kpi-card:hover{
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0,0,0,.12);
+}
+
+.kpi-value{
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.kpi-green{ border-inline-start: 6px solid #198754; }
+.kpi-red{ border-inline-start: 6px solid #dc3545; }
+.kpi-orange{ border-inline-start: 6px solid #fd7e14; }
+.kpi-purple{ border-inline-start: 6px solid #6f42c1; }
+.kpi-neutral{ border-inline-start: 6px solid rgba(0,0,0,.25); }
+
+.stat-pill{ padding: .5rem .65rem; border-radius: 999px; }
+
+.chart-wrap{
+  min-height: 240px;
+}
+
+/* Tabs */
+.nav-tabs .nav-link{
+  font-weight: 600;
+}
+
+/* Dark mode polishing for dashboard blocks */
+body.dark-mode .kpi-card,
+body.dark-mode .card{
+  border-color: #2b2b2b !important;
+}
+body.dark-mode .table-light{
+  --bs-table-bg: #222;
+  --bs-table-color: #eee;
+}
+
+.app-brand-icon{ font-size: 40px; color: #0d6efd; }
+
+.btn-soft{
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(13,110,253,.06);
+}
+.btn-soft:hover{ background: rgba(13,110,253,.12); }
+
+.kpi-card{
+  border: 0;
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(0,0,0,.10);
+}
+.kpi-value{ font-size: 1.85rem; font-weight: 900; line-height: 1.1; margin-top: .25rem; }
+
+.kpi-grad-green{ background: linear-gradient(135deg, #198754, #20c997); }
+.kpi-grad-blue{  background: linear-gradient(135deg, #0d6efd, #6ea8fe); }
+.kpi-grad-orange{background: linear-gradient(135deg, #fd7e14, #ffc107); }
+.kpi-grad-purple{background: linear-gradient(135deg, #6f42c1, #a370f7); }
+.kpi-grad-gray{  background: linear-gradient(135deg, #495057, #adb5bd); }
+.kpi-grad-dark{  background: linear-gradient(135deg, #212529, #495057); }
+
+.mini-kpi{
+  border: 1px solid rgba(0,0,0,.08);
+  background: rgba(0,0,0,.02);
+}
+
+.stat-pill{ padding: .45rem .7rem; border-radius: 999px; }
+.chart-wrap{ min-height: 240px; }
+
+.tiny-table td, .tiny-table th{
+  padding: .35rem .5rem !important;
+  font-size: .875rem;
+}

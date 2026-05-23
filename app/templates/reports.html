@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h4 class="mb-3">📊 تقارير</h4>
+<form class="row g-2 mb-3">
+  <div class="col-md-3"><input type="date" name="date_from" class="form-control" value="{{date_from or ''}}"></div>
+  <div class="col-md-3"><input type="date" name="date_to" class="form-control" value="{{date_to or ''}}"></div>
+  <div class="col-md-2">
+    <select name="t" class="form-select">
+      <option value="all" {% if t=='all' %}selected{% endif %}>الكل</option>
+      <option value="S" {% if t=='S' %}selected{% endif %}>بيع</option>
+      <option value="R" {% if t=='R' %}selected{% endif %}>مرتجع</option>
+    </select>
+  </div>
+  <div class="col-md-2"><button class="btn btn-outline-secondary w-100">تصفية</button></div>
+  <div class="col-md-2"><a class="btn btn-success w-100" href="/reports?date_from={{date_from}}&date_to={{date_to}}&t={{t}}&export=csv">تصدير CSV</a></div>
+</form>
+
+<table class="table table-bordered">
+  <thead><tr><th>الكود</th><th>النوع</th><th>العميل</th><th>الهاتف</th><th>Subtotal</th><th>خصم</th><th>شحن</th><th>الإجمالي</th><th>تاريخ</th></tr></thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td><a href="/invoices/{{r.id}}" target="_blank">{{r.invoice_code}}</a></td>
+      <td>{{r.type}}</td>
+      <td>{{r.customer_name}}</td>
+      <td>{{r.customer_phone}}</td>
+      <td class="text-end">{{ '%.2f'|format(r.subtotal or 0) }}</td>
+      <td class="text-end">{{ '%.2f'|format(r.discount or 0) }}</td>
+      <td class="text-end">{{ '%.2f'|format(r.shipping_cost or 0) }}</td>
+      <td class="text-end">{{ '%.2f'|format(r.total or 0) }}</td>
+      <td>{{r.created_at}}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

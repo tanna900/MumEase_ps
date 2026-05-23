@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<h4 class="mb-3">🗓️ التسويات اليومية</h4>
+
+<div class="d-flex gap-2 mb-3">
+  <a class="btn btn-primary" href="/settlements/close?date={{ today }}">تقفيل يومية اليوم ({{ today }})</a>
+  <form class="d-flex gap-2" method="get" action="/settlements/close">
+    <input type="date" class="form-control" name="date" required>
+    <button class="btn btn-outline-secondary">اذهب</button>
+  </form>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-bordered align-middle">
+    <thead>
+      <tr class="text-center">
+        <th style="width:130px">التاريخ</th>
+        <th>مبيعات</th>
+        <th>مرتجعات</th>
+        <th>مصروفات (تشغيلي + شحن)</th>
+        <th>صافي اليوم</th>
+        <th style="width:180px"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td class="text-center">{{ r.date }}</td>
+        <td class="text-end">{{ '%.2f'|format(r.sales_total or 0) }}</td>
+        <td class="text-end text-danger">-{{ '%.2f'|format(r.returns_total or 0) }}</td>
+        <td class="text-end text-danger">-{{ '%.2f'|format(r.expenses_total or 0) }}</td>
+        <td class="text-end fw-bold">{{ '%.2f'|format((r.net_total or 0)) }}</td>
+        <td class="text-center">
+          <a class="btn btn-sm btn-outline-secondary" href="/settlements/close?date={{ r.date }}">عرض</a>
+          <form method="post" action="/settlements/delete" class="d-inline" onsubmit="return confirm('حذف التسوية لليوم {{ r.date }}؟');">
+            <input type="hidden" name="sid" value="{{ r.id }}">
+            <button class="btn btn-sm btn-outline-danger">حذف</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="text-center text-muted">لا توجد تسويات بعد</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

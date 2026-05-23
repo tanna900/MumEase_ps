@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h4 class="mb-3">📍 تقرير المحافظات</h4>
+
+<form class="row g-2 mb-3" id="filterForm">
+  <div class="col-auto">
+    <label class="form-label">من</label>
+    <input type="date" class="form-control" id="date_from" name="date_from" value="{{ request.query_params.get('date_from') or '' }}">
+  </div>
+  <div class="col-auto">
+    <label class="form-label">إلى</label>
+    <input type="date" class="form-control" id="date_to" name="date_to" value="{{ request.query_params.get('date_to') or '' }}">
+  </div>
+  <div class="col-auto align-self-end d-flex gap-2">
+    <button class="btn btn-primary">تحديث</button>
+    <button class="btn btn-outline-secondary" type="button" id="clearBtn">مسح التواريخ</button>
+    <button class="btn btn-outline-success" type="button" id="exportCsvBtn">تصدير CSV</button>
+    <button class="btn btn-outline-success" type="button" id="exportExcelBtn">تصدير Excel</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-bordered align-middle" id="govTable">
+    <thead class="text-center">
+      <tr>
+        <th style="min-width:180px">المحافظة</th>
+        <th class="text-end" style="min-width:120px">عدد فواتير البيع</th>
+        <th class="text-end" style="min-width:140px">إجمالي البيع</th>
+        <th class="text-end" style="min-width:120px">عدد المرتجعات</th>
+        <th class="text-end" style="min-width:140px">إجمالي المرتجعات</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+      <tr class="fw-bold">
+        <td>الإجمالي</td>
+        <td class="text-end" id="t_sales_cnt">0</td>
+        <td class="text-end" id="t_sales_sum">0.00</td>
+        <td class="text-end" id="t_rets_cnt">0</td>
+        <td class="text-end" id="t_rets_sum">0.00</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<script>
+  // تنسيقات أرقام بالإنجليزي
+  function fmtMoney(n){
+    return (Number(n||0)).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+  function fmtInt(n){
+    return (Number(n||0)).toLocaleString('en-US', {maximumFractionDigits: 0});
+  }
+
+  // نخزن آخر بيانات للتصدير
+  let _lastRows = [];
+
+  async function loadData() {
+    const df = document.getElementById('date_from').value || '';
+    const dt = document.getElementById('date_to').value || '';
+    const url = new URL('/reports/api/by-governorate', window.location.origin);
+    if (df) url.searchParams.set('date_from', df);
+    if (dt) url.searchParams.set('date_to', dt);
+
+    const resp = await fetch(url);
+    if (!resp.ok) { console.error('API error'); return; }
+    const data = await resp.json();
+    const rows = data.rows || [];
+    _lastRows = rows.slice();
+
+    const tbody = document.querySelector('#govTable tbody');
+    tbody.innerHTML = '';
+    let tSalesCnt=0, tSalesSum=0, tRetCnt=0, tRetSum=0;
+
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">لا توجد بيانات</td></tr>';
+    } else {
+      rows.forEach(r => {
+        const sc = Number(r.sales_count||0);
+        const ss = Number(r.sales_total||0);
+        const rc = Number(r.returns_count||0);
+        const rs = Number(r.returns_total||0);
+
+        tSalesCnt += sc;
+        tSalesSum += ss;
+        tRetCnt   += rc;
+        tRetSum   += rs;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.governorate || 'غير محدد'}</td>
+          <td class="text-end" dir="ltr">${fmtInt(sc)}</td>
+          <td class="text-end" dir="ltr">${fmtMoney(ss)}</td>
+          <td class="text-end" dir="ltr">${fmtInt(rc)}</td>
+          <td class="text-end" dir="ltr">${fmtMoney(rs)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('t_sales_cnt').textContent = fmtInt(tSalesCnt);
+    document.getElementById('t_sales_sum').textContent = fmtMoney(tSalesSum);
+    document.getElementById('t_rets_cnt').textContent  = fmtInt(tRetCnt);
+    document.getElementById('t_rets_sum').textContent  = fmtMoney(tRetSum);
+  }
+
+  // زر التصدير CSV
+  function exportCsv(){
+    if(!_lastRows.length){
+      alert("⚠️ لا توجد بيانات للتصدير");
+      return;
+    }
+    let csv = "Governorate,Sales Count,Sales Total,Returns Count,Returns Total\n";
+    _lastRows.forEach(r=>{
+      csv += `"${r.governorate||'غير محدد'}",${r.sales_count||0},${r.sales_total||0},${r.returns_count||0},${r.returns_total||0}\n`;
+    });
+    const blob = new Blob([csv], {type: "text/csv;charset=utf-8;"});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "governorates_report.csv";
+    link.click();
+  }
+
+  // زر التصدير Excel (بصيغة HTML Table)
+  function exportExcel(){
+    if(!_lastRows.length){
+      alert("⚠️ لا توجد بيانات للتصدير");
+      return;
+    }
+    let html = `
+      <table border="1">
+        <tr>
+          <th>Governorate</th>
+          <th>Sales Count</th>
+          <th>Sales Total</th>
+          <th>Returns Count</th>
+          <th>Returns Total</th>
+        </tr>`;
+    _lastRows.forEach(r=>{
+      html += `
+        <tr>
+          <td>${r.governorate||'غير محدد'}</td>
+          <td>${r.sales_count||0}</td>
+          <td>${r.sales_total||0}</td>
+          <td>${r.returns_count||0}</td>
+          <td>${r.returns_total||0}</td>
+        </tr>`;
+    });
+    html += "</table>";
+    const blob = new Blob([html], {type: "application/vnd.ms-excel"});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "governorates_report.xls";
+    link.click();
+  }
+
+  document.getElementById('filterForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    loadData();
+  });
+  document.getElementById('clearBtn').addEventListener('click', function(){
+    document.getElementById('date_from').value = '';
+    document.getElementById('date_to').value = '';
+    loadData();
+  });
+  document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
+  document.getElementById('exportExcelBtn').addEventListener('click', exportExcel);
+
+  document.addEventListener('DOMContentLoaded', loadData);
+</script>
+
+{% endblock %}

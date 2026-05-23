@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4>📒 يومية: {{ head.date }} <span class="badge bg-secondary ms-2">{{ serial_str }}</span></h4>
+  <div>
+    <a href="/settlements" class="btn btn-secondary">رجوع</a>
+    <button onclick="window.print()" class="btn btn-success">طباعة</button>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">ملخص</div>
+      <div class="card-body p-0">
+        <table class="table mb-0">
+          <tr><td>إجمالي المبيعات (S)</td><td class="text-end">{{ '%.2f'|format(head.sales_total or 0) }}</td></tr>
+          <tr><td>إجمالي المرتجعات (R)</td><td class="text-end">- {{ '%.2f'|format(head.returns_total or 0) }}</td></tr>
+          <tr class="table-warning"><td>مصروفات أخرى</td><td class="text-end">- {{ '%.2f'|format(head.expenses_total or 0) }}</td></tr>
+          <tr class="table-info"><td><b>الصافي</b></td><td class="text-end"><b>{{ '%.2f'|format(head.net_total or 0) }}</b></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">تفصيل المصروفات الأخرى</div>
+      <div class="card-body p-0">
+        <table class="table mb-0">
+          <thead class="table-light"><tr><th>المبلغ</th><th>الشرح</th></tr></thead>
+          <tbody>
+            {% for e in expenses %}
+            <tr><td>{{ '%.2f'|format(e.amount or 0) }}</td><td>{{ e.note }}</td></tr>
+            {% else %}<tr><td colspan="2" class="text-muted">لا توجد مصروفات.</td></tr>{% endfor %}
+          </tbody>
+          <tfoot class="table-light"><tr><th>الإجمالي</th><th>{{ '%.2f'|format(head.expenses_total or 0) }}</th></tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mt-1">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">فواتير البيع (S) — {{ head.date }}</div>
+      <div class="card-body p-0">
+        <table class="table mb-0">
+          <thead class="table-light"><tr><th>#</th><th>الإجمالي</th><th>الشحن</th><th></th></tr></thead>
+          <tbody>
+            {% for inv in inv_sales %}
+            <tr>
+              <td>{{ inv.id }}</td>
+              <td>{{ '%.2f'|format(inv.total or 0) }}</td>
+              <td>{{ '%.2f'|format(inv.actual_shipping_cost or 0) }}</td>
+              <td><a class="btn btn-sm btn-outline-primary" href="/invoices/{{ inv.id }}" target="_blank">فتح</a></td>
+            </tr>
+            {% else %}<tr><td colspan="4" class="text-muted">لا توجد فواتير بيع.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">فواتير المرتجع (R) — {{ head.date }}</div>
+      <div class="card-body p-0">
+        <table class="table mb-0">
+          <thead class="table-light"><tr><th>#</th><th>الإجمالي</th><th>شحن المرتجع</th><th></th></tr></thead>
+          <tbody>
+            {% for inv in inv_returns %}
+            <tr>
+              <td>{{ inv.id }}</td>
+              <td>{{ '%.2f'|format(inv.total or 0) }}</td>
+              <td>{{ '%.2f'|format(inv.return_shipping_fee or 0) }}</td>
+              <td><a class="btn btn-sm btn-outline-primary" href="/invoices/{{ inv.id }}" target="_blank">فتح</a></td>
+            </tr>
+            {% else %}<tr><td colspan="4" class="text-muted">لا توجد فواتير مرتجع.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="text-muted small mt-3">هذه اليومية مقفولة وغير قابلة للتعديل.</p>
+{% endblock %}

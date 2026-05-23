@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MumEase POS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/static/css/styles.css" rel="stylesheet">
+
+  <style>
+    /* تحسين مكان البادج فوق الجرس */
+    .notif-btn { position: relative; }
+    .notif-badge {
+      position: absolute; top: 0; inset-inline-start: -6px;
+      transform: translate(-25%,-25%);
+      font-size: .7rem; padding: 2px 6px;
+    }
+
+    /* ======== Dark Mode (إضافة فقط) ======== */
+    body.dark-mode { background-color: #121212; color: #e6e6e6; }
+    .dark-mode .app-navbar,
+    .dark-mode .navbar { background-color: #1f1f1f !important; }
+    .dark-mode .dropdown-menu { background-color: #1b1b1b; color: #e6e6e6; border-color: #2b2b2b; }
+    .dark-mode .dropdown-item { color: #e6e6e6; }
+    .dark-mode .dropdown-item:hover { background-color: #2a2a2a; color: #fff; }
+    .dark-mode .card,
+    .dark-mode .modal-content { background-color: #1a1a1a; color: #e6e6e6; border-color: #2b2b2b; }
+    .dark-mode .list-group-item { background-color: #1a1a1a; color: #e6e6e6; border-color: #2b2b2b; }
+    .dark-mode .table { color: #e6e6e6; }
+    .dark-mode .table thead th { color: #f0f0f0; }
+    .dark-mode .table-bordered>:not(caption)>* { border-color: #2b2b2b; }
+    .dark-mode .form-control,
+    .dark-mode .form-select,
+    .dark-mode .form-control:focus,
+    .dark-mode .form-select:focus {
+      background-color: #222;
+      color: #eee;
+      border-color: #444;
+    }
+    .dark-mode .btn-light { background-color: #2b2b2b; color: #eee; border-color: #444; }
+    .dark-mode .text-muted { color: #aaaaaa !important; }
+    .dark-mode .dropdown-divider { border-top-color: #2b2b2b; }
+    /* ======== /Dark Mode ======== */
+  </style>
+
+  <!-- تفعيل الوضع المحفوظ مبكرًا -->
+  <script>
+    (function(){
+      try {
+        if (localStorage.getItem('darkMode') === 'enabled') {
+          document.addEventListener('DOMContentLoaded', function(){
+            document.body.classList.add('dark-mode');
+          });
+        }
+      } catch(e){}
+    })();
+  </script>
+</head>
+
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark app-navbar mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="/">MumEase POS</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="nav">
+
+      <!-- LEFT: الروابط -->
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+        <li class="nav-item"><a class="nav-link" href="/sales/new">🧾 بيع</a></li>
+        <li class="nav-item"><a class="nav-link" href="/returns">↩️ مرتجعات</a></li>
+
+        <!-- 📦 إدارة الأصناف (نسخة واحدة فقط - بدون تكرار) -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="productsMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            📦 إدارة الأصناف
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="productsMenu">
+            <li><a class="dropdown-item" href="/products">📋 المخزون</a></li>
+            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#navProductCardModal">📑 كارت الصنف</a></li>
+            <li><a class="dropdown-item" href="/purchases/import">🛒 مشتريات</a></li>
+                    <li><a class="dropdown-item" href="/materials">🧵خامات الإنتاج</a></li>
+          </ul>
+        </li>
+
+        <!-- 📚 السجلات -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="logsMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            📚 السجلات
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="logsMenu">
+            <li><a class="dropdown-item" href="/customers/ledger">👤 سجل العملاء</a></li>
+            <li><a class="dropdown-item" href="/invoices/browse">🧾 سجل الفواتير</a></li>
+          </ul>
+        </li>
+
+        <li class="nav-item"><a class="nav-link" href="/settlements">التسويات اليومية</a></li>
+
+        <!-- 🚚 الشحن -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="shipMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            🚚 الشحن
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="shipMenu">
+            <li><a class="dropdown-item" href="/shipping">📦 حسابات الشحن</a></li>
+            <li><a class="dropdown-item" href="/shipping/cash-sync">🔗 ربط الدفعات بالخزنة</a></li>
+          </ul>
+        </li>
+
+        <li class="nav-item"><a class="nav-link" href="/cash">💰 خزنة</a></li>
+
+        <!-- 💹 تقارير -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="reportsMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            💹 تقارير
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="reportsMenu">
+            <li><a class="dropdown-item" href="/cash/close-day">🧾 تقفيل يومية</a></li>
+            <li><a class="dropdown-item" href="/pl">📈 أرباح وخسائر</a></li>
+            <li><a class="dropdown-item" href="/finance/snapshot">📊 تقرير الوضع المالي</a></li>
+
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="/marketers">🧑‍💼 إدارة المسوّقين</a></li>
+            <li><a class="dropdown-item" href="/marketers/commission">💼 عمولات المسوّقين</a></li>
+
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="/reports/governorates">📍 تقرير المحافظات</a></li>
+
+            <!-- [FACTORY ACCOUNTS START] -->
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="/factory">🏭 حساب المصنع</a></li>
+            <!-- [FACTORY ACCOUNTS END] -->
+          </ul>
+        </li>
+
+      </ul>
+
+      <!-- RIGHT: أدوات -->
+      <div class="d-flex align-items-center gap-2">
+
+        <!-- Dark mode switch -->
+        <div class="form-check form-switch m-0">
+          <input class="form-check-input" type="checkbox" id="darkModeSwitch">
+          <label class="form-check-label text-light" for="darkModeSwitch">🌙</label>
+        </div>
+
+        <!-- بحث سريع -->
+        <form class="d-flex gap-1 my-2 my-lg-0" role="search" method="get" action="/products">
+          <input class="form-control form-control-sm" style="max-width:140px"
+                 name="q" value="{{ request.query_params.get('q') or '' }}" placeholder="اسم/باركود">
+          <input class="form-control form-control-sm" style="max-width:100px"
+                 name="color" value="{{ request.query_params.get('color') or '' }}" placeholder="لون">
+          <button class="btn btn-light btn-sm" type="submit" title="بحث">
+            <i class="bi bi-search"></i>
+          </button>
+        </form>
+
+        <!-- جرس التنبيهات -->
+        <ul class="navbar-nav">
+          <li class="nav-item dropdown">
+            <a class="nav-link notif-btn" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="التنبيهات">
+              <i class="bi bi-bell"></i>
+              <span id="notif-badge" class="badge bg-danger rounded-pill notif-badge d-none">0</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notifDropdown" style="min-width: 280px;">
+              <li class="dropdown-header d-flex justify-content-between align-items-center">
+                <span>التنبيهات</span>
+                <button class="btn btn-sm btn-link" type="button" onclick="refreshNotifications(true)">تحديث</button>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <div id="notif-list">
+                <li class="dropdown-item text-muted">لا توجد تنبيهات</li>
+              </div>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item small" href="/alerts">مركز التنبيهات</a></li>
+            </ul>
+          </li>
+        </ul>
+
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="container">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="text-center text-muted small py-4">©️ MumEase</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // تحديث البادچ والقائمة من /alerts/summary
+  async function refreshNotifications(openDropdown = false){
+    try {
+      const res = await fetch('/alerts/summary');
+      if (!res.ok) return;
+      const data = await res.json();
+
+      const count = Number(data.count || 0);
+      const badge = document.getElementById('notif-badge');
+      if (count > 0) {
+        badge.classList.remove('d-none');
+        badge.textContent = count;
+      } else {
+        badge.classList.add('d-none');
+      }
+
+      if (openDropdown) {
+        const list = document.getElementById('notif-list');
+        list.innerHTML = '';
+        const items = data.items || [];
+        if (!items.length) {
+          list.innerHTML = '<li class="dropdown-item text-muted">لا توجد تنبيهات</li>';
+        } else {
+          items.forEach(it => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+              <a class="dropdown-item small d-flex align-items-start gap-2" href="${it.href || '#'}">
+                <i class="bi ${it.icon || ''} pt-1"></i>
+                <span>${escapeHtml(it.text || '')}</span>
+              </a>`;
+            list.appendChild(li);
+          });
+        }
+      }
+    } catch (e) {
+      console.error('notif error', e);
+    }
+  }
+
+  const notifDropdownEl = document.getElementById('notifDropdown');
+  if (notifDropdownEl) {
+    notifDropdownEl.addEventListener('show.bs.dropdown', function () {
+      refreshNotifications(true);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    refreshNotifications();
+    setInterval(refreshNotifications, 60000);
+  });
+
+  function escapeHtml(t){
+    const m = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'};
+    return String(t||'').replace(/[&<>"']/g, s => m[s]);
+  }
+</script>
+
+<script>
+  const switchBtn = document.getElementById("darkModeSwitch");
+  try{
+    const savedMode = localStorage.getItem("darkMode");
+    if (savedMode === "enabled") {
+      document.body.classList.add("dark-mode");
+      if (switchBtn) switchBtn.checked = true;
+    }
+  }catch(e){}
+
+  if (switchBtn){
+    switchBtn.addEventListener("change", () => {
+      try{
+        if (switchBtn.checked) {
+          document.body.classList.add("dark-mode");
+          localStorage.setItem("darkMode", "enabled");
+        } else {
+          document.body.classList.remove("dark-mode");
+          localStorage.setItem("darkMode", "disabled");
+        }
+      }catch(e){}
+    });
+  }
+</script>
+
+<!-- ====== Modal لعرض الفواتير ====== -->
+<div class="modal fade" id="invoiceModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">📑 تفاصيل الفاتورة</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0" id="invoiceModalBody">
+        <div class="p-3 text-center text-muted">...جاري التحميل</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function openInvoiceModal(id){
+  const body = document.getElementById("invoiceModalBody");
+  body.innerHTML = '<div class="p-3 text-center text-muted">...جاري التحميل</div>';
+  try{
+    // ✅ نطلب Popup fragment (من غير Base) — بدون ملفات Templates إضافية
+    const r = await fetch(`/invoices/${id}?popup=1`);
+    if(r.ok){
+      const html = await r.text();
+      body.innerHTML = html;
+      body.querySelectorAll("script").forEach(scr=>{
+        try{ eval(scr.innerText); }catch(e){}
+      });
+    }else{
+      body.innerHTML = '<div class="p-3 text-danger">تعذّر تحميل الفاتورة</div>';
+    }
+  }catch(e){
+    body.innerHTML = '<div class="p-3 text-danger">خطأ بالاتصال</div>';
+  }
+  const modal = new bootstrap.Modal(document.getElementById('invoiceModal'));
+  modal.show();
+}
+</script>
+
+<!-- Modal: فتح كارت الصنف -->
+<div class="modal fade" id="navProductCardModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" id="navProductCardForm">
+      <div class="modal-header">
+        <h5 class="modal-title">فتح كارت الصنف</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2">
+          <label class="form-label">باركود المنتج</label>
+          <input type="text" class="form-control" id="navCardBarcode" placeholder="امسح الباركود هنا">
+        </div>
+        <div>
+          <label class="form-label">Product ID</label>
+          <input type="number" class="form-control" id="navCardPID" placeholder="مثال: 123">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary">فتح</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function(){
+    const f = document.getElementById('navProductCardForm');
+    if(!f) return;
+
+    f.addEventListener('submit', function(e){
+      e.preventDefault();
+      const bc  = (document.getElementById('navCardBarcode')?.value || '').trim();
+      const pid = parseInt(document.getElementById('navCardPID')?.value || '0', 10);
+
+      if (bc) {
+        window.location.href = '/products/card/by-barcode?barcode=' + encodeURIComponent(bc);
+        return;
+      }
+      if (pid > 0) {
+        window.location.href = '/products/' + pid + '/card';
+        return;
+      }
+      alert('اكتب باركود أو ID الأول.');
+    });
+
+    const modalEl = document.getElementById('navProductCardModal');
+    modalEl?.addEventListener('shown.bs.modal', function(){
+      document.getElementById('navCardBarcode')?.focus();
+    });
+  })();
+</script>
+
+</body>
+</html>

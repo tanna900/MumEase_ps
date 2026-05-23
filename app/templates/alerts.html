@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block content %}
+<h4 class="mb-3">🔔 مركز التنبيهات</h4>
+
+<div class="row g-3">
+  <!-- عمود الأصناف -->
+  <div class="col-md-6" id="lowstock">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-exclamation-triangle me-1"></i> أصناف تحت حد المخزون ({{ LOW_STOCK_THRESHOLD }})</span>
+        <form method="post" action="/alerts/ignore-all" class="m-0">
+          <input type="hidden" name="kind" value="low_stock">
+          <button class="btn btn-sm btn-outline-secondary" {% if not low_list %}disabled{% endif %}>تجاهل الكل</button>
+        </form>
+      </div>
+      <div class="card-body">
+        {% if low_list and low_list|length > 0 %}
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>الصنف</th>
+                  <th style="width:120px" class="text-end">المخزون</th>
+                  <th style="width:100px" class="text-center">إجراء</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for p in low_list %}
+                <tr>
+                  <td>{{ p.name }}</td>
+                  <td class="text-end">{{ p.stock }}</td>
+                  <td class="text-center">
+                    <form method="post" action="/alerts/ignore" class="d-inline">
+                      <input type="hidden" name="kind" value="low_stock">
+                      <input type="hidden" name="ref_id" value="{{ p.id }}">
+                      <button class="btn btn-sm btn-outline-danger">تجاهل</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-muted">لا توجد أصناف منخفضة المخزون.</div>
+        {% endif %}
+      </div>
+      <div class="card-footer text-end">
+        <a href="/products" class="btn btn-sm btn-outline-primary">إدارة الأصناف</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- عمود الفواتير -->
+  <div class="col-md-6" id="overdue">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clock-history me-1"></i> فواتير بيع أقدم من {{ DAYS_NO_ALLOCATION }} يوم بدون تخصيص دفعات</span>
+        <form method="post" action="/alerts/ignore-all" class="m-0">
+          <input type="hidden" name="kind" value="overdue">
+          <button class="btn btn-sm btn-outline-secondary" {% if not overdue_list %}disabled{% endif %}>تجاهل الكل</button>
+        </form>
+      </div>
+      <div class="card-body">
+        {% if overdue_list and overdue_list|length > 0 %}
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:120px">رقم الفاتورة</th>
+                  <th>العميل</th>
+                  <th style="width:140px">الهاتف</th>
+                  <th style="width:160px">تاريخ الإنشاء</th>
+                  <th style="width:120px" class="text-end">أيام المرور</th>
+                  <th style="width:140px" class="text-end">قيمة الفاتورة</th>
+                  <th style="width:100px" class="text-center">إجراء</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for r in overdue_list %}
+                <tr>
+                  <td><a href="/invoices/{{ r.id }}" class="text-decoration-none">{{ r.code }}</a></td>
+                  <td>{{ r.customer }}</td>
+                  <td dir="ltr">{{ r.phone }}</td>
+                  <td>{{ r.created_at.strftime("%Y-%m-%d %H:%M") if r.created_at else "-" }}</td>
+                  <td class="text-end">{{ r.age_days }}</td>
+                  <td class="text-end">{{ '%.2f'|format(r.total) }}</td>
+                  <td class="text-center">
+                    <form method="post" action="/alerts/ignore" class="d-inline">
+                      <input type="hidden" name="kind" value="overdue">
+                      <input type="hidden" name="ref_id" value="{{ r.id }}">
+                      <button class="btn btn-sm btn-outline-danger">تجاهل</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-muted">لا توجد فواتير تحتاج متابعة.</div>
+        {% endif %}
+      </div>
+      <div class="card-footer text-end">
+        <a href="/shipping" class="btn btn-sm btn-outline-primary">فتح حسابات الشحن</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

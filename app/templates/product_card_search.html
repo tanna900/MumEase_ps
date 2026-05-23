@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<h4 class="mb-3">📑 كارت الصنف — بحث</h4>
+
+<form method="get" action="/products/card/search" class="row g-2 align-items-end mb-3">
+  <div class="col-md-6">
+    <label class="form-label">ابحث بجزء من الاسم أو الباركود</label>
+    <input class="form-control" name="q" value="{{ q or '' }}" placeholder="مثال: sleeveless أو 12345" autofocus>
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-primary w-100">بحث</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-bordered align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>الاسم</th>
+        <th>اللون</th>
+        <th>المقاس</th>
+        <th>الباركود</th>
+        <th class="text-end">الستوك</th>
+        <th style="width:140px;">إجراء</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if results and results|length %}
+        {% for p in results %}
+          <tr>
+            <td>{{ p.name }}</td>
+            <td>{{ p.color or '-' }}</td>
+            <td>{{ p.size or '-' }}</td>
+            <td>{{ p.barcode or '-' }}</td>
+            <td class="text-end">{{ p.stock or 0 }}</td>
+            <td>
+              <a class="btn btn-sm btn-outline-dark" href="/products/{{ p.id }}/card" target="_blank">فتح الكارت</a>
+            </td>
+          </tr>
+        {% endfor %}
+      {% else %}
+        <tr><td colspan="6" class="text-center text-muted">اكتب كلمة بحث لعرض النتائج.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

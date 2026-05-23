@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h4 class="mb-3">👤 معاملات العميل</h4>
+
+<div class="card p-3 mb-3">
+  <div class="row g-2">
+    <div class="col-md-4"><strong>الاسم:</strong> {{ name }}</div>
+    <div class="col-md-4"><strong>الموبايل:</strong> <span dir="ltr">{{ phone }}</span></div>
+    <div class="col-md-4 text-md-end">
+      <a href="/customers/ledger" class="btn btn-sm btn-outline-secondary">عودة للسجل</a>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="card p-3 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="m-0">🧾 فواتير البيع</h6>
+        <div class="small text-muted">
+          عدد: {{ sales_count }} — إجمالي: <strong>{{ '%.2f'|format(sales_sum or 0) }}</strong>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered">
+          <thead>
+            <tr class="text-center">
+              <th>الكود</th>
+              <th style="width:140px">التاريخ</th>
+              <th class="text-end" style="width:140px">الإجمالي</th>
+              <th style="width:90px">فتح</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for i in sales %}
+            <tr>
+              <td>{{ i.invoice_code }}</td>
+              <td>{{ i.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+              <td class="text-end">{{ '%.2f'|format(i.total or 0) }}</td>
+              <td class="text-center"><a class="btn btn-sm btn-outline-primary" href="/invoices/{{ i.id }}">عرض</a></td>
+            </tr>
+            {% endfor %}
+            {% if not sales or sales|length == 0 %}
+            <tr><td colspan="4" class="text-center text-muted">لا يوجد.</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card p-3 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="m-0">↩️ فواتير المرتجع</h6>
+        <div class="small text-muted">
+          عدد: {{ rets_count }} — إجمالي: <strong>{{ '%.2f'|format(rets_sum or 0) }}</strong>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered">
+          <thead>
+            <tr class="text-center">
+              <th>الكود</th>
+              <th style="width:140px">التاريخ</th>
+              <th class="text-end" style="width:140px">قيمة المرتجع</th>
+              <th style="width:90px">فتح</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for i in rets %}
+            <tr>
+              <td>{{ i.invoice_code }}</td>
+              <td>{{ i.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+              <td class="text-end">{{ '%.2f'|format(i.total or 0) }}</td>
+              <td class="text-center"><a class="btn btn-sm btn-outline-primary" href="/invoices/{{ i.id }}">عرض</a></td>
+            </tr>
+            {% endfor %}
+            {% if not rets or rets|length == 0 %}
+            <tr><td colspan="4" class="text-center text-muted">لا يوجد.</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

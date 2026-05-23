@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h4 class="mb-3">↩️ قائمة المرتجعات</h4>
+
+<div class="mb-3 d-flex gap-2">
+  <a class="btn btn-success" href="/returns/new">➕ عمل مرتجع جديد</a>
+  <!-- NEW: زر تصدير -->
+  <a class="btn btn-outline-secondary" href="/returns/export">
+    <i class="bi bi-download"></i> تصدير CSV
+  </a>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-bordered align-middle">
+    <thead>
+      <tr class="text-center">
+        <th>كود المرتجع</th>
+        <th>فاتورة البيع الأصلية</th>
+        <th>العميل</th>
+        <th>التاريخ</th>
+        <th class="text-end">إجمالي المرتجع</th>
+        <th>شركة الشحن</th>
+        <th>عرض</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for inv in invoices %}
+      <tr>
+        <td>{{ inv.invoice_code }}</td>
+        <td>{{ inv.original_sale_code or '-' }}</td>
+        <td>{{ inv.customer_name }}</td>
+        <td>{{ inv.created_at.strftime("%Y-%m-%d %H:%M") if inv.created_at else "" }}</td>
+        <td class="text-end">{{ '%.2f'|format(inv.total or 0) }}</td>
+        <td>{{ inv.shipping_company or '-' }}</td>
+        <td><a class="btn btn-sm btn-outline-primary" href="/invoices/{{ inv.id }}">فتح</a></td>
+      </tr>
+      {% endfor %}
+      {% if not invoices or invoices|length == 0 %}
+      <tr><td colspan="7" class="text-center text-muted">لا توجد مرتجعات بعد.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<!-- NEW: تقسيم الصفحات -->
+{% if pages and pages > 1 %}
+<nav class="mt-3 d-flex justify-content-center">
+  <ul class="pagination mb-0">
+    <li class="page-item {% if not has_prev %}disabled{% endif %}">
+      <a class="page-link" href="/returns?page={{ page - 1 }}&page_size={{ page_size }}" tabindex="-1">السابق</a>
+    </li>
+
+    {% set start = page - 2 if page - 2 > 1 else 1 %}
+    {% set end   = page + 2 if page + 2 < pages else pages %}
+    {% for p in range(start, end + 1) %}
+      <li class="page-item {% if p == page %}active{% endif %}">
+        <a class="page-link" href="/returns?page={{ p }}&page_size={{ page_size }}">{{ p }}</a>
+      </li>
+    {% endfor %}
+
+    <li class="page-item {% if not has_next %}disabled{% endif %}">
+      <a class="page-link" href="/returns?page={{ page + 1 }}&page_size={{ page_size }}">التالي</a>
+    </li>
+  </ul>
+</nav>
+<div class="text-center text-muted small mt-2">
+  صفحة {{ page }} من {{ pages }} — إجمالي السجلات: {{ total_count }}
+</div>
+{% endif %}
+
+{% endblock %}

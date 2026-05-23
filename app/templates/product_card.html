@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block content %}
+<h4 class="mb-2">📦 كارت صنف</h4>
+
+<div class="card p-2 mb-3">
+  <div class="row g-2">
+    <div class="col-md-4">
+      <div class="p-2 border rounded h-100">
+        <div class="text-muted small">الصنف</div>
+        <div class="fw-bold">
+          {{ product.name }}
+          {% if product.size %}<span class="text-muted">({{ product.size }})</span>{% endif %}
+          {% if product.color %}<span class="text-muted"> {{ product.color }}</span>{% endif %}
+        </div>
+        {% if product.barcode %}
+        <div class="small text-muted">باركود: {{ product.barcode }}</div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="col-md-8">
+      <form class="row g-2 align-items-end" method="get">
+        <div class="col-md-4">
+          <label class="form-label small">من</label>
+          <input type="date" name="date_from" value="{{ date_from }}" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label small">إلى</label>
+          <input type="date" name="date_to" value="{{ date_to }}" class="form-control">
+        </div>
+        <div class="col-md-4 d-flex gap-2">
+          <button class="btn btn-primary flex-fill">تطبيق</button>
+          <a class="btn btn-outline-secondary flex-fill"
+             href="/products/{{ product.id }}/card">مسح</a>
+          <a class="btn btn-outline-success"
+             href="/products/{{ product.id }}/card/export?date_from={{ date_from }}&date_to={{ date_to }}">
+            تنزيل CSV
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="row g-2 mb-2">
+  <div class="col-md-3">
+    <div class="card p-2">
+      <div class="text-muted small">رصيد أول المدة</div>
+      <div class="fs-5 fw-bold">{{ opening }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card p-2">
+      <div class="text-muted small">إجمالي الإضافات</div>
+      <div class="fs-5 fw-bold text-success">+{{ total_in }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card p-2">
+      <div class="text-muted small">إجمالي المنصرف</div>
+      <div class="fs-5 fw-bold text-danger">-{{ total_out }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card p-2">
+      <div class="text-muted small">رصيد آخر المدة</div>
+      <div class="fs-5 fw-bold">{{ closing }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-bordered align-middle">
+    <thead class="table-light">
+      <tr>
+        <th style="width:160px;">التاريخ</th>
+        <th style="width:100px;">النوع</th>
+        <th>مرجع</th>
+        <th class="text-end" style="width:120px;">كمية</th>
+        <th class="text-end" style="width:120px;">سعر وحدة</th>
+        <th>ملاحظة</th>
+        <th class="text-end" style="width:140px;">رصيد جارٍ</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if rows and rows|length %}
+        {% for r in rows %}
+          <tr>
+            <td>{{ r.dt }}</td>
+            <td>
+              <span class="badge
+  {% if r.kind=='إضافة' %}bg-success
+  {% elif r.kind=='بيع' %}bg-danger
+  {% elif r.kind=='مرتجع' %}bg-info
+  {% elif r.kind=='تسوية' %}bg-secondary
+  {% else %}bg-secondary{% endif %}">
+  {{ r.kind }}
+</span>
+            </td>
+            <td>
+              {% if r.extra.invoice_id %}
+                <a href="/invoices/{{ r.extra.invoice_id }}" target="_blank">{{ r.ref }}</a>
+              {% else %}
+                {{ r.ref }}
+              {% endif %}
+            </td>
+            <td class="text-end">
+              {% if r.qty > 0 %}+{% endif %}{{ r.qty }}
+            </td>
+            <td class="text-end">{{ '%.2f'|format(r.unit_price or 0) }}</td>
+            <td>{{ r.note }}</td>
+            <td class="text-end">{{ r.running }}</td>
+          </tr>
+        {% endfor %}
+      {% else %}
+        <tr><td colspan="7" class="text-center text-muted">لا توجد حركات في الفترة المختارة.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

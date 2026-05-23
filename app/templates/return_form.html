@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h4 class="mb-3">↩️ إنشاء مرتجع</h4>
+
+{% if msg %}
+  <div class="alert {% if '⚠️' in msg %}alert-warning{% elif '✅' in msg %}alert-success{% else %}alert-secondary{% endif %}">
+    {{ msg }}
+  </div>
+{% endif %}
+
+<!-- خطوة 1: ابحث عن فاتورة البيع الأصلية -->
+<div class="card p-3 mb-3">
+  <div class="row g-2">
+    <div class="col-md-4 position-relative">
+      <input id="sale-search" class="form-control" placeholder="اكتب جزء من كود الفاتورة (مثال: S-11)">
+      <!-- قائمة الاقتراحات -->
+      <div id="sale-suggest" class="list-group position-absolute w-100 shadow" style="z-index: 1000; max-height: 260px; overflow:auto; display:none; top: 100%;"></div>
+    </div>
+    <div class="col-md-2">
+      <form method="get" action="/returns/new" id="code-form">
+        <input type="hidden" name="sale_code" id="sale_code_hidden">
+        <button class="btn btn-outline-secondary w-100" type="submit">جلب بالفاصل</button>
+      </form>
+    </div>
+  </div>
+  <div class="form-text mt-1">تقدر تكتب جزء من الكود وهيطلع لك الاقتراحات. أو لو عارف الكود كامل اكتبه واضغط "جلب بالفاصل".</div>
+</div>
+
+{% if sale %}
+  <div class="card p-3 mb-3">
+    <div class="row g-2">
+      <div class="col-md-3"><strong>الكود:</strong> {{ sale.invoice_code }}</div>
+      <div class="col-md-3"><strong>العميل:</strong> {{ sale.customer_name }}</div>
+      <div class="col-md-3"><strong>الموبايل:</strong> {{ sale.customer_phone }}</div>
+      <div class="col-md-3"><strong>شركة الشحن:</strong> {{ sale.shipping_company or '-' }}</div>
+    </div>
+  </div>
+
+  <form method="post" action="/returns/create" id="ret-form">
+    <input type="hidden" name="sale_id" value="{{ sale.id }}">
+
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle">
+        <thead>
+          <tr class="text-center">
+            <th>الصنف</th>
+            <th style="width:110px">المباع</th>
+            <th style="width:130px">مرتجع سابق</th>
+            <th style="width:140px">متاح للإرجاع</th>
+            <th style="width:160px">سعر الوحدة</th>
+            <th style="width:160px">كمية مرتجع الآن</th>
+            <th style="width:160px">إجمالي</th>
+          </tr>
+        </thead>
+        <tbody id="items-body">
+          {% for r in sale_items %}
+          <tr>
+            <td>
+              {{ r.product_name }}
+              <input type="hidden" name="product_id" value="{{ r.product_id }}">
+              <input type="hidden" name="unit_price" value="{{ '%.2f'|format(r.unit_price) }}">
+            </td>
+            <td class="text-end">{{ r.sold_qty }}</td>
+            <td class="text-end">{{ r.returned_qty }}</td>
+            <td class="text-end">{{ r.remaining_qty }}</td>
+            <td class="text-end">{{ '%.2f'|format(r.unit_price) }}</td>
+            <td>
+              <input name="return_qty" type="number" class="form-control form-control-sm rq"
+                     value="0" min="0" max="{{ r.remaining_qty }}" oninput="capQty(this); recalc();">
+            </td>
+            <td class="text-end"><span class="line-total">0.00</span></td>
+          </tr>
+          {% endfor %}
+          {% if not sale_items or sale_items|length == 0 %}
+            <tr><td colspan="7" class="text-center text-muted">لا توجد بنود أو لا يوجد متاح للإرجاع.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">إجمالي قيمة المرتجع</label>
+        <input id="subtotal" type="number" class="form-control" value="0" readonly>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">رسوم شحن المرتجع (تُخصم على الشركة)</label>
+        <input name="return_shipping_fee" id="return_shipping_fee" type="number" step="0.01" class="form-control" value="0">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">سبب المرتجع</label>
+        <input name="reason" class="form-control" placeholder="مثال: مقاس غير مناسب / عيب تصنيع ...">
+      </div>
+    </div>
+
+<div class="row g-2 mt-2">
+  <div class="col-md-3">
+    <label class="form-label">خصم المرتجع</label>
+    <input name="return_discount" type="number" step="0.01" class="form-control" value="0">
+  </div>
+</div>
+
+    <div class="mt-3">
+      <label class="form-label">ملاحظات (اختياري)</label>
+      <textarea name="note" class="form-control" rows="2"></textarea>
+    </div>
+
+    <div class="mt-4 d-flex gap-2">
+      <button class="btn btn-success"><i class="bi bi-save2"></i> حفظ المرتجع</button>
+      <a class="btn btn-outline-secondary" href="/returns/new?sale_code={{ sale.invoice_code }}">تفريغ الإدخال</a>
+    </div>
+  </form>
+{% else %}
+  <div class="alert alert-info">
+    اكتب جزء من كود فاتورة البيع في مربع البحث بالأعلى ثم اختر من الاقتراحات، أو أدخل الكود كاملًا واضغط "جلب بالفاصل".
+  </div>
+{% endif %}
+
+<script>
+/* ---- Typeahead ---- */
+(function(){
+  const input = document.getElementById('sale-search');
+  const box   = document.getElementById('sale-suggest');
+  const hiddenCode = document.getElementById('sale_code_hidden');
+  const codeForm = document.getElementById('code-form');
+
+  if(!input || !box) return;
+
+  let timer = null;
+
+  function hideBox(){ box.style.display = 'none'; box.innerHTML = ''; }
+  function showBox(){ box.style.display = 'block'; }
+
+  input.addEventListener('input', function(){
+    const q = (this.value || '').trim();
+    if(timer) clearTimeout(timer);
+    if(q.length < 1){ hideBox(); return; }
+    timer = setTimeout(() => {
+      fetch('/returns/search?q=' + encodeURIComponent(q))
+        .then(r => r.json())
+        .then(data => {
+          const arr = (data && data.results) ? data.results : [];
+          if(!arr.length){ hideBox(); return; }
+          box.innerHTML = arr.map(item => {
+            const code = escapeHtml(item.invoice_code || '');
+            const cust = escapeHtml(item.customer_name || '');
+            const date = escapeHtml(item.created_at || '');
+            const ship = escapeHtml(item.shipping_company || '');
+            const total = Number(item.total || 0).toFixed(2);
+            return `
+              <a href="#" class="list-group-item list-group-item-action"
+                 data-id="${item.id}" data-code="${code}">
+                <div class="d-flex justify-content-between">
+                  <strong>${code}</strong>
+                  <span class="text-muted small">${date}</span>
+                </div>
+                <div class="small text-muted">
+                  عميل: ${cust} • شركة الشحن: ${ship} • الإجمالي: ${total}
+                </div>
+              </a>
+            `;
+          }).join('');
+          showBox();
+        })
+        .catch(() => hideBox());
+    }, 200);
+  });
+
+  box.addEventListener('click', function(e){
+    const a = e.target.closest('a.list-group-item');
+    if(!a) return;
+    e.preventDefault();
+    const id = a.getAttribute('data-id');
+    // نفتح نفس الصفحة محمّلة بالفاتورة المختارة مباشرة عن طريق sale_id
+    window.location.href = '/returns/new?sale_id=' + encodeURIComponent(id);
+  });
+
+  // إدخال كود كامل يدويًا عبر الزر
+  codeForm.addEventListener('submit', function(e){
+    const v = (input.value || '').trim();
+    if(!v){
+      e.preventDefault();
+      alert('اكتب كود الفاتورة أولًا.');
+      return;
+    }
+    hiddenCode.value = v;
+  });
+
+  document.addEventListener('click', function(e){
+    if(!box.contains(e.target) && e.target !== input){
+      hideBox();
+    }
+  });
+
+  function escapeHtml(t){
+    const m = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'};
+    return String(t||'').replace(/[&<>"']/g, s => m[s]);
+  }
+})();
+
+/* ---- حساب الإجماليات ---- */
+function capQty(el){
+  var max = parseInt(el.getAttribute('max')||'0',10);
+  var v = parseInt(el.value||'0',10);
+  if(v<0) v = 0;
+  if(v>max) v = max;
+  el.value = v;
+}
+
+function recalc(){
+  var subtotal = 0.0;
+  var rows = document.querySelectorAll('#items-body tr');
+  rows.forEach(function(tr){
+    var qtyEl = tr.querySelector('input[name="return_qty"]');
+    if(!qtyEl){ return; }
+    var qty = parseInt(qtyEl.value||'0',10);
+    var unit = parseFloat((tr.querySelector('input[name="unit_price"]')||{}).value||'0');
+    var line = qty * unit;
+    subtotal += line;
+    var lt = tr.querySelector('.line-total');
+    if(lt){ lt.textContent = (line||0).toFixed(2); }
+  });
+  var sub = document.getElementById('subtotal');
+  if(sub){ sub.value = subtotal.toFixed(2); }
+}
+document.addEventListener('input', function(e){
+  if(e.target && e.target.classList.contains('rq')){
+    recalc();
+  }
+});
+document.addEventListener('DOMContentLoaded', recalc);
+
+document.getElementById('ret-form') && document.getElementById('ret-form').addEventListener('submit', function(e){
+  var any=false;
+  document.querySelectorAll('input[name="return_qty"]').forEach(function(q){
+    if(parseInt(q.value||'0',10) > 0) any = true;
+  });
+  if(!any){
+    e.preventDefault();
+    alert('⚠️ أدخل كمية مرتجع لبند واحد على الأقل.');
+  }
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">📦 فواتير المشتريات</h4>
+    <div class="d-flex gap-2">
+      <a href="/purchases/import" class="btn btn-primary btn-sm">📥 استيراد شيت مشتريات</a>
+      <a href="/purchases/import/template.xlsx" class="btn btn-outline-secondary btn-sm" target="_blank">📄 قالب Excel</a>
+      <a href="/factory" class="btn btn-outline-dark btn-sm" target="_blank">🏭 إدارة المصانع</a>
+    </div>
+</div>
+
+{% if msg %}
+<div class="alert alert-info">{{ msg }}</div>
+{% endif %}
+
+{% if request.url.path == "/purchases/import" %}
+<div class="card mb-4">
+    <div class="card-header">📥 استيراد شيت مشتريات</div>
+    <div class="card-body">
+        <form method="post" action="/purchases/upload" enctype="multipart/form-data" class="row g-3">
+
+            <div class="col-md-6">
+                <label class="form-label">ملف المشتريات (Excel)</label>
+                <input type="file" name="file" class="form-control" accept=".xlsx" required>
+
+                <div class="form-text small text-muted mt-2">
+                  <div class="mb-1">
+                    <b>✅ القالب الجديد (Headers):</b>
+                    <span class="d-block" style="direction:ltr; unicode-bidi:bidi-override;">
+                      barcode, name, color, size, qty, fabric_cost, mfg_cost, overhead_cost, total_cost, price
+                    </span>
+                  </div>
+
+                  <div class="mb-1">
+                    <b>♻️ متوافق مع القديم:</b>
+                    <span class="d-block">
+                      لو عندك Header قديم فيه <b>cost_price</b> بدل <b>total_cost</b> — النظام هيعتبره <b>إجمالي تكلفة القطعة</b>.
+                      (ساعتها <b>fabric_cost</b> هيكون 0 ومش هيخصم خامات إنتاج تلقائيًا)
+                    </span>
+                  </div>
+
+                  <div class="mb-1">
+                    <b>📌 القواعد:</b>
+                    <ul class="mb-0">
+                      <li><b>حساب المصنع</b>: بيتحسب على <b>mfg_cost</b> فقط (العدد × تكلفة التصنيع).</li>
+                      <li><b>خامات إنتاج</b>: بيتخصم منها <b>fabric_cost</b> فقط (العدد × تكلفة القماش).</li>
+                      <li><b>المخزون</b>: بيتسجل على <b>total_cost</b> (إجمالي تكلفة القطعة) + بيتحسب متوسط تكلفة المخزون.</li>
+                      <li><b>النثريات</b>: تتحط في <b>overhead_cost</b> (تغليف/مواصلات/هالك...).</li>
+                      <li><b>سعر البيع</b>: بيتحدث لآخر <b>price</b> مرفوع.</li>
+                      <li><b>شرط</b>: لازم <b>total_cost ≥ (fabric_cost + mfg_cost + overhead_cost)</b> (لو total_cost مكتوب).</li>
+                    </ul>
+                  </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">تاريخ الشراء</label>
+                <input type="date" name="date" class="form-control">
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">المصنع</label>
+                <select name="factory_id" class="form-select">
+                  <option value="">— اختار مصنع —</option>
+                  {% for fid, fname in factories_map.items() %}
+                    <option value="{{ fid }}">{{ fname }}</option>
+                  {% endfor %}
+                </select>
+                <div class="form-text small text-muted">
+                  اختياري — لو اخترت مصنع، النظام هيضيف عليه <b>إجمالي التصنيع</b> فقط.
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">رقم فاتورة الشراء (اختياري)</label>
+                <input type="text" name="code" class="form-control" placeholder="اتركه فارغًا لإنشاء كود تلقائي">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">ملاحظات</label>
+                <input type="text" name="note" class="form-control">
+            </div>
+
+            <div class="col-12 mt-2 d-flex align-items-center gap-2">
+                <button class="btn btn-success">🚀 رفع الشيت وتسجيل الفاتورة</button>
+                <div class="small text-muted">
+                  لو رفعت شيت قديم (A..G) برضه شغال — بس <b>fabric_cost/mfg_cost/overhead_cost</b> هيبقوا 0 تلقائيًا.
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>رقم الفاتورة</th>
+                        <th>التاريخ</th>
+                        <th>المصنع</th>
+                        <th class="text-end">عدد القطع</th>
+                        <th class="text-end">إجمالي تكلفة المخزون</th>
+                        <th>الملف</th>
+                        <th style="width: 200px;">عمليات</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                {% for p in purchases %}
+                    <tr>
+                        <td>{{ p.code }}</td>
+                        <td>{{ p.date }}</td>
+                        <td>{{ factories_map.get(p.factory_id, '-') }}</td>
+
+                        <td class="text-end">{{ "%.0f"|format(p.total_qty or 0) }}</td>
+                        <td class="text-end">{{ "%.2f"|format(p.total_cost or 0) }}</td>
+
+                        <td>{{ p.file_name or "-" }}</td>
+
+                        <td class="d-flex gap-1">
+                            <a href="/purchases/{{ p.id }}" class="btn btn-sm btn-outline-primary">عرض</a>
+
+                            <form action="/purchases/{{ p.id }}/delete" method="post"
+                                  onsubmit="return confirm('هل تريد حذف هذه الفاتورة؟ هيرجع المخزون وهيتسجل قيد إلغاء (تصنيع) في حساب المصنع + رجوع خامات (قماش فقط).');"
+                                  style="display:inline-block;">
+                                <button class="btn btn-sm btn-outline-danger">حذف</button>
+                            </form>
+
+                        </td>
+                    </tr>
+                {% endfor %}
+
+                {% if purchases|length == 0 %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-3">
+                        لا توجد فواتير مشتريات حتى الآن.
+                    </td>
+                </tr>
+                {% endif %}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

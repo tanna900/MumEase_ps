@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block content %}
+<h4 class="mb-3">⚙️ إعدادات نقطة الربحية</h4>
+
+<p class="text-muted">
+اربط هنا تصنيفاتك مع بنود الخزنة من نوع <span class="badge bg-danger">مصروف/OUT</span> عشان يتحسبوا في نقطة التعادل.
+</p>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>التكاليف الثابتة</span>
+        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mdlAddFixed">➕ إضافة</button>
+      </div>
+      <div class="card-body">
+        {% if fixed and fixed|length %}
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>التصنيف/البند</th>
+                  <th>ملاحظة</th>
+                  <th style="width:70px">إجراء</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for r in fixed %}
+                <tr>
+                  <td>{{ r.category }}</td>
+                  <td>{{ r.note }}</td>
+                  <td class="text-end">
+                    <form method="post" action="/pl/settings/delete/{{ r.id }}" onsubmit="return confirm('حذف هذا التصنيف؟');">
+                      <button class="btn btn-sm btn-outline-danger">🗑️</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-muted">لا توجد عناصر محددة.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content_between align-items-center">
+        <span>التكاليف المتغيرة</span>
+        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mdlAddVar">➕ إضافة</button>
+      </div>
+      <div class="card-body">
+        {% if variable and variable|length %}
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>التصنيف/البند</th>
+                  <th>ملاحظة</th>
+                  <th style="width:70px">إجراء</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for r in variable %}
+                <tr>
+                  <td>{{ r.category }}</td>
+                  <td>{{ r.note }}</td>
+                  <td class="text-end">
+                    <form method="post" action="/pl/settings/delete/{{ r.id }}" onsubmit="return confirm('حذف هذا التصنيف؟');">
+                      <button class="btn btn-sm btn-outline-danger">🗑️</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-muted">لا توجد عناصر محددة.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if not out_choices or out_choices|length == 0 %}
+<div class="alert alert-warning">
+لا توجد بنود <strong>مصروف/OUT</strong> ظاهرة من الخزنة. سجّل قيد مصروف واحد على الأقل (النوع: مصروف/OUT) ثم حدّث الصفحة.
+</div>
+{% endif %}
+
+<!-- Modal: إضافة ثابت -->
+<div class="modal fade" id="mdlAddFixed" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post" action="/pl/settings/add">
+      <input type="hidden" name="kind" value="FIXED">
+      <div class="modal-header">
+        <h5 class="modal-title">إضافة تصنيف ثابت</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">اختر من بنود الخزنة (OUT)</label>
+        <select name="links" class="form-select" multiple size="7">
+          {% for c in out_choices %}
+            <option value="{{ c }}">{{ c }}</option>
+          {% endfor %}
+        </select>
+        <div class="form-text">اختر واحد أو أكتر (CTRL/⌘). تقدر كمان تكتب اسم يدوي تحت.</div>
+
+        <label class="form-label mt-2">أو اسم يدوي</label>
+        <input class="form-control" name="name" placeholder="مثال: إيجار">
+
+        <label class="form-label mt-2">ملاحظة</label>
+        <input class="form-control" name="note" placeholder="اختياري">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: إضافة متغير -->
+<div class="modal fade" id="mdlAddVar" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post" action="/pl/settings/add">
+      <input type="hidden" name="kind" value="VARIABLE">
+      <div class="modal-header">
+        <h5 class="modal-title">إضافة تصنيف متغير</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">اختر من بنود الخزنة (OUT)</label>
+        <select name="links" class="form-select" multiple size="7">
+          {% for c in out_choices %}
+            <option value="{{ c }}">{{ c }}</option>
+          {% endfor %}
+        </select>
+        <div class="form-text">مثال: إعلانات، عمولة تسويق، باكدجات شحن…</div>
+
+        <label class="form-label mt-2">أو اسم يدوي</label>
+        <input class="form-control" name="name" placeholder="مثال: إعلانات">
+
+        <label class="form-label mt-2">ملاحظة</label>
+        <input class="form-control" name="note" placeholder="اختياري">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">حسابات المصانع</h4>
+  <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mdlNewFactory">➕ إضافة مصنع</button>
+</div>
+
+<form class="row g-2 mb-3">
+  <div class="col-auto">
+    <label class="form-label">من</label>
+    <input type="date" name="d1" value="{{ d1 }}" class="form-control">
+  </div>
+  <div class="col-auto">
+    <label class="form-label">إلى</label>
+    <input type="date" name="d2" value="{{ d2 }}" class="form-control">
+  </div>
+  <div class="col-auto align-self-end">
+    <button class="btn btn-primary">تطبيق</button>
+  </div>
+</form>
+
+<table class="table table-sm align-middle">
+  <thead>
+    <tr>
+      <th>المصنع</th>
+      <th>إجمالي التصنيع</th>
+      <th>إجمالي المدفوع</th>
+      <th>الرصيد</th>
+      <th class="text-end">إجراءات</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for s in summaries %}
+    {% set f = s.factory %}
+    {% set bal = s.balance %}
+    {% set status = 'badge bg-danger' if bal>0 else 'badge bg-success' if bal<0 else 'badge bg-secondary' %}
+    <tr>
+      <td>
+        <div class="fw-bold">{{ f.name }}</div>
+        <div class="small text-muted">{{ f.phone or '' }} {{ f.address or '' }}</div>
+      </td>
+      <td>{{ '%.2f'|format(s.total_cost) }} EGP</td>
+      <td>{{ '%.2f'|format(s.total_paid) }} EGP</td>
+      <td>
+        {{ '%.2f'|format(bal|abs) }} EGP
+        <span class="{{ status }}">
+          {% if bal>0 %} مستحق للمصنع
+          {% elif bal<0 %} دافع زيادة
+          {% else %} متسوي {% endif %}
+        </span>
+      </td>
+      <td class="text-end">
+        <a href="/factory/{{ f.id }}" class="btn btn-sm btn-outline-primary">📄 عرض</a>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<!-- Modal: إضافة مصنع جديد -->
+<div class="modal fade" id="mdlNewFactory" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post" action="/factory/new">
+      <div class="modal-header">
+        <h5 class="modal-title">إضافة مصنع جديد</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body row g-2">
+        <div class="col-12"><label class="form-label">الاسم *</label><input name="name" class="form-control" required></div>
+        <div class="col-6"><label class="form-label">التليفون</label><input name="phone" class="form-control"></div>
+        <div class="col-6"><label class="form-label">العنوان</label><input name="address" class="form-control"></div>
+        <div class="col-12"><label class="form-label">ملاحظات</label><textarea name="notes" class="form-control"></textarea></div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-primary">حفظ</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

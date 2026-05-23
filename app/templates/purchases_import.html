@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">📥 استيراد شيت مشتريات</h4>
+  <a class="btn btn-outline-secondary btn-sm" href="/purchases/import/template.xlsx">
+    📄 تحميل قالب Excel
+  </a>
+</div>
+
+{% if msg %}
+  <div class="alert alert-info">{{ msg }}</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-body">
+    <form method="post" action="/purchases/import" enctype="multipart/form-data" class="row g-3">
+
+      <div class="col-md-6">
+        <label class="form-label">ملف المشتريات (Excel / CSV)</label>
+        <input type="file" name="file" class="form-control" required>
+        <div class="form-text small">
+          استخدم قالب Excel المرفق أو تأكد أن الملف يحتوي على الأعمدة التالية
+          (كـ headers بالإنجليزي):
+          <code>
+            barcode, name, color, size, cost_price, price, qty,
+            factory_name, purchase_date, purchase_code
+          </code>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">تاريخ افتراضي للشراء</label>
+        <input type="date" name="default_date" class="form-control">
+        <div class="form-text small">يستخدم لو عمود <b>purchase_date</b> فاضي في الشيت.</div>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">اسم مصنع افتراضي</label>
+        <input type="text" name="default_factory" class="form-control" placeholder="مثال: مصنع أحمد">
+        <div class="form-text small">يستخدم لو عمود <b>factory_name</b> فاضي.</div>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">رقم فاتورة شراء افتراضي (اختياري)</label>
+        <input type="text" name="default_purchase_code" class="form-control" placeholder="مثال: P-2025-001">
+        <div class="form-text small">يضاف في الملاحظات لو عمود <b>purchase_code</b> فاضي.</div>
+      </div>
+
+      <div class="col-12">
+        <button class="btn btn-primary">🚀 استيراد المشتريات</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

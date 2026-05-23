@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h4 class="mb-3">👤 سجل العملاء</h4>
+
+<form class="row g-2 mb-3" method="get" action="/customers/ledger">
+  <div class="col-md-4">
+    <input class="form-control" name="q" value="{{ q or '' }}" placeholder="بحث بالاسم أو رقم الموبايل">
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-outline-secondary w-100">بحث</button>
+  </div>
+  <div class="col-md-3 ms-auto d-grid">
+    <a class="btn btn-outline-success"
+       href="/customers/ledger/export?q={{ q | urlencode }}">
+      ⬇️ تصدير CSV
+    </a>
+  </div>
+</form>
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <div class="text-muted">
+    {% if total_rows is defined %}
+      إجمالي العملاء: <b>{{ total_rows }}</b>
+    {% endif %}
+  </div>
+
+  {% if pages_count and pages_count > 1 %}
+  <nav aria-label="الترقيم">
+    <ul class="pagination pagination-sm mb-0 align-items-center">
+
+      <!-- أول -->
+      <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+        <a class="page-link"
+           href="/customers/ledger?q={{ q | urlencode }}&page=1&per_page={{ per_page }}">⏮</a>
+      </li>
+
+      <!-- السابق -->
+      <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+        <a class="page-link"
+           href="/customers/ledger?q={{ q | urlencode }}&page={{ page-1 }}&per_page={{ per_page }}">السابق</a>
+      </li>
+
+      <!-- الصفحة الأولى -->
+      <li class="page-item {% if page == 1 %}active{% endif %}">
+        <a class="page-link"
+           href="/customers/ledger?q={{ q | urlencode }}&page=1&per_page={{ per_page }}">1</a>
+      </li>
+
+      <!-- نقاط بعد الأولى -->
+      {% if page > 3 %}
+      <li class="page-item disabled">
+        <span class="page-link">…</span>
+      </li>
+      {% endif %}
+
+      <!-- الصفحة الحالية + 3 بعدها -->
+      {% for p in range(page, page + 4) %}
+        {% if p > 1 and p < pages_count %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+          <a class="page-link"
+             href="/customers/ledger?q={{ q | urlencode }}&page={{ p }}&per_page={{ per_page }}">
+            {{ p }}
+          </a>
+        </li>
+        {% endif %}
+      {% endfor %}
+
+      <!-- نقاط قبل الأخيرة -->
+      {% if page + 3 < pages_count %}
+      <li class="page-item disabled">
+        <span class="page-link">…</span>
+      </li>
+      {% endif %}
+
+      <!-- الصفحة الأخيرة -->
+      <li class="page-item {% if page == pages_count %}active{% endif %}">
+        <a class="page-link"
+           href="/customers/ledger?q={{ q | urlencode }}&page={{ pages_count }}&per_page={{ per_page }}">
+          {{ pages_count }}
+        </a>
+      </li>
+
+      <!-- التالي -->
+      <li class="page-item {% if page >= pages_count %}disabled{% endif %}">
+        <a class="page-link"
+           href="/customers/ledger?q={{ q | urlencode }}&page={{ page+1 }}&per_page={{ per_page }}">التالي</a>
+      </li>
+
+      <!-- آخر -->
+      <li class="page-item {% if page >= pages_count %}disabled{% endif %}">
+        <a class="page-link"
+           href="/customers/ledger?q={{ q | urlencode }}&page={{ pages_count }}&per_page={{ per_page }}">⏭</a>
+      </li>
+
+      <!-- Jump to Page -->
+      <li class="ms-3">
+        <form method="get" action="/customers/ledger" class="d-flex align-items-center">
+          <input type="hidden" name="q" value="{{ q }}">
+          <input type="hidden" name="per_page" value="{{ per_page }}">
+          <input type="number"
+                 name="page"
+                 min="1"
+                 max="{{ pages_count }}"
+                 class="form-control form-control-sm"
+                 style="width:90px"
+                 placeholder="صفحة">
+          <button class="btn btn-sm btn-outline-primary ms-1">
+            انتقال
+          </button>
+        </form>
+      </li>
+
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+
+<div class="table-responsive">
+  <table class="table table-bordered align-middle">
+    <thead>
+      <tr class="text-center">
+        <th style="width:80px">#</th>
+        <th>اسم العميل</th>
+        <th>رقم الموبايل</th>
+        <th class="text-end" style="width:140px">عدد فواتير البيع</th>
+        <th class="text-end" style="width:180px">إجمالي البيع</th>
+        <th class="text-end" style="width:160px">عدد المرتجعات</th>
+        <th class="text-end" style="width:180px">إجمالي المرتجعات</th>
+        <th style="width:120px">عرض</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td class="text-center fw-bold">{{ r.idx }}</td>
+        <td>{{ r.name }}</td>
+        <td dir="ltr">{{ r.phone }}</td>
+        <td class="text-end">{{ r.sale_count }}</td>
+        <td class="text-end">{{ '%.2f'|format(r.sale_total) }}</td>
+        <td class="text-end">{{ r.ret_count }}</td>
+        <td class="text-end">{{ '%.2f'|format(r.ret_total) }}</td>
+        <td class="text-center">
+          <a class="btn btn-sm btn-outline-primary"
+             href="/customers/ledger/detail?name={{ r.name | urlencode }}&phone={{ r.phone | urlencode }}">
+            عرض
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+
+      {% if not rows or rows|length == 0 %}
+      <tr>
+        <td colspan="8" class="text-center text-muted">
+          لا يوجد عملاء حتى الآن.
+        </td>
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

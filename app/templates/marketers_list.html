@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<h4 class="mb-3">🧑‍💼 إدارة المسوّقين</h4>
+
+{% if request.query_params.get('msg') %}
+  <div class="alert alert-info">{{ request.query_params.get('msg') }}</div>
+{% endif %}
+
+<div class="card mb-3">
+  <div class="card-body">
+    <form class="row g-2" method="post" action="/marketers/add">
+      <div class="col-md-5">
+        <label class="form-label">اسم المسوّق</label>
+        <input name="name" class="form-control" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">نسبة العمولة %</label>
+        <input type="number" step="0.01" min="0" name="commission_rate" class="form-control" placeholder="مثال: 5 أو 7.5">
+      </div>
+      <div class="col-md-3 d-flex align-items-end">
+        <button class="btn btn-success w-100">إضافة</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-bordered table-striped align-middle">
+    <thead class="table-light">
+      <tr>
+        <th style="width:70px">#</th>
+        <th>الاسم</th>
+        <th style="width:160px">نسبة العمولة %</th>
+        <th style="width:220px">إجرائات</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+        <tr>
+          <td>{{ r.id }}</td>
+          <td>
+            <form class="row g-2" method="post" action="/marketers/update">
+              <input type="hidden" name="mid" value="{{ r.id }}">
+              <div class="col-7">
+                <input name="name" class="form-control form-control-sm" value="{{ r.name }}">
+              </div>
+              <div class="col-3">
+                <input name="commission_rate" type="number" step="0.01" min="0" class="form-control form-control-sm" value="{{ '%.2f'|format(r.commission_rate or 0) }}">
+              </div>
+              <div class="col-2 d-grid">
+                <button class="btn btn-sm btn-primary">حفظ</button>
+              </div>
+            </form>
+          </td>
+          <td>{{ '%.2f'|format(r.commission_rate or 0) }}%</td>
+          <td class="text-nowrap">
+            <form method="post" action="/marketers/delete" onsubmit="return confirm('حذف {{ r.name }}؟');" class="d-inline">
+              <input type="hidden" name="mid" value="{{ r.id }}">
+              <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> حذف</button>
+            </form>
+            <a class="btn btn-sm btn-outline-secondary" href="/marketers/commission?marketer_id={{ r.id }}"><i class="bi bi-calculator"></i> حساب العمولة</a>
+          </td>
+        </tr>
+      {% endfor %}
+      {% if rows|length == 0 %}
+        <tr><td colspan="4" class="text-center text-muted">لا يوجد مسوّقون بعد.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

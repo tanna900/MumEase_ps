@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+{% block content %}
+<h5 class="mb-3">💰 الخزنة</h5>
+
+{% if request.query_params.get("msg") %}
+  <div class="alert alert-info">{{ request.query_params.get("msg") }}</div>
+{% endif %}
+
+<!-- ============ NEW: تنبيه أرصدة الخزن الفرعية + دفعات الشحن غير المربوطة ============ -->
+<div class="row g-2">
+  <div class="col-md-8">
+    <div class="card p-2 h-100">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <div class="fw-bold"><i class="bi bi-wallet2"></i> الخزن الفرعية</div>
+        {% if total_sub_balance and total_sub_balance > 0 %}
+          <span class="badge bg-warning text-dark">إجمالي غير مُرحّل: {{ '%.2f'|format(total_sub_balance) }}</span>
+        {% endif %}
+      </div>
+
+      {% if sub_balances and sub_balances|length > 0 %}
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead>
+              <tr class="text-muted small">
+                <th>الخزنة</th>
+                <th style="width:160px" class="text-end">الرصيد الحالي</th>
+                <th style="width:360px">تحويل إلى الخزنة الرئيسية</th>
+                <th style="width:120px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for w in sub_balances %}
+              <tr>
+                <td class="fw-semibold">{{ w.label }}</td>
+                <td class="text-end">{{ '%.2f'|format(w.balance) }}</td>
+                <td>
+                  <form class="row g-1 align-items-center" method="post" action="/cash/transfer-sub">
+                    <input type="hidden" name="source_key" value="{{ w.key }}">
+                    <div class="col-4">
+                      <input type="number" step="0.01" min="0" name="amount" class="form-control form-control-sm" placeholder="المبلغ (اتركه فاضي = الكل)">
+                    </div>
+                    <div class="col-4">
+                      <input type="date" name="date" class="form-control form-control-sm" value="">
+                    </div>
+                    <div class="col-4">
+                      <input type="text" name="note" class="form-control form-control-sm" placeholder="ملاحظة (اختياري)">
+                    </div>
+                    <div class="col-12 mt-1">
+                      <button class="btn btn-sm btn-primary">
+                        <i class="bi bi-arrow-left-right"></i> تحويل
+                      </button>
+                      {% if w.balance and w.balance > 0 %}
+                        <button class="btn btn-sm btn-outline-dark" type="submit" onclick="this.form.amount.value='0'">
+                          تحويل كل الرصيد ({{ '%.2f'|format(w.balance) }})
+                        </button>
+                      {% endif %}
+                    </div>
+                  </form>
+                </td>
+                <td class="text-end">
+                  {% if w.balance and w.balance > 0 %}
+                    <span class="badge bg-warning text-dark">غير مُرحّل</span>
+                  {% else %}
+                    <span class="badge bg-success">لا يوجد رصيد</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-muted small">لا توجد خزن فرعية حتى الآن.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card p-2 h-100">
+      <div class="fw-bold mb-2"><i class="bi bi-truck"></i> دفعات شركات الشحن غير المربوطة</div>
+      {% if unlinked_count and unlinked_count > 0 %}
+        <div class="alert alert-warning py-2 mb-2">
+          عدد: <b>{{ unlinked_count }}</b> — إجمالي: <b>{{ '%.2f'|format(unlinked_sum or 0) }}</b><br>
+          <a class="small" href="/shipping/cash-sync">ربط الآن ↗️</a>
+        </div>
+      {% else %}
+        <div class="text-muted small">لا يوجد دفعات غير مربوطة.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<!-- ================================================================== -->
+
+<!-- أزرار/إحصائيات أعلى -->
+<div class="row g-2 mt-2">
+  <div class="col-md-3">
+    <div class="card p-2">
+      <div class="text-muted small">الرصيد الافتتاحي</div>
+      <div class="fs-5 fw-bold">{{ '%.2f'|format(opening or 0) }}</div>
+      <form class="d-flex gap-1 mt-2" method="post" action="/cash/opening">
+        <input type="number" step="0.01" name="opening" class="form-control form-control-sm" placeholder="تعديل…">
+        <button class="btn btn-sm btn-outline-primary">حفظ</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <a class="text-decoration-none" href="/cash?category=&q={{ q }}&date_from={{ date_from }}&date_to={{ date_to }}">
+      <div class="card p-2 h-100">
+        <div class="text-muted small">إجمالي الإيرادات</div>
+        <div class="fs-5 fw-bold text-success">{{ '%.2f'|format(total_in or 0) }}</div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-3">
+    <a class="text-decoration-none" href="/cash?category=&q={{ q }}&date_from={{ date_from }}&date_to={{ date_to }}">
+      <div class="card p-2 h-100">
+        <div class="text-muted small">إجمالي المصروفات</div>
+        <div class="fs-5 fw-bold text-danger">{{ '%.2f'|format(total_out or 0) }}</div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-3">
+    <div class="card p-2 h-100">
+      <div class="text-muted small">صافي الخزنة</div>
+      <div class="fs-5 fw-bold">{{ '%.2f'|format(balance or 0) }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- فلاتر -->
+<div class="card p-2 mt-2">
+  <form class="row g-2 align-items-end" method="get" action="/cash">
+    <div class="col-md-2">
+      <label class="form-label small">من</label>
+      <input type="date" class="form-control form-control-sm" name="date_from" value="{{ date_from }}">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small">إلى</label>
+      <input type="date" class="form-control form-control-sm" name="date_to" value="{{ date_to }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small">البند</label>
+      <select name="category" class="form-select form-select-sm">
+        <option value="">— الكل —</option>
+        {% for c in categories %}
+          <option value="{{ c }}" {% if category==c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small">بحث في الملاحظة</label>
+      <input type="text" class="form-control form-control-sm" name="q" value="{{ q }}">
+    </div>
+    <div class="col-md-2 d-flex gap-2">
+      <button class="btn btn-sm btn-primary flex-fill">تطبيق</button>
+      <a class="btn btn-sm btn-outline-secondary flex-fill" href="/cash">مسح</a>
+    </div>
+  </form>
+</div>
+
+<!-- إضافة حركة -->
+<div class="card p-2 mt-2">
+  <form class="row g-2 align-items-end" method="post" action="/cash/add">
+    <div class="col-md-2">
+      <label class="form-label small">النوع</label>
+      <select name="type" class="form-select form-select-sm" required>
+        <option value="IN">إيراد</option>
+        <option value="OUT">مصروف</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small">البند</label>
+      <input name="category" class="form-control form-control-sm" list="cats" placeholder="اكتب أو اختر" required>
+      <datalist id="cats">
+        {% for c in categories %}
+          <option value="{{ c }}"></option>
+        {% endfor %}
+        <!-- NEW: نقترح البنود الفرعية لو حابب تسجّل عليها مباشرة -->
+        {% if sub_balances %}
+          {% for w in sub_balances %}
+            <option value="{{ w.cat }}"></option>
+          {% endfor %}
+        {% endif %}
+      </datalist>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small">المبلغ</label>
+      <input name="amount" type="number" step="0.01" class="form-control form-control-sm" required>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small">التاريخ</label>
+      <input name="date" type="date" class="form-control form-control-sm" value="">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small">ملاحظة</label>
+      <input name="note" class="form-control form-control-sm">
+    </div>
+    <div class="col-12">
+      <button class="btn btn-sm btn-success"><i class="bi bi-plus-circle"></i> إضافة</button>
+      <a class="btn btn-sm btn-outline-secondary" href="/cash/export?category={{ category }}&date_from={{ date_from }}&date_to={{ date_to }}&q={{ q }}">
+        <i class="bi bi-filetype-csv"></i> تصدير CSV
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- الجدول -->
+<div class="table-responsive mt-2">
+  <table class="table table-sm table-bordered align-middle">
+    <thead class="table-light">
+      <tr>
+        <th style="width:110px">التاريخ</th>
+        <th style="width:100px">النوع</th>
+        <th>البند</th>
+        <th style="width:140px" class="text-end">المبلغ</th>
+        <th>ملاحظة</th>
+        <th style="width:90px"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ r.date }}</td>
+        <td>
+          {% if r.type=='IN' %}
+            <span class="badge bg-success">إيراد</span>
+          {% else %}
+            <span class="badge bg-danger">مصروف</span>
+          {% endif %}
+        </td>
+        <td>{{ r.category }}</td>
+        <td class="text-end">{{ '%.2f'|format(r.amount or 0) }}</td>
+        <td>{{ r.note or '' }}</td>
+        <td class="text-center">
+          <form method="post" action="/cash/delete" onsubmit="return confirm('حذف الحركة؟');">
+            <input type="hidden" name="eid" value="{{ r.id }}">
+            <button class="btn btn-sm btn-outline-danger">حذف</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not rows or rows|length == 0 %}
+      <tr><td colspan="6" class="text-center text-muted">لا توجد حركات.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== NEW: ترقيم الصفحات ===== -->
+{% if pages and pages > 1 %}
+<nav aria-label="pagination">
+  <ul class="pagination pagination-sm justify-content-center">
+    {% set qp = request.query_params %}
+    {% set cur = page or 1 %}
+    {% set pp = per_page or 15 %}
+
+    {# رابط مساعد لبناء URL مع الحفاظ على الفلاتر #}
+    {% macro page_url(p) -%}
+      {{ request.url.replace_query_params(
+          date_from=date_from,
+          date_to=date_to,
+          category=category,
+          q=q,
+          page=p,
+          per_page=pp
+      ) }}
+    {%- endmacro %}
+
+    <li class="page-item {% if cur <= 1 %}disabled{% endif %}">
+      <a class="page-link" href="{{ page_url(cur-1) }}" tabindex="-1">السابق</a>
+    </li>
+
+    {# نعرض مدى بسيط حول الصفحة الحالية #}
+    {% set start = (1 if cur-2 < 1 else cur-2) %}
+    {% set end = (pages if cur+2 > pages else cur+2) %}
+
+    {% if start > 1 %}
+      <li class="page-item"><a class="page-link" href="{{ page_url(1) }}">1</a></li>
+      {% if start > 2 %}
+        <li class="page-item disabled"><span class="page-link">…</span></li>
+      {% endif %}
+    {% endif %}
+
+    {% for p in range(start, end+1) %}
+      <li class="page-item {% if p == cur %}active{% endif %}">
+        <a class="page-link" href="{{ page_url(p) }}">{{ p }}</a>
+      </li>
+    {% endfor %}
+
+    {% if end < pages %}
+      {% if end < pages-1 %}
+        <li class="page-item disabled"><span class="page-link">…</span></li>
+      {% endif %}
+      <li class="page-item"><a class="page-link" href="{{ page_url(pages) }}">{{ pages }}</a></li>
+    {% endif %}
+
+    <li class="page-item {% if cur >= pages %}disabled{% endif %}">
+      <a class="page-link" href="{{ page_url(cur+1) }}">التالي</a>
+    </li>
+  </ul>
+</nav>
+{% endif %}
+<!-- ===== /NEW ===== -->
+
+{% endblock %}

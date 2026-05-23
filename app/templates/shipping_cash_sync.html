@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block content %}
+<h4 class="mb-3">🔗 ربط دفعات الشحن بالخزنة (توريد صافي)</h4>
+
+<!-- أزرار عامة -->
+<div class="mb-3 d-flex gap-2">
+  <form method="post" action="/shipping/cash-sync/link-bulk">
+    <button class="btn btn-success"><i class="bi bi-arrow-down-square"></i> ترحيل كل الدفعات غير المُرحّلة</button>
+  </form>
+  <a class="btn btn-outline-secondary" href="/shipping/cash-sync">تحديث</a>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header bg-light">دفعات غير مُرحّلة للخزنة</div>
+      <div class="card-body">
+        <div class="mb-2 text-muted">الإجمالي: {{ '%.2f'|format(total_unlinked or 0) }}</div>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle">
+            <thead>
+              <tr class="text-center">
+                <th style="width:100px">التاريخ</th>
+                <th>الشركة</th>
+                <th style="width:140px">المبلغ</th>
+                <th>ملاحظة</th>
+                <th style="width:100px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in unlinked %}
+              <tr>
+                <td class="text-center">{{ p.date }}</td>
+                <td>{{ p.company }}</td>
+                <td class="text-end">{{ '%.2f'|format(p.amount or 0) }}</td>
+                <td>{{ p.note or '' }}</td>
+                <td class="text-center">
+                  <form method="post" action="/shipping/cash-sync/link-one">
+                    <input type="hidden" name="payment_id" value="{{ p.id }}">
+                    <button class="btn btn-sm btn-primary">ترحيل</button>
+                  </form>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="5" class="text-center text-muted">لا يوجد</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header bg-light">دفعات مُرحّلة (مرتبطة بقيود خزنة)</div>
+      <div class="card-body">
+        <div class="mb-2 text-muted">الإجمالي: {{ '%.2f'|format(total_linked or 0) }}</div>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle">
+            <thead>
+              <tr class="text-center">
+                <th style="width:100px">التاريخ</th>
+                <th>الشركة</th>
+                <th style="width:140px">المبلغ</th>
+                <th>قيد الخزنة</th>
+                <th style="width:100px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p, link, fe in linked %}
+              <tr>
+                <td class="text-center">{{ p.date }}</td>
+                <td>{{ p.company }}</td>
+                <td class="text-end">{{ '%.2f'|format(p.amount or 0) }}</td>
+                <td>
+                  <div class="small">ID: {{ fe.id }}</div>
+                  <div class="small">تاريخ: {{ fe.date }}</div>
+                  <div class="small">بند: {{ fe.category }}</div>
+                </td>
+                <td class="text-center">
+                  <form method="post" action="/shipping/cash-sync/unlink" onsubmit="return confirm('إلغاء قيد الخزنة لهذه الدفعة؟');">
+                    <input type="hidden" name="payment_id" value="{{ p.id }}">
+                    <button class="btn btn-sm btn-outline-danger">إلغاء القيد</button>
+                  </form>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="5" class="text-center text-muted">لا يوجد</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
