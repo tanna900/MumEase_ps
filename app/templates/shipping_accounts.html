@@ -457,13 +457,122 @@ tr.bg-light button.btn-outline-dark {
 
   .mobile-actions{
     display:grid;
-    grid-template-columns:repeat(4,1fr);
+    grid-template-columns:repeat(5,1fr);
     gap:8px;
   }
 
   .mobile-actions .btn{
     min-height:44px;
     border-radius:12px;
+  }
+
+}
+
+
+
+
+@media(max-width:768px){
+
+  .mobile-shipping-card{
+    padding:12px;
+  }
+
+  .mobile-shipping-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:10px;
+  }
+
+  .mobile-shipping-name{
+    font-size:.95rem;
+    margin:0;
+  }
+
+  .mobile-shipping-code{
+    font-size:.82rem;
+    white-space:nowrap;
+    margin:0;
+  }
+
+  .mobile-shipping-grid{
+    margin-bottom:10px;
+  }
+
+  .mobile-actions{
+    gap:6px;
+  }
+
+  .mobile-actions .btn{
+    min-height:36px;
+    padding:4px;
+    font-size:14px;
+  }
+
+  .mobile-alloc select,
+  .mobile-alloc input{
+    min-height:38px;
+    font-size:14px;
+  }
+
+}
+
+
+
+
+/* ===== Paid Table Mobile ===== */
+.mobile-paid-toggle{
+  display:none;
+}
+
+@media(max-width:768px){
+
+  .mobile-paid-toggle{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:100%;
+    border:none;
+    background:#fff;
+    border-radius:14px;
+    padding:12px;
+    font-weight:700;
+    box-shadow:0 2px 10px rgba(0,0,0,.05);
+    margin-bottom:10px;
+  }
+
+  .paid-collapse-box{
+    display:none;
+  }
+
+  .paid-collapse-box.open{
+    display:block;
+  }
+
+  #tbl_paid{
+    table-layout:auto !important;
+    width:100%;
+  }
+
+  #tbl_paid th,
+  #tbl_paid td{
+    font-size:12px;
+    white-space:normal !important;
+    word-break:break-word;
+    vertical-align:top;
+  }
+
+  #tbl_paid td:nth-child(1){
+    min-width:90px;
+  }
+
+  #tbl_paid td:nth-child(2){
+    min-width:120px;
+  }
+
+  #tbl_paid td:nth-child(3){
+    min-width:120px;
   }
 
 }
@@ -674,6 +783,12 @@ tr.bg-light button.btn-outline-dark {
                 class="btn btn-success">
           💾
         </button>
+
+        <a href="#"
+           onclick="openInvoicePopup({{ r.id }}); return false;"
+           class="btn btn-outline-primary">
+          👁️
+        </a>
 
       </div>
 
@@ -925,6 +1040,18 @@ tr.bg-light button.btn-outline-dark {
         </div>
 
         {% if invoices_paid and invoices_paid|length > 0 %}
+
+          <button class="mobile-paid-toggle d-md-none"
+                  type="button"
+                  onclick="togglePaidInvoices()">
+
+            ✅ الفواتير المسددة
+
+          </button>
+
+          <div class="paid-collapse-box d-md-block"
+               id="paidInvoicesBox">
+
           <div class="table-responsive">
             <table class="table table-sm table-bordered align-middle mb-0" id="tbl_paid">
               <thead class="table-light">
@@ -976,6 +1103,7 @@ tr.bg-light button.btn-outline-dark {
               </tbody>
             </table>
           </div>
+</div>
 
          {% if paid_pages and paid_pages > 1 %}
   <nav class="mt-2">
@@ -1553,4 +1681,18 @@ document.querySelectorAll('.invoice-group').forEach(row => {
 });
 
 </script>
+
+
+<script>
+
+function togglePaidInvoices(){
+  const el = document.getElementById('paidInvoicesBox');
+  if(el){
+    el.classList.toggle('open');
+  }
+}
+
+</script>
+
+
 {% endblock %}
