@@ -149,7 +149,9 @@
 
 }
 
-<style id="mobile-cash-hide-fix">
+
+
+
 
 @media(max-width:768px){
 
@@ -160,8 +162,9 @@
     display:none !important;
   }
 
-  /* make net cash full width */
+  /* keep only net cash visible */
   .cash-summary-cards > div:nth-child(4){
+    display:block !important;
     width:100% !important;
     max-width:100% !important;
     flex:0 0 100% !important;
@@ -179,7 +182,7 @@
   }
 
 }
-</style>
+
 
 </style>
 
@@ -852,5 +855,3 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 {% endblock %}
-
-</div>
