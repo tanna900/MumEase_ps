@@ -148,6 +148,21 @@
   }
 
 }
+
+
+
+
+
+
+
+
+
+@media(max-width:768px){
+  .row.g-2.mt-2.d-none.d-md-flex{
+    display:none !important;
+  }
+}
+
 </style>
 
 {% macro n(x) -%}
@@ -329,14 +344,17 @@
 </div>
 <!-- ================================================================== -->
 
+
 <!-- أزرار/إحصائيات أعلى -->
-<div class="row g-2 mt-2">
+
+<!-- Desktop Summary Cards -->
+<div class="row g-2 mt-2 d-none d-md-flex">
+
   <div class="col-md-3">
     <div class="page-card">
       <div class="text-muted small">الرصيد الافتتاحي</div>
       <div class="fs-5 fw-bold">{{ n(opening) }}</div>
 
-      <!-- ✅ محمي بباسورد -->
       <form class="d-flex gap-1 mt-2" method="post" action="/cash/opening">
         <input type="number" step="1" name="opening" class="form-control form-control-sm" placeholder="تعديل…">
         <input type="password" name="password" class="form-control form-control-sm" placeholder="00000" style="max-width:110px">
@@ -348,30 +366,49 @@
   <div class="col-md-3">
     <a class="text-decoration-none" href="/cash?category=&q={{ q }}&date_from={{ date_from }}&date_to={{ date_to }}">
       <div class="page-card p-3 h-100 stat-card">
-  <div class="stat-label">إجمالي الإيرادات</div>
-  <div class="stat-value text-success">{{ n(total_in) }}</div>
-</div>
+        <div class="stat-label">إجمالي الإيرادات</div>
+        <div class="stat-value text-success">{{ n(total_in) }}</div>
+      </div>
     </a>
   </div>
 
   <div class="col-md-3">
     <a class="text-decoration-none" href="/cash?category=&q={{ q }}&date_from={{ date_from }}&date_to={{ date_to }}">
       <div class="page-card p-3 h-100 stat-card">
-  <div class="stat-label">إجمالي المصروفات</div>
-  <div class="stat-value text-danger">{{ n(total_out) }}</div>
-</div>
+        <div class="stat-label">إجمالي المصروفات</div>
+        <div class="stat-value text-danger">{{ n(total_out) }}</div>
+      </div>
     </a>
   </div>
 
   <div class="col-md-3">
     <div class="page-card p-3 h-100 stat-card">
-  <div class="stat-label">صافي الخزنة</div>
-  <div class="stat-value">{{ n(balance) }}</div>
-</div>
+      <div class="stat-label">صافي الخزنة</div>
+      <div class="stat-value">{{ n(balance) }}</div>
+    </div>
   </div>
+
+</div>
+
+<!-- Mobile Net Cash Only -->
+<div class="d-block d-md-none mt-2">
+
+  <div class="page-card stat-card text-center">
+
+    <div class="stat-label">
+      صافي الخزنة
+    </div>
+
+    <div class="stat-value">
+      {{ n(balance) }}
+    </div>
+
+  </div>
+
 </div>
 
 <!-- فلاتر -->
+
 <div class="card p-2 mt-2">
   <form class="row g-2 align-items-end" method="get" action="/cash">
     <div class="col-md-2">
@@ -438,7 +475,7 @@
       <label class="form-label small">التاريخ</label>
       <input name="date" type="date" class="form-control form-control-sm" value="">
     </div>
-    <div class="col-md-3">
+    <div class="col-12 col-md-3">
       <label class="form-label small">ملاحظة</label>
       <input name="note" class="form-control form-control-sm">
     </div>
@@ -819,5 +856,3 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 {% endblock %}
-
-</div>
