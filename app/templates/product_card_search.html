@@ -1,8 +1,136 @@
 {% extends "base.html" %}
 {% block content %}
-<h4 class="mb-3">📑 كارت الصنف — بحث</h4>
 
-<form method="get" action="/products/card/search" class="row g-2 align-items-end mb-3">
+<style>
+
+.search-shell{
+  max-width:1450px;
+  margin:auto;
+}
+
+.page-title{
+  font-size:1.8rem;
+  font-weight:900;
+}
+
+.page-subtitle{
+  color:#6c757d;
+  margin-top:4px;
+}
+
+.page-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:22px;
+  padding:18px;
+  box-shadow:0 2px 10px rgba(0,0,0,.04);
+}
+
+.form-control{
+  border-radius:14px !important;
+  min-height:50px;
+}
+
+.table{
+  border-radius:18px;
+  overflow:hidden;
+  margin-bottom:0;
+}
+
+.table thead th{
+  background:#faf7ff !important;
+  border-bottom:1px solid #eee !important;
+  white-space:nowrap;
+}
+
+.table tbody tr td{
+  transition:.18s ease;
+}
+
+.table tbody tr:hover td{
+  background:#eef5ff !important;
+}
+
+.stock-low{
+  color:#dc2626;
+  font-weight:800;
+}
+
+.stock-good{
+  color:#111827;
+  font-weight:700;
+}
+
+.mobile-products{
+  display:none;
+}
+
+.mobile-product-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+
+.mobile-product-card:hover{
+  transform:translateY(-2px);
+  transition:.18s ease;
+}
+
+.results-count{
+  color:#6c757d;
+  font-size:.9rem;
+}
+
+@media(max-width:768px){
+
+  .search-shell{
+    padding:0 8px;
+  }
+
+  .page-title{
+    font-size:1.4rem;
+  }
+
+  .page-card{
+    padding:15px;
+    border-radius:18px;
+  }
+
+  .desktop-table{
+    display:none;
+  }
+
+  .mobile-products{
+    display:block;
+  }
+
+  .search-actions .btn{
+    width:100%;
+  }
+
+}
+</style>
+
+
+<div class="search-shell">
+
+<div class="mb-4">
+
+  <div class="page-title">
+    📑 البحث عن كارت الصنف
+  </div>
+
+  <div class="page-subtitle">
+    الوصول السريع لحركة ومعلومات المنتجات
+  </div>
+
+</div>
+
+
+<div class="page-card mb-3"><form method="get" action="/products/card/search" class="row g-3 align-items-end">
   <div class="col-md-6">
     <label class="form-label">ابحث بجزء من الاسم أو الباركود</label>
     <input class="form-control" name="q" value="{{ q or '' }}" placeholder="مثال: sleeveless أو 12345" autofocus>
@@ -10,11 +138,19 @@
   <div class="col-md-2">
     <button class="btn btn-primary w-100">بحث</button>
   </div>
-</form>
+</form></div>
 
-<div class="table-responsive">
-  <table class="table table-bordered align-middle">
-    <thead class="table-light">
+
+{% if results and results|length %}
+<div class="results-count mb-2">
+  عدد النتائج: {{ results|length }}
+</div>
+{% endif %}
+
+<div class="table-responsive desktop-table">
+
+  <table class="table align-middle">
+    <thead>
       <tr>
         <th>الاسم</th>
         <th>اللون</th>
@@ -32,16 +168,77 @@
             <td>{{ p.color or '-' }}</td>
             <td>{{ p.size or '-' }}</td>
             <td>{{ p.barcode or '-' }}</td>
-            <td class="text-end">{{ p.stock or 0 }}</td>
+            
+<td class="text-end">
+  <span class="{{ 'stock-low' if (p.stock or 0) < 4 else 'stock-good' }}">
+    {{ p.stock or 0 }}
+  </span>
+</td>
+
             <td>
               <a class="btn btn-sm btn-outline-dark" href="/products/{{ p.id }}/card" target="_blank">فتح الكارت</a>
             </td>
           </tr>
         {% endfor %}
       {% else %}
-        <tr><td colspan="6" class="text-center text-muted">اكتب كلمة بحث لعرض النتائج.</td></tr>
+        <tr><td colspan="6" class="text-center text-muted">🔎 ابدأ بكتابة اسم المنتج أو الباركود</td></tr>
       {% endif %}
     </tbody>
   </table>
+</div>
+
+<!-- Mobile Product Cards -->
+<div class="mobile-products mt-3">
+
+{% if results and results|length %}
+
+{% for p in results %}
+
+<div class="mobile-product-card">
+
+  <div class="fw-bold fs-5 mb-2">
+    {{ p.name }}
+  </div>
+
+  <div class="small text-muted mb-2">
+    {{ p.color or '-' }} / {{ p.size or '-' }}
+  </div>
+
+  <div class="small mb-2">
+    Barcode:
+    {{ p.barcode or '-' }}
+  </div>
+
+  <div class="mb-3">
+
+    <span class="{{ 'stock-low' if (p.stock or 0) < 4 else 'stock-good' }}">
+      Stock: {{ p.stock or 0 }}
+    </span>
+
+  </div>
+
+  <a class="btn btn-outline-dark w-100"
+     href="/products/{{ p.id }}/card"
+     target="_blank">
+
+    📦 فتح الكارت
+
+  </a>
+
+</div>
+
+{% endfor %}
+
+{% else %}
+
+<div class="text-center text-muted py-5">
+  🔎 ابدأ بكتابة اسم المنتج أو الباركود
+</div>
+
+{% endif %}
+
+</div>
+
+
 </div>
 {% endblock %}

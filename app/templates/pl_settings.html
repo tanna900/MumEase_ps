@@ -1,22 +1,169 @@
 {% extends "base.html" %}
 {% block content %}
-<h4 class="mb-3">⚙️ إعدادات نقطة الربحية</h4>
 
-<p class="text-muted">
+<style>
+
+.settings-shell{
+  max-width:1450px;
+  margin:auto;
+}
+
+.page-title{
+  font-size:1.8rem;
+  font-weight:900;
+}
+
+.page-subtitle{
+  color:#6c757d;
+  margin-top:4px;
+}
+
+.page-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:22px;
+  overflow:hidden;
+  box-shadow:0 2px 10px rgba(0,0,0,.04);
+  height:100%;
+}
+
+.page-card .card-header{
+  background:#faf7ff;
+  border-bottom:1px solid #eee;
+  padding:14px 16px;
+}
+
+.page-card .card-body{
+  padding:16px;
+}
+
+.form-control,
+.form-select{
+  border-radius:14px !important;
+  min-height:46px;
+}
+
+.table{
+  border-radius:18px;
+  overflow:hidden;
+  margin-bottom:0;
+}
+
+.table thead th{
+  background:#faf7ff !important;
+  border-bottom:1px solid #eee !important;
+  white-space:nowrap;
+}
+
+.table tbody tr td{
+  transition:.18s ease;
+}
+
+.table tbody tr:hover td{
+  background:#eef5ff !important;
+}
+
+.alert{
+  border-radius:18px;
+}
+
+.mobile-cards{
+  display:none;
+}
+
+.mobile-setting-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+
+.mobile-setting-card:hover{
+  transform:translateY(-2px);
+  transition:.18s ease;
+}
+
+.modal-content{
+  border-radius:22px;
+  border:none;
+}
+
+.modal-header{
+  border-bottom:1px solid #eee;
+}
+
+.modal-footer{
+  border-top:1px solid #eee;
+}
+
+@media(max-width:768px){
+
+  .settings-shell{
+    padding:0 8px;
+  }
+
+  .page-title{
+    font-size:1.4rem;
+  }
+
+  .desktop-table{
+    display:none;
+  }
+
+  .mobile-cards{
+    display:block;
+  }
+
+  .page-card{
+    border-radius:18px;
+  }
+
+  .card-header{
+    flex-direction:column;
+    align-items:stretch !important;
+    gap:10px;
+  }
+
+  .card-header .btn{
+    width:100%;
+  }
+
+}
+</style>
+
+
+<div class="settings-shell">
+
+<div class="mb-4">
+
+  <div class="page-title">
+    ⚙️ إعدادات نقطة الربحية
+  </div>
+
+  <div class="page-subtitle">
+    إدارة وربط التكاليف الثابتة والمتغيرة مع بنود الخزنة
+  </div>
+
+</div>
+
+
+<div class="alert alert-light border mb-4">
 اربط هنا تصنيفاتك مع بنود الخزنة من نوع <span class="badge bg-danger">مصروف/OUT</span> عشان يتحسبوا في نقطة التعادل.
-</p>
+</div>
 
 <div class="row g-3 mb-4">
   <div class="col-md-6">
-    <div class="card h-100">
-      <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="page-card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <span>التكاليف الثابتة</span>
         <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mdlAddFixed">➕ إضافة</button>
       </div>
       <div class="card-body">
         {% if fixed and fixed|length %}
           <div class="table-responsive">
-            <table class="table table-sm table-bordered mb-0">
+            <table class="table table-sm mb-0 desktop-table">
               <thead class="table-light">
                 <tr>
                   <th>التصنيف/البند</th>
@@ -40,22 +187,22 @@
             </table>
           </div>
         {% else %}
-          <div class="text-muted">لا توجد عناصر محددة.</div>
+          <div class="text-muted">🧾 لا توجد عناصر محددة</div>
         {% endif %}
       </div>
     </div>
   </div>
 
   <div class="col-md-6">
-    <div class="card h-100">
-      <div class="card-header d-flex justify-content_between align-items-center">
+    <div class="page-card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <span>التكاليف المتغيرة</span>
         <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mdlAddVar">➕ إضافة</button>
       </div>
       <div class="card-body">
         {% if variable and variable|length %}
           <div class="table-responsive">
-            <table class="table table-sm table-bordered mb-0">
+            <table class="table table-sm mb-0 desktop-table">
               <thead class="table-light">
                 <tr>
                   <th>التصنيف/البند</th>
@@ -79,7 +226,7 @@
             </table>
           </div>
         {% else %}
-          <div class="text-muted">لا توجد عناصر محددة.</div>
+          <div class="text-muted">🧾 لا توجد عناصر محددة</div>
         {% endif %}
       </div>
     </div>
@@ -87,7 +234,7 @@
 </div>
 
 {% if not out_choices or out_choices|length == 0 %}
-<div class="alert alert-warning">
+<div class="alert alert-warning rounded-4">
 لا توجد بنود <strong>مصروف/OUT</strong> ظاهرة من الخزنة. سجّل قيد مصروف واحد على الأقل (النوع: مصروف/OUT) ثم حدّث الصفحة.
 </div>
 {% endif %}
@@ -152,5 +299,74 @@
       </div>
     </form>
   </div>
+</div>
+
+<!-- Mobile Fixed Cards -->
+<div class="mobile-cards mt-3">
+
+{% if fixed and fixed|length %}
+
+{% for r in fixed %}
+
+<div class="mobile-setting-card">
+
+  <div class="fw-bold fs-5 mb-2">
+    {{ r.category }}
+  </div>
+
+  <div class="small text-muted mb-3">
+    {{ r.note or 'بدون ملاحظة' }}
+  </div>
+
+  <form method="post"
+        action="/pl/settings/delete/{{ r.id }}"
+        onsubmit="return confirm('حذف هذا التصنيف؟');">
+
+    <button class="btn btn-outline-danger w-100">
+      🗑️ حذف
+    </button>
+
+  </form>
+
+</div>
+
+{% endfor %}
+
+{% endif %}
+
+<!-- Mobile Variable Cards -->
+{% if variable and variable|length %}
+
+{% for r in variable %}
+
+<div class="mobile-setting-card">
+
+  <div class="fw-bold fs-5 mb-2">
+    {{ r.category }}
+  </div>
+
+  <div class="small text-muted mb-3">
+    {{ r.note or 'بدون ملاحظة' }}
+  </div>
+
+  <form method="post"
+        action="/pl/settings/delete/{{ r.id }}"
+        onsubmit="return confirm('حذف هذا التصنيف؟');">
+
+    <button class="btn btn-outline-danger w-100">
+      🗑️ حذف
+    </button>
+
+  </form>
+
+</div>
+
+{% endfor %}
+
+{% endif %}
+
+</div>
+
+
 </div>
 {% endblock %}

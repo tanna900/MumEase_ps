@@ -1,12 +1,159 @@
 {% extends "base.html" %}
 {% block content %}
-<h4 class="mb-3">🔔 مركز التنبيهات</h4>
+
+<style>
+
+.alerts-shell{
+  max-width:1450px;
+  margin:auto;
+}
+
+.page-title{
+  font-size:1.8rem;
+  font-weight:800;
+}
+
+.page-subtitle{
+  color:#6c757d;
+  margin-top:4px;
+}
+
+.alert-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:22px;
+  overflow:hidden;
+  box-shadow:0 2px 10px rgba(0,0,0,.04);
+  height:100%;
+}
+
+.alert-card .card-header{
+  border-bottom:1px solid #eee;
+  padding:14px 16px;
+  font-weight:700;
+}
+
+.alert-card .card-footer{
+  background:#fff;
+  border-top:1px solid #eee;
+}
+
+.table{
+  margin-bottom:0;
+}
+
+.table thead th{
+  background:#faf7ff !important;
+  border-bottom:1px solid #eee !important;
+  white-space:nowrap;
+}
+
+.table tbody tr td{
+  transition:.18s ease;
+}
+
+.table tbody tr:hover td{
+  background:#eef5ff !important;
+}
+
+.badge-soft-danger{
+  background:#fee2e2;
+  color:#991b1b;
+  padding:6px 12px;
+  border-radius:999px;
+  font-weight:700;
+}
+
+.badge-soft-warning{
+  background:#fef3c7;
+  color:#92400e;
+  padding:6px 12px;
+  border-radius:999px;
+  font-weight:700;
+}
+
+.scroll-area{
+  max-height:340px;
+  overflow-y:auto;
+}
+
+.mobile-cards{
+  display:none;
+}
+
+.mobile-alert-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+
+.mobile-alert-card:hover{
+  transform:translateY(-2px);
+  transition:.18s ease;
+}
+
+@media(max-width:768px){
+
+  .alerts-shell{
+    padding:0 8px;
+  }
+
+  .desktop-table{
+    display:none;
+  }
+
+  .mobile-cards{
+    display:block;
+  }
+
+  .page-title{
+    font-size:1.4rem;
+  }
+
+  .alert-card{
+    border-radius:18px;
+  }
+
+  .card-header{
+    flex-direction:column;
+    align-items:flex-start !important;
+    gap:10px;
+  }
+
+  .card-header form,
+  .card-header a{
+    width:100%;
+  }
+
+  .card-header .btn{
+    width:100%;
+  }
+
+}
+</style>
+
+
+<div class="alerts-shell">
+
+<div class="mb-4">
+  <div class="page-title">
+    🔔 مركز التنبيهات
+  </div>
+
+  <div class="page-subtitle">
+    متابعة أهم التنبيهات والإشعارات
+  </div>
+</div>
+
 
 <div class="row g-3">
 
   <!-- عمود الأصناف -->
   <div class="col-md-6" id="lowstock">
-    <div class="card h-100">
+    <div class="alert-card h-100">
       <div class="card-header d-flex justify-content-between align-items-center">
         <span><i class="bi bi-exclamation-triangle me-1"></i> أصناف تحت حد المخزون ({{ LOW_STOCK_THRESHOLD }})</span>
         <form method="post" action="/alerts/ignore-all" class="m-0">
@@ -16,8 +163,8 @@
       </div>
       <div class="card-body p-0">
         {% if low_list %}
-          <div style="max-height:320px; overflow-y:auto;">
-            <table class="table table-sm table-bordered align-middle mb-0">
+          <div class="scroll-area desktop-table">
+            <table class="table table-sm align-middle mb-0">
               <thead style="position:sticky; top:0; z-index:2; background:#f8f9fa;">
                 <tr>
                   <th>الصنف</th>
@@ -29,7 +176,7 @@
               {% for p in low_list %}
                 <tr>
                   <td>{{ p.name }}</td>
-                  <td class="text-end fw-bold text-danger">{{ p.stock }}</td>
+                  <td class="text-end"><span class="badge-soft-danger">{{ p.stock }}</span></td>
                   <td class="text-center">
                     <form method="post" action="/alerts/ignore" class="d-inline">
                       <input type="hidden" name="kind" value="low_stock">
@@ -43,7 +190,7 @@
             </table>
           </div>
         {% else %}
-          <div class="text-muted p-3">لا توجد أصناف منخفضة المخزون.</div>
+          <div class="text-muted p-3">✅ لا توجد أصناف منخفضة المخزون</div>
         {% endif %}
       </div>
       <div class="card-footer text-end">
@@ -54,7 +201,7 @@
 
   <!-- عمود الفواتير -->
   <div class="col-md-6" id="overdue">
-    <div class="card h-100">
+    <div class="alert-card h-100">
       <div class="card-header d-flex justify-content-between align-items-center">
         <span><i class="bi bi-clock-history me-1"></i> فواتير بيع أقدم من {{ DAYS_NO_ALLOCATION }} يوم بدون تخصيص</span>
         <form method="post" action="/alerts/ignore-all" class="m-0">
@@ -64,8 +211,8 @@
       </div>
       <div class="card-body p-0">
         {% if overdue_list %}
-          <div style="max-height:320px; overflow-y:auto;">
-            <table class="table table-sm table-bordered align-middle mb-0">
+          <div class="scroll-area desktop-table">
+            <table class="table table-sm align-middle mb-0">
               <thead style="position:sticky; top:0; z-index:2; background:#f8f9fa;">
                 <tr>
                   <th>رقم الفاتورة</th>
@@ -82,7 +229,7 @@
                   <td><a href="/invoices/{{ r.id }}" class="text-decoration-none">{{ r.code }}</a></td>
                   <td>{{ r.customer }}</td>
                   <td dir="ltr">{{ r.phone }}</td>
-                  <td class="text-end text-danger fw-bold">{{ r.age_days }}</td>
+                  <td class="text-end"><span class="badge-soft-danger">{{ r.age_days }} يوم</span></td>
                   <td class="text-end">{{ '%.0f'|format(r.total) }} ج</td>
                   <td class="text-center">
                     <form method="post" action="/alerts/ignore" class="d-inline">
@@ -97,7 +244,7 @@
             </table>
           </div>
         {% else %}
-          <div class="text-muted p-3">لا توجد فواتير تحتاج متابعة.</div>
+          <div class="text-muted p-3">✅ لا توجد فواتير تحتاج متابعة</div>
         {% endif %}
       </div>
       <div class="card-footer text-end">
@@ -108,15 +255,15 @@
 
   <!-- عمود الهالك -->
   <div class="col-12" id="wastage">
-    <div class="card">
+    <div class="alert-card">
       <div class="card-header d-flex justify-content-between align-items-center bg-warning bg-opacity-25">
         <span><i class="bi bi-trash me-1"></i> أصناف هالكة أكتر من {{ HIGH_WASTAGE_THRESHOLD }} قطع</span>
         <a href="/wastage" class="btn btn-sm btn-outline-warning">إدارة الهالك</a>
       </div>
       <div class="card-body p-0">
         {% if wastage_list %}
-          <div style="max-height:300px; overflow-y:auto;">
-            <table class="table table-sm table-bordered align-middle mb-0">
+          <div class="scroll-area desktop-table">
+            <table class="table table-sm align-middle mb-0">
               <thead style="position:sticky; top:0; z-index:2; background:#fff3cd;">
                 <tr>
                   <th>الصنف</th>
@@ -129,8 +276,8 @@
               {% for p in wastage_list %}
                 <tr>
                   <td class="fw-semibold">{{ p.name }}</td>
-                  <td class="text-center fw-bold text-danger">{{ p.wastage_stock }}</td>
-                  <td class="text-end text-warning fw-bold">{{ "{:,.0f}".format(p.wastage_value) }} ج</td>
+                  <td class="text-center"><span class="badge-soft-danger">{{ p.wastage_stock }}</span></td>
+                  <td class="text-end"><span class="badge-soft-warning">{{ "{:,.0f}".format(p.wastage_value) }} ج</span></td>
                   <td class="text-center">
                     <a href="/wastage?q={{ p.name }}" class="btn btn-sm btn-outline-warning">عرض</a>
                   </td>
@@ -148,6 +295,137 @@
       </div>
     </div>
   </div>
+
+</div>
+
+<!-- Mobile Low Stock -->
+<div class="mobile-cards mt-3">
+
+{% if low_list %}
+
+{% for p in low_list %}
+
+<div class="mobile-alert-card">
+
+  <div class="fw-bold fs-5 mb-2">
+    {{ p.name }}
+  </div>
+
+  <div class="mb-3">
+    <span class="badge-soft-danger">
+      المخزون: {{ p.stock }}
+    </span>
+  </div>
+
+  <form method="post"
+        action="/alerts/ignore">
+
+    <input type="hidden" name="kind" value="low_stock">
+    <input type="hidden" name="ref_id" value="{{ p.id }}">
+
+    <button class="btn btn-outline-danger w-100">
+      تجاهل
+    </button>
+
+  </form>
+
+</div>
+
+{% endfor %}
+
+{% endif %}
+
+<!-- Mobile Overdue -->
+{% if overdue_list %}
+
+{% for r in overdue_list %}
+
+<div class="mobile-alert-card">
+
+  <div class="d-flex justify-content-between align-items-start mb-2">
+
+    <div class="fw-bold">
+      {{ r.code }}
+    </div>
+
+    <span class="badge-soft-danger">
+      {{ r.age_days }} يوم
+    </span>
+
+  </div>
+
+  <div class="small text-muted mb-2">
+    {{ r.customer }}
+  </div>
+
+  <div class="small mb-2" dir="ltr">
+    {{ r.phone }}
+  </div>
+
+  <div class="fw-bold mb-3">
+    {{ '%.0f'|format(r.total) }} ج
+  </div>
+
+  <div class="d-grid gap-2">
+
+    <form method="post"
+          action="/alerts/ignore">
+
+      <input type="hidden" name="kind" value="overdue">
+      <input type="hidden" name="ref_id" value="{{ r.id }}">
+
+      <button class="btn btn-outline-danger w-100">
+        تجاهل
+      </button>
+
+    </form>
+
+  </div>
+
+</div>
+
+{% endfor %}
+
+{% endif %}
+
+<!-- Mobile Wastage -->
+{% if wastage_list %}
+
+{% for p in wastage_list %}
+
+<div class="mobile-alert-card">
+
+  <div class="fw-bold fs-5 mb-2">
+    {{ p.name }}
+  </div>
+
+  <div class="d-flex gap-2 flex-wrap mb-3">
+
+    <span class="badge-soft-danger">
+      هالك: {{ p.wastage_stock }}
+    </span>
+
+    <span class="badge-soft-warning">
+      {{ "{:,.0f}".format(p.wastage_value) }} ج
+    </span>
+
+  </div>
+
+  <a href="/wastage?q={{ p.name }}"
+     class="btn btn-outline-warning w-100">
+
+    عرض
+
+  </a>
+
+</div>
+
+{% endfor %}
+
+{% endif %}
+
+</div>
+
 
 </div>
 {% endblock %}

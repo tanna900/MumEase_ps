@@ -1,26 +1,55 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container-fluid py-3">
+
+<style>
+.report-shell{max-width:1500px;margin:auto}
+.page-title{font-size:1.9rem;font-weight:900}
+.page-subtitle{color:#6c757d;margin-top:4px}
+.page-card{background:#fff;border:1px solid #eee;border-radius:22px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.table{border-radius:18px;overflow:hidden}
+.table thead th{background:#faf7ff!important;border-bottom:1px solid #eee!important}
+.table tbody tr td{transition:.18s ease}
+.table tbody tr:hover td{background:#eef5ff!important}
+.form-control,.form-select{border-radius:14px!important;min-height:46px}
+.card{border-radius:22px!important;border:1px solid #eee!important;box-shadow:0 2px 10px rgba(0,0,0,.04)!important}
+.card-header{background:#faf7ff!important;color:#111!important;border-bottom:1px solid #eee!important}
+.progress{border-radius:999px;overflow:hidden}
+.badge{border-radius:999px}
+@media(max-width:768px){
+.report-shell{padding:0 8px}
+.page-title{font-size:1.45rem}
+.table{font-size:.9rem}
+.card{border-radius:18px!important}
+}
+</style>
+
+<div class="report-shell py-3">
+
+<div class="mb-4">
+<div class="page-title">👥 العملاء المكررون</div>
+<div class="page-subtitle">تحليل العملاء المتكررين وسلوك الشراء</div>
+</div>
+
   <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
     <h4 class="mb-0 fw-bold">👥 تقرير العملاء المكررين</h4>
-    <a href="/reports" class="btn btn-outline-secondary btn-sm">← التقارير</a>
+    <a href="/reports" class="btn btn-outline-secondary ">← التقارير</a>
   </div>
 
-  <form method="get" class="row g-2 align-items-end mb-4">
+  <div class="page-card mb-4"><form method="get" class="row g-2 align-items-end mb-4">
     <div class="col-auto">
       <label class="form-label small mb-1">من</label>
-      <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from }}">
+      <input type="date" name="date_from" class="form-control " value="{{ date_from }}">
     </div>
     <div class="col-auto">
       <label class="form-label small mb-1">إلى</label>
-      <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to }}">
+      <input type="date" name="date_to" class="form-control " value="{{ date_to }}">
     </div>
     <div class="col-auto">
-      <button class="btn btn-primary btn-sm">🔍 عرض</button>
+      <button class="btn btn-primary ">🔍 عرض</button>
       <a href="/reports/repeat-customers?date_from={{ date_from }}&date_to={{ date_to }}&export=csv"
-         class="btn btn-success btn-sm">⬇️ تصدير</a>
+         class="btn btn-success ">⬇️ تصدير</a>
     </div>
-  </form>
+  </form></div>
 
   <div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
@@ -70,11 +99,11 @@
     </li>
   </ul>
 
-  <div class="tab-content border border-top-0 rounded-bottom shadow-sm">
+  <div class="tab-content border border-top-0 rounded-bottom ">
 
     <div class="tab-pane fade show active" id="tabRepeat">
       <div style="height:480px; overflow-y:auto;">
-        <table class="table table-sm table-hover table-bordered mb-0 align-middle">
+        <table class="table table-sm   mb-0 align-middle">
           <thead style="position:sticky; top:0; z-index:2; background:#d1e7dd;">
             <tr>
               <th style="min-width:160px;">الاسم</th>
@@ -105,7 +134,7 @@
 
     <div class="tab-pane fade" id="tabSingle">
       <div style="height:480px; overflow-y:auto;">
-        <table class="table table-sm table-hover table-bordered mb-0 align-middle">
+        <table class="table table-sm   mb-0 align-middle">
           <thead style="position:sticky; top:0; z-index:2; background:#f8f9fa;">
             <tr>
               <th style="min-width:160px;">الاسم</th>

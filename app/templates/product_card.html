@@ -1,16 +1,198 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container-fluid py-3">
+
+<style>
+
+.product-shell{
+  max-width:1500px;
+  margin:auto;
+}
+
+.page-title{
+  font-size:1.9rem;
+  font-weight:900;
+}
+
+.page-subtitle{
+  color:#6c757d;
+  margin-top:4px;
+}
+
+.page-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:22px;
+  padding:18px;
+  box-shadow:0 2px 10px rgba(0,0,0,.04);
+}
+
+.form-control{
+  border-radius:14px !important;
+  min-height:46px;
+}
+
+.metric-card{
+  border-radius:20px;
+  padding:14px;
+  height:100%;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+  border:1px solid #eee;
+  background:#fff;
+}
+
+.metric-title{
+  color:#6c757d;
+  font-size:.78rem;
+}
+
+.metric-value{
+  font-size:1.25rem;
+  font-weight:900;
+  margin-top:6px;
+}
+
+.metric-green{
+  background:#f0fdf4;
+  border-color:#86efac;
+}
+
+.metric-yellow{
+  background:#fffbeb;
+  border-color:#fcd34d;
+}
+
+.metric-blue{
+  background:#eff6ff;
+  border-color:#93c5fd;
+}
+
+.metric-gray{
+  background:#f8fafc;
+}
+
+.table{
+  border-radius:18px;
+  overflow:hidden;
+  margin-bottom:0;
+}
+
+.table thead th{
+  background:#faf7ff !important;
+  border-bottom:1px solid #eee !important;
+  white-space:nowrap;
+}
+
+.table tbody tr td{
+  transition:.18s ease;
+}
+
+.table tbody tr:hover td{
+  background:#eef5ff !important;
+}
+
+.scroll-area{
+  height:500px;
+  overflow-y:auto;
+}
+
+.badge-soft-success{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.badge-soft-danger{
+  background:#fee2e2;
+  color:#991b1b;
+}
+
+.badge-soft-info{
+  background:#dbeafe;
+  color:#1d4ed8;
+}
+
+.badge-soft-secondary{
+  background:#e5e7eb;
+  color:#374151;
+}
+
+.mobile-movements{
+  display:none;
+}
+
+.mobile-move-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+
+.mobile-move-card:hover{
+  transform:translateY(-2px);
+  transition:.18s ease;
+}
+
+@media(max-width:768px){
+
+  .product-shell{
+    padding:0 8px;
+  }
+
+  .page-title{
+    font-size:1.45rem;
+  }
+
+  .page-card{
+    padding:15px;
+    border-radius:18px;
+  }
+
+  .desktop-table{
+    display:none;
+  }
+
+  .mobile-movements{
+    display:block;
+  }
+
+  .filter-actions{
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .filter-actions .btn{
+    width:100%;
+  }
+
+}
+</style>
+
+
+<div class="product-shell py-3">
+
+<div class="mb-4">
+
+  <div class="page-title">
+    📦 كارت حركة المنتج
+  </div>
+
+  <div class="page-subtitle">
+    متابعة المخزون والأرباح وحركات المنتج
+  </div>
+
+</div>
+
 
   {# ── هيدر المنتج ── #}
-  <div class="card shadow-sm mb-3">
-    <div class="card-body py-2">
+  <div class="page-card mb-3">
+    
       <div class="row g-3 align-items-center">
         <div class="col-md-4">
           <div class="fw-bold fs-5">
             {{ product.name }}
             {% if product.size %}<span class="badge bg-light text-dark border ms-1">{{ product.size }}</span>{% endif %}
-            {% if product.color %}<span class="badge bg-secondary ms-1">{{ product.color }}</span>{% endif %}
+            {% if product.color %}<span class="badge badge-soft-secondary ms-1">{{ product.color }}</span>{% endif %}
           </div>
           {% if product.barcode %}
           <div class="text-muted small">باركود: {{ product.barcode }}</div>
@@ -26,7 +208,7 @@
               <label class="form-label small mb-1">إلى</label>
               <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm">
             </div>
-            <div class="col-md-4 d-flex gap-1">
+            <div class="col-md-4 d-flex gap-2 filter-actions">
               <button class="btn btn-primary btn-sm flex-fill">تطبيق</button>
               <a class="btn btn-outline-secondary btn-sm" href="/products/{{ product.id }}/card">مسح</a>
               <a class="btn btn-outline-success btn-sm"
@@ -41,43 +223,43 @@
   {# ── كروت معلومات المنتج ── #}
   <div class="row g-3 mb-3">
     <div class="col-6 col-md-2">
-      <div class="card text-center border-secondary h-100 py-2">
-        <div class="card-body p-1">
+      <div class="metric-card metric-gray text-center">
+        
           <div class="text-muted" style="font-size:11px;">تكلفة القطعة</div>
-          <div class="fs-6 fw-bold">{{ "{:,.0f}".format(cost_price) }} ج</div>
+          <div class="metric-value ">{{ "{:,.0f}".format(cost_price) }} ج</div>
         </div>
       </div>
     </div>
     <div class="col-6 col-md-2">
-      <div class="card text-center border-primary h-100 py-2">
-        <div class="card-body p-1">
+      <div class="metric-card metric-blue text-center">
+        
           <div class="text-muted" style="font-size:11px;">سعر البيع</div>
-          <div class="fs-6 fw-bold text-primary">{{ "{:,.0f}".format(sale_price) }} ج</div>
+          <div class="metric-value  text-primary">{{ "{:,.0f}".format(sale_price) }} ج</div>
         </div>
       </div>
     </div>
     <div class="col-6 col-md-2">
-      <div class="card text-center border-success h-100 py-2">
-        <div class="card-body p-1">
+      <div class="metric-card metric-green text-center">
+        
           <div class="text-muted" style="font-size:11px;">هامش الربح</div>
-          <div class="fs-6 fw-bold text-success">{{ price_margin }}%</div>
+          <div class="metric-value  text-success">{{ price_margin }}%</div>
         </div>
       </div>
     </div>
     <div class="col-6 col-md-2">
-      <div class="card text-center {{ 'border-danger' if closing < 4 else 'border-secondary' }} h-100 py-2">
-        <div class="card-body p-1">
+      <div class="card text-center metric-card metric-blue text-center">
+        
           <div class="text-muted" style="font-size:11px;">الستوك الحالي</div>
-          <div class="fs-6 fw-bold {{ 'text-danger' if closing < 4 else '' }}">{{ closing }} قطعة</div>
+          <div class="metric-value  {{ 'text-danger' if closing < 4 else '' }}">{{ closing }} قطعة</div>
           <div class="text-muted" style="font-size:10px;">قيمة {{ "{:,.0f}".format(stock_value) }} ج</div>
         </div>
       </div>
     </div>
     <div class="col-6 col-md-2">
-      <div class="card text-center {{ 'border-warning' if wastage_stock > 0 else 'border-secondary' }} h-100 py-2">
-        <div class="card-body p-1">
+      <div class="card text-center metric-card metric-yellow text-center">
+        
           <div class="text-muted" style="font-size:11px;">مخزون الهالك</div>
-          <div class="fs-6 fw-bold {{ 'text-warning' if wastage_stock > 0 else 'text-muted' }}">{{ wastage_stock }} قطعة</div>
+          <div class="metric-value  {{ 'text-warning' if wastage_stock > 0 else 'text-muted' }}">{{ wastage_stock }} قطعة</div>
           {% if wastage_stock > 0 %}
           <div class="text-muted" style="font-size:10px;">قيمة {{ "{:,.0f}".format(wastage_value) }} ج</div>
           {% endif %}
@@ -85,10 +267,10 @@
       </div>
     </div>
     <div class="col-6 col-md-2">
-      <div class="card text-center h-100 py-2">
-        <div class="card-body p-1">
+      <div class="metric-card metric-gray text-center">
+        
           <div class="text-muted" style="font-size:11px;">رصيد أول المدة</div>
-          <div class="fs-6 fw-bold">{{ opening }}</div>
+          <div class="metric-value ">{{ opening }}</div>
         </div>
       </div>
     </div>
@@ -97,36 +279,36 @@
   {# ── كروت ملخص الفترة ── #}
   <div class="row g-3 mb-3">
     <div class="col-6 col-md-3">
-      <div class="card text-center border-success h-100 py-2">
-        <div class="card-body p-1">
+      <div class="metric-card metric-green text-center">
+        
           <div class="text-muted" style="font-size:11px;">إجمالي إيراد المبيعات</div>
-          <div class="fs-6 fw-bold text-success">{{ "{:,.0f}".format(net_sales_value) }} ج</div>
+          <div class="metric-value  text-success">{{ "{:,.0f}".format(net_sales_value) }} ج</div>
           <div class="text-muted" style="font-size:10px;">مباع {{ total_out }} قطعة</div>
         </div>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="card text-center border-warning h-100 py-2">
-        <div class="card-body p-1">
+        
           <div class="text-muted" style="font-size:11px;">تكلفة البضاعة المباعة</div>
-          <div class="fs-6 fw-bold text-warning">{{ "{:,.0f}".format(total_cogs) }} ج</div>
+          <div class="metric-value  text-warning">{{ "{:,.0f}".format(total_cogs) }} ج</div>
         </div>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="card text-center {{ 'border-success' if net_profit >= 0 else 'border-danger' }} h-100 py-2">
-        <div class="card-body p-1">
+        
           <div class="text-muted" style="font-size:11px;">صافي الربح من المنتج</div>
-          <div class="fs-6 fw-bold {{ 'text-success' if net_profit >= 0 else 'text-danger' }}">{{ "{:,.0f}".format(net_profit) }} ج</div>
+          <div class="metric-value  {{ 'text-success' if net_profit >= 0 else 'text-danger' }}">{{ "{:,.0f}".format(net_profit) }} ج</div>
           <div class="text-muted" style="font-size:10px;">هامش {{ profit_margin }}%</div>
         </div>
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="card text-center border-secondary h-100 py-2">
-        <div class="card-body p-1">
+      <div class="metric-card metric-gray text-center">
+        
           <div class="text-muted" style="font-size:11px;">إجمالي الإضافات</div>
-          <div class="fs-6 fw-bold">+{{ total_in }} قطعة</div>
+          <div class="metric-value ">+{{ total_in }} قطعة</div>
           {% if total_ret_value > 0 %}
           <div class="text-muted" style="font-size:10px;">مرتجعات {{ "{:,.0f}".format(total_ret_value) }} ج</div>
           {% endif %}
@@ -136,13 +318,13 @@
   </div>
 
   {# ── جدول الحركات ── #}
-  <div class="card shadow-sm">
-    <div class="card-header fw-bold bg-dark text-white d-flex justify-content-between">
+  <div class="page-card">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
       <span>📋 حركات المخزون</span>
-      <span class="badge bg-secondary">{{ rows|length }} حركة</span>
+      <span class="badge badge-soft-secondary-subtle text-dark border">{{ rows|length }} حركة</span>
     </div>
-    <div style="height:480px; overflow-y:auto;">
-      <table class="table table-sm table-bordered align-middle mb-0">
+    <div class="scroll-area desktop-table">
+      <table class="table table-sm align-middle mb-0">
         <thead style="position:sticky; top:0; z-index:2; background:#212529;">
           <tr>
             <th style="min-width:140px; color:#fff;">التاريخ</th>
@@ -168,11 +350,11 @@
               <td style="font-size:13px;">{{ r.dt }}</td>
               <td>
                 <span class="badge
-                  {% if r.kind=='إضافة' %}bg-success
-                  {% elif r.kind=='بيع' %}bg-danger
-                  {% elif r.kind=='مرتجع' %}bg-info
-                  {% elif r.kind=='تسوية' %}bg-secondary
-                  {% else %}bg-secondary{% endif %}">
+                  {% if r.kind=='إضافة' %}badge-soft-success
+                  {% elif r.kind=='بيع' %}badge-soft-danger
+                  {% elif r.kind=='مرتجع' %}badge-soft-info
+                  {% elif r.kind=='تسوية' %}badge-soft-secondary
+                  {% else %}badge-soft-secondary{% endif %}">
                   {{ r.kind }}
                 </span>
               </td>
@@ -200,12 +382,108 @@
             </tr>
             {% endfor %}
           {% else %}
-            <tr><td colspan="9" class="text-center text-muted py-4">لا توجد حركات في الفترة المختارة.</td></tr>
+            <tr><td colspan="9" class="text-center text-muted py-4">🧾 لا توجد حركات في الفترة المحددة</td></tr>
           {% endif %}
         </tbody>
       </table>
     </div>
   </div>
+
+</div>
+
+<!-- Mobile Movement Cards -->
+<div class="mobile-movements mt-3">
+
+{% if rows %}
+
+{% for r in rows %}
+
+<div class="mobile-move-card">
+
+  <div class="d-flex justify-content-between align-items-start mb-3">
+
+    <div>
+
+      <div class="fw-bold">
+        {{ r.kind }}
+      </div>
+
+      <div class="small text-muted">
+        {{ r.dt }}
+      </div>
+
+    </div>
+
+    <div class="fw-bold {{ 'text-success' if r.qty > 0 else 'text-danger' }}">
+      {% if r.qty > 0 %}+{% endif %}{{ r.qty }}
+    </div>
+
+  </div>
+
+  <div class="small mb-2">
+    المرجع:
+    {% if r.extra.invoice_id %}
+      <a href="/invoices/{{ r.extra.invoice_id }}" target="_blank">
+        {{ r.ref }}
+      </a>
+    {% else %}
+      {{ r.ref }}
+    {% endif %}
+  </div>
+
+  <div class="row text-center mb-3">
+
+    <div class="col-4">
+      <div class="small text-muted">السعر</div>
+      <div class="fw-bold">
+        {% if r.unit_price > 0 %}
+          {{ "{:,.0f}".format(r.unit_price) }}
+        {% else %}
+          —
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="col-4">
+      <div class="small text-muted">التكلفة</div>
+      <div class="fw-bold">
+        {% if r.unit_cost > 0 %}
+          {{ "{:,.0f}".format(r.unit_cost) }}
+        {% else %}
+          —
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="col-4">
+      <div class="small text-muted">الرصيد</div>
+      <div class="fw-bold">
+        {{ r.running }}
+      </div>
+    </div>
+
+  </div>
+
+  {% if r.note %}
+  <div class="small text-muted">
+    {{ r.note }}
+  </div>
+  {% endif %}
+
+</div>
+
+{% endfor %}
+
+{% else %}
+
+<div class="text-center text-muted py-5">
+  🧾 لا توجد حركات في الفترة المحددة
+</div>
+
+{% endif %}
+
+</div>
+
 
 </div>
 {% endblock %}

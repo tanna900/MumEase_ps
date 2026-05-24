@@ -1,19 +1,169 @@
 {% extends "base.html" %}
 {% block content %}
+
+<style>
+
+/* =========================
+   Cash Modern UI
+========================= */
+
+.cash-shell{
+  max-width:1450px;
+  margin:auto;
+}
+
+.page-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:22px;
+  padding:18px;
+  box-shadow:0 2px 10px rgba(0,0,0,.04);
+}
+
+.stat-card{
+  border-radius:20px !important;
+  border:1px solid #eee !important;
+  box-shadow:0 2px 10px rgba(0,0,0,.04);
+  transition:.18s ease;
+}
+
+.stat-card:hover{
+  transform:translateY(-2px);
+}
+
+.stat-card .stat-value{
+  font-size:2rem !important;
+  font-weight:800 !important;
+}
+
+.table{
+  border-radius:18px;
+  overflow:hidden;
+}
+
+.table thead th{
+  background:#faf7ff !important;
+  border-bottom:1px solid #eee !important;
+  white-space:nowrap;
+}
+
+.table tbody tr td{
+  transition:.18s ease;
+}
+
+.table tbody tr:hover td{
+  background:#eef5ff !important;
+}
+
+.form-control,
+.form-select{
+  border-radius:14px !important;
+  min-height:44px;
+}
+
+.badge{
+  border-radius:999px;
+  padding:7px 12px;
+}
+
+.pagination{
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.pagination .page-link{
+  border-radius:10px !important;
+  min-width:42px;
+  text-align:center;
+}
+
+.mobile-cards{
+  display:none;
+}
+
+.section-title{
+  font-size:1.05rem;
+  font-weight:700;
+  margin-bottom:14px;
+}
+
+@media(max-width:768px){
+
+  .cash-shell{
+    padding:0 8px;
+  }
+
+  .desktop-table{
+    display:none;
+  }
+
+  .mobile-cards{
+    display:block;
+  }
+
+  .page-card{
+    padding:15px;
+    border-radius:18px;
+  }
+
+  .top-actions{
+    flex-direction:column;
+    align-items:stretch !important;
+    gap:10px;
+  }
+
+  .top-actions .btn{
+    width:100%;
+  }
+
+  .stat-card .stat-value{
+    font-size:1.45rem !important;
+  }
+
+  .sub-wallet-table{
+    display:none;
+  }
+
+  .mobile-wallet-card{
+    background:#fff;
+    border:1px solid #eee;
+    border-radius:16px;
+    padding:14px;
+    margin-bottom:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+
+  .mobile-wallet-card:hover{
+    transform:translateY(-2px);
+    transition:.18s ease;
+  }
+
+  .mobile-cash-card{
+    background:#fff;
+    border:1px solid #eee;
+    border-radius:18px;
+    padding:16px;
+    margin-bottom:14px;
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+
+}
+</style>
+
 {% macro n(x) -%}
   {{ "{:,.0f}".format((x or 0)|float) }}
 {%- endmacro %}
 
-<h5 class="mb-3">💰 الخزنة</h5>
+<div class="cash-shell"><h4 class="mb-3 fw-bold">💰 الخزنة</h4>
 
 {% if request.query_params.get("msg") %}
   <div class="alert alert-info">{{ request.query_params.get("msg") }}</div>
 {% endif %}
 
 <!-- ============ تنبيه أرصدة الخزن الفرعية + دفعات الشحن غير المربوطة ============ -->
-<div class="row g-2">
+<div class="row g-3">
   <div class="col-md-8">
-    <div class="card p-2 h-100">
+    <div class="page-card h-100">
       <div class="d-flex align-items-center justify-content-between mb-2">
         <div class="fw-bold"><i class="bi bi-wallet2"></i> الخزن الفرعية</div>
         {% if total_sub_balance and total_sub_balance > 0 %}
@@ -22,7 +172,7 @@
       </div>
 
       {% if sub_balances and sub_balances|length > 0 %}
-        <div class="table-responsive">
+        <div class="table-responsive sub-wallet-table">
           <table class="table table-sm align-middle mb-0">
             <thead>
               <tr class="text-muted small">
@@ -76,11 +226,95 @@
       {% else %}
         <div class="text-muted small">لا توجد خزن فرعية حتى الآن.</div>
       {% endif %}
+
+<!-- Mobile Wallet Cards -->
+<div class="mobile-wallets d-block d-md-none mt-3">
+
+{% for w in sub_balances %}
+
+<div class="mobile-wallet-card">
+
+  <div class="d-flex justify-content-between align-items-center mb-2">
+
+    <div class="fw-bold">
+      {{ w.label }}
+    </div>
+
+    {% if w.balance and w.balance > 0 %}
+      <span class="badge bg-warning text-dark">
+        غير مُرحّل
+      </span>
+    {% else %}
+      <span class="badge bg-success">
+        لا يوجد رصيد
+      </span>
+    {% endif %}
+
+  </div>
+
+  <div class="fs-4 fw-bold mb-3">
+    {{ n(w.balance) }}
+  </div>
+
+  <form method="post"
+        action="/cash/transfer-sub"
+        class="row g-2">
+
+    <input type="hidden" name="source_key" value="{{ w.key }}">
+
+    <div class="col-12">
+      <input type="number"
+             step="1"
+             min="0"
+             name="amount"
+             class="form-control"
+             placeholder="المبلغ">
+    </div>
+
+    <div class="col-12">
+      <input type="date"
+             name="date"
+             class="form-control">
+    </div>
+
+    <div class="col-12">
+      <input type="text"
+             name="note"
+             class="form-control"
+             placeholder="ملاحظة">
+    </div>
+
+    <div class="col-12 d-grid gap-2">
+
+      <button class="btn btn-primary">
+        🔄 تحويل
+      </button>
+
+      {% if w.balance and w.balance > 0 %}
+      <button class="btn btn-outline-dark"
+              type="submit"
+              onclick="this.form.amount.value='0'">
+
+        تحويل كل الرصيد
+
+      </button>
+      {% endif %}
+
+    </div>
+
+  </form>
+
+</div>
+
+{% endfor %}
+
+</div>
+
     </div>
   </div>
 
   <div class="col-md-4">
-    <div class="card p-2 h-100">
+    <div class="page-card h-100">
       <div class="fw-bold mb-2"><i class="bi bi-truck"></i> دفعات شركات الشحن غير المربوطة</div>
       {% if unlinked_count and unlinked_count > 0 %}
         <div class="alert alert-warning py-2 mb-2">
@@ -98,7 +332,7 @@
 <!-- أزرار/إحصائيات أعلى -->
 <div class="row g-2 mt-2">
   <div class="col-md-3">
-    <div class="card p-2">
+    <div class="page-card">
       <div class="text-muted small">الرصيد الافتتاحي</div>
       <div class="fs-5 fw-bold">{{ n(opening) }}</div>
 
@@ -113,7 +347,7 @@
 
   <div class="col-md-3">
     <a class="text-decoration-none" href="/cash?category=&q={{ q }}&date_from={{ date_from }}&date_to={{ date_to }}">
-      <div class="card p-3 h-100 stat-card">
+      <div class="page-card p-3 h-100 stat-card">
   <div class="stat-label">إجمالي الإيرادات</div>
   <div class="stat-value text-success">{{ n(total_in) }}</div>
 </div>
@@ -122,7 +356,7 @@
 
   <div class="col-md-3">
     <a class="text-decoration-none" href="/cash?category=&q={{ q }}&date_from={{ date_from }}&date_to={{ date_to }}">
-      <div class="card p-3 h-100 stat-card">
+      <div class="page-card p-3 h-100 stat-card">
   <div class="stat-label">إجمالي المصروفات</div>
   <div class="stat-value text-danger">{{ n(total_out) }}</div>
 </div>
@@ -130,7 +364,7 @@
   </div>
 
   <div class="col-md-3">
-    <div class="card p-3 h-100 stat-card">
+    <div class="page-card p-3 h-100 stat-card">
   <div class="stat-label">صافي الخزنة</div>
   <div class="stat-value">{{ n(balance) }}</div>
 </div>
@@ -288,7 +522,7 @@
 
 
 <!-- الجدول -->
-<div class="table-responsive mt-2">
+<div class="table-responsive mt-3 desktop-table">
   <table class="table table-sm table-bordered align-middle">
     <thead class="table-light">
       <tr>
@@ -372,10 +606,90 @@
   </table>
 </div>
 
+
+<!-- Mobile Cash Cards -->
+<div class="mobile-cards mt-3">
+
+{% for r in rows %}
+
+<div class="mobile-cash-card">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+
+    <div>
+
+      {% if r.type=='IN' %}
+        <span class="badge bg-success">إيراد</span>
+      {% else %}
+        <span class="badge bg-danger">مصروف</span>
+      {% endif %}
+
+    </div>
+
+    <div class="small text-muted">
+      {{ r.date }}
+    </div>
+
+  </div>
+
+  <div class="fs-3 fw-bold mb-2 {% if r.type=='IN' %}text-success{% else %}text-danger{% endif %}">
+    {{ n(r.amount) }}
+  </div>
+
+  <div class="fw-semibold mb-1">
+    {{ r.category }}
+  </div>
+
+  <div class="small text-muted mb-3">
+    {{ r.note or 'بدون ملاحظة' }}
+  </div>
+
+  <div class="small text-muted mb-3">
+    الرصيد بعد الحركة:
+    <strong>{{ n(running_by_id.get(r.id)) }}</strong>
+  </div>
+
+  <div class="d-grid gap-2">
+
+    <button
+      type="button"
+      class="btn btn-outline-primary btnEditCash"
+      data-bs-toggle="modal"
+      data-bs-target="#editCashModal"
+      data-eid="{{ r.id }}"
+      data-type="{{ r.type }}"
+      data-amount="{{ (r.amount or 0)|int }}"
+      data-date="{{ r.date }}"
+      data-note="{{ r.note or '' }}"
+    >
+      ✏️ تعديل
+    </button>
+
+    <form method="post"
+          action="/cash/delete"
+          onsubmit="return confirm('حذف الحركة؟');">
+
+      <input type="hidden" name="eid" value="{{ r.id }}">
+
+      <button class="btn btn-outline-danger w-100">
+        🗑️ حذف
+      </button>
+
+    </form>
+
+  </div>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+
 <!-- ===== ترقيم الصفحات ===== -->
 {% if pages and pages > 1 %}
 <nav aria-label="pagination">
-  <ul class="pagination pagination-sm justify-content-center">
+  <ul class="pagination justify-content-center mb-0">
     {% set cur = page or 1 %}
     {% set pp = per_page or 15 %}
 
@@ -389,6 +703,10 @@
           per_page=pp
       ) }}
     {%- endmacro %}
+
+    <li class="page-item {% if cur <= 1 %}disabled{% endif %}">
+      <a class="page-link" href="{{ page_url(1) }}">الأولى</a>
+    </li>
 
     <li class="page-item {% if cur <= 1 %}disabled{% endif %}">
       <a class="page-link" href="{{ page_url(cur-1) }}" tabindex="-1">السابق</a>
@@ -420,9 +738,18 @@
     <li class="page-item {% if cur >= pages %}disabled{% endif %}">
       <a class="page-link" href="{{ page_url(cur+1) }}">التالي</a>
     </li>
+
+    <li class="page-item {% if cur >= pages %}disabled{% endif %}">
+      <a class="page-link" href="{{ page_url(pages) }}">الأخيرة</a>
+    </li>
   </ul>
 </nav>
 {% endif %}
+
+<div class="text-center text-muted small mt-3 mb-3">
+  صفحة {{ page or 1 }} من {{ pages or 1 }}
+</div>
+
 <!-- ===== /ترقيم الصفحات ===== -->
 
 <!-- ✅ Modal تعديل الحركة -->
@@ -437,7 +764,7 @@
       <div class="modal-body">
         <input type="hidden" name="eid" id="edit_eid">
 
-        <div class="row g-2">
+        <div class="row g-3">
           <div class="col-md-4">
             <label class="form-label small">النوع</label>
             <select name="type" id="edit_type" class="form-select form-select-sm" required>
@@ -492,3 +819,5 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 {% endblock %}
+
+</div>

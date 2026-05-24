@@ -1,7 +1,35 @@
 {% extends "base.html" %}
 {% block content %}
+
+<style>
+.settlement-shell{max-width:1500px;margin:auto}
+.page-title{font-size:1.9rem;font-weight:900}
+.page-subtitle{color:#6c757d;margin-top:4px}
+.page-card,.card{background:#fff;border:1px solid #eee!important;border-radius:22px!important;box-shadow:0 2px 10px rgba(0,0,0,.04)!important}
+.card-header{background:#faf7ff!important;border-bottom:1px solid #eee!important}
+.form-control,.form-select{border-radius:14px!important;min-height:46px}
+.table{border-radius:18px;overflow:hidden}
+.table thead th{background:#faf7ff!important;border-bottom:1px solid #eee!important}
+.table tbody tr td{transition:.18s ease}
+.table tbody tr:hover td{background:#eef5ff!important}
+.pagination .page-link{border-radius:12px!important;margin-inline:2px}
+.alert{border-radius:18px}
+.btn{border-radius:14px}
+@media(max-width:768px){
+.settlement-shell{padding:0 8px}
+.page-title{font-size:1.45rem}
+.card,.page-card{border-radius:18px!important}
+.table{font-size:.9rem}
+}
+</style>
+
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h4>🧾 معاينة تسوية يوم: {{ s_date }} <span class="badge bg-secondary ms-2">{{ serial_str }}</span></h4>
+  <div class="settlement-shell">
+
+<div class="mb-4">
+<div class="page-title">🧾 معاينة التسوية</div>
+<div class="page-subtitle">مراجعة البيانات قبل التقفيل النهائي</div>
+</div>
   <a href="/settlements/new?date={{ s_date }}" class="btn btn-secondary">تعديل الإدخالات</a>
 </div>
 
@@ -11,10 +39,10 @@
       <div class="card-header">ملخص</div>
       <div class="card-body p-0">
         <table class="table mb-0">
-          <tr><td>إجمالي المبيعات (S)</td><td class="text-end">{{ '%.2f'|format(sales_total) }}</td></tr>
-          <tr><td>إجمالي المرتجعات (R)</td><td class="text-end">- {{ '%.2f'|format(returns_total) }}</td></tr>
-          <tr class="table-warning"><td>مصروفات أخرى</td><td class="text-end">- {{ '%.2f'|format(expenses_total) }}</td></tr>
-          <tr class="table-info"><td><b>الصافي</b></td><td class="text-end"><b>{{ '%.2f'|format(net_total) }}</b></td></tr>
+          <tr><td>إجمالي المبيعات (S)</td><td class="text-end">{{ '%.0f'|format(sales_total) }}</td></tr>
+          <tr><td>إجمالي المرتجعات (R)</td><td class="text-end">- {{ '%.0f'|format(returns_total) }}</td></tr>
+          <tr class="table-warning"><td>مصروفات أخرى</td><td class="text-end">- {{ '%.0f'|format(expenses_total) }}</td></tr>
+          <tr class="table-info"><td><b>الصافي</b></td><td class="text-end"><b>{{ '%.0f'|format(net_total) }}</b></td></tr>
         </table>
       </div>
     </div>
@@ -28,10 +56,10 @@
           <thead class="table-light"><tr><th>المبلغ</th><th>الشرح</th></tr></thead>
           <tbody>
             {% for e in expenses %}
-            <tr><td>{{ '%.2f'|format(e.amount) }}</td><td>{{ e.note }}</td></tr>
+            <tr><td>{{ '%.0f'|format(e.amount) }}</td><td>{{ e.note }}</td></tr>
             {% else %}<tr><td colspan="2" class="text-muted">لا توجد مصروفات.</td></tr>{% endfor %}
           </tbody>
-          <tfoot class="table-light"><tr><th>الإجمالي</th><th>{{ '%.2f'|format(expenses_total) }}</th></tr></tfoot>
+          <tfoot class="table-light"><tr><th>الإجمالي</th><th>{{ '%.0f'|format(expenses_total) }}</th></tr></tfoot>
         </table>
       </div>
     </div>
@@ -49,9 +77,9 @@
             {% for inv in inv_sales %}
             <tr>
               <td>{{ inv.id }}</td>
-              <td>{{ '%.2f'|format(inv.total or 0) }}</td>
-              <td>{{ '%.2f'|format(inv.actual_shipping_cost or 0) }}</td>
-              <td><a class="btn btn-sm btn-outline-primary" href="/invoices/{{ inv.id }}" target="_blank">فتح</a></td>
+              <td>{{ '%.0f'|format(inv.total or 0) }}</td>
+              <td>{{ '%.0f'|format(inv.actual_shipping_cost or 0) }}</td>
+              <td><a class="btn  btn-outline-primary" href="/invoices/{{ inv.id }}" target="_blank">فتح</a></td>
             </tr>
             {% else %}<tr><td colspan="4" class="text-muted">لا توجد فواتير بيع.</td></tr>{% endfor %}
           </tbody>
@@ -70,9 +98,9 @@
             {% for inv in inv_returns %}
             <tr>
               <td>{{ inv.id }}</td>
-              <td>{{ '%.2f'|format(inv.total or 0) }}</td>
-              <td>{{ '%.2f'|format(inv.return_shipping_fee or 0) }}</td>
-              <td><a class="btn btn-sm btn-outline-primary" href="/invoices/{{ inv.id }}" target="_blank">فتح</a></td>
+              <td>{{ '%.0f'|format(inv.total or 0) }}</td>
+              <td>{{ '%.0f'|format(inv.return_shipping_fee or 0) }}</td>
+              <td><a class="btn  btn-outline-primary" href="/invoices/{{ inv.id }}" target="_blank">فتح</a></td>
             </tr>
             {% else %}<tr><td colspan="4" class="text-muted">لا توجد فواتير مرتجع.</td></tr>{% endfor %}
           </tbody>
@@ -98,4 +126,5 @@
   <button type="submit" class="btn btn-danger">قفل اليومية وتسجيلها</button>
   <a href="/settlements/new?date={{ s_date }}" class="btn btn-outline-secondary">إلغاء</a>
 </form>
+</div>
 {% endblock %}

@@ -1,16 +1,141 @@
 {% extends "base.html" %}
 {% block content %}
-<h4 class="mb-3">🗓️ التسويات اليومية</h4>
 
-<div class="d-flex gap-2 mb-3">
+<style>
+
+.settle-shell{
+  max-width:1350px;
+  margin:auto;
+}
+
+.page-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:22px;
+  padding:18px;
+  box-shadow:0 2px 10px rgba(0,0,0,.04);
+}
+
+.page-title{
+  font-size:1.7rem;
+  font-weight:800;
+  margin-bottom:4px;
+}
+
+.page-subtitle{
+  color:#6c757d;
+}
+
+.table{
+  border-radius:18px;
+  overflow:hidden;
+}
+
+.table thead th{
+  background:#faf7ff;
+  border-bottom:1px solid #eee;
+  white-space:nowrap;
+}
+
+.table tbody tr td{
+  transition:.18s ease;
+}
+
+.table tbody tr:hover td{
+  background:#eef5ff !important;
+}
+
+.form-control{
+  border-radius:14px !important;
+  min-height:46px;
+}
+
+.money-positive{
+  color:#198754;
+  font-weight:800;
+}
+
+.money-negative{
+  color:#dc3545;
+  font-weight:700;
+}
+
+.mobile-cards{
+  display:none;
+}
+
+.mobile-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+
+.mobile-card:hover{
+  transform:translateY(-2px);
+  transition:.18s ease;
+}
+
+@media(max-width:768px){
+
+  .settle-shell{
+    padding:0 8px;
+  }
+
+  .desktop-table{
+    display:none;
+  }
+
+  .mobile-cards{
+    display:block;
+  }
+
+  .top-bar{
+    flex-direction:column;
+    align-items:stretch !important;
+    gap:10px;
+  }
+
+  .top-bar .btn{
+    width:100%;
+  }
+
+  .page-card{
+    padding:15px;
+    border-radius:18px;
+  }
+
+  .page-title{
+    font-size:1.35rem;
+  }
+
+}
+</style>
+
+
+<div class="settle-shell">
+
+<div class="mb-3">
+  <div class="page-title">
+    🗓️ التسويات اليومية
+  </div>
+
+  <div class="page-subtitle">
+    متابعة وتقفيل الأرباح اليومية
+  </div>
+</div>
+
+
+<div class="page-card mb-3"><div class="d-flex gap-2 align-items-center flex-wrap top-bar">
   <a class="btn btn-primary" href="/settlements/close?date={{ today }}">تقفيل يومية اليوم ({{ today }})</a>
   <form class="d-flex gap-2" method="get" action="/settlements/close">
     <input type="date" class="form-control" name="date" required>
     <button class="btn btn-outline-secondary">اذهب</button>
-  </form>
-</div>
+  </form></div></div>
 
-<div class="table-responsive">
+<div class="page-card desktop-table"><div class="table-responsive">
   <table class="table table-bordered align-middle">
     <thead>
       <tr class="text-center">
@@ -26,10 +151,18 @@
       {% for r in rows %}
       <tr>
         <td class="text-center">{{ r.date }}</td>
-        <td class="text-end">{{ '%.2f'|format(r.sales_total or 0) }}</td>
-        <td class="text-end text-danger">-{{ '%.2f'|format(r.returns_total or 0) }}</td>
-        <td class="text-end text-danger">-{{ '%.2f'|format(r.expenses_total or 0) }}</td>
-        <td class="text-end fw-bold">{{ '%.2f'|format((r.net_total or 0)) }}</td>
+        <td class="text-end">{{ '%.0f'|format(r.sales_total or 0) }}</td>
+        <td class="text-end text-danger">-{{ '%.0f'|format(r.returns_total or 0) }}</td>
+        <td class="text-end text-danger">-{{ '%.0f'|format(r.expenses_total or 0) }}</td>
+        <td class="text-end fw-bold
+{% if (r.net_total or 0) >= 0 %}
+money-positive
+{% else %}
+money-negative
+{% endif %}
+">
+{{ '%.0f'|format((r.net_total or 0)) }}
+</td>
         <td class="text-center">
           <a class="btn btn-sm btn-outline-secondary" href="/settlements/close?date={{ r.date }}">عرض</a>
           <form method="post" action="/settlements/delete" class="d-inline" onsubmit="return confirm('حذف التسوية لليوم {{ r.date }}؟');">
@@ -39,9 +172,118 @@
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="6" class="text-center text-muted">لا توجد تسويات بعد</td></tr>
+      <tr><td colspan="6" class="text-center text-muted">🧾 لا توجد تسويات حتى الآن</td></tr>
       {% endfor %}
     </tbody>
-  </table>
+  </table></div></div>
+
+<!-- Mobile Cards -->
+<div class="mobile-cards mt-3">
+
+{% for r in rows %}
+
+<div class="mobile-card">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+
+    <div class="fw-bold">
+      {{ r.date }}
+    </div>
+
+    <div class="
+      fs-5 fw-bold
+      {% if (r.net_total or 0) >= 0 %}
+        money-positive
+      {% else %}
+        money-negative
+      {% endif %}
+    ">
+      {{ '%.0f'|format((r.net_total or 0)) }}
+    </div>
+
+  </div>
+
+  <div class="row text-center mb-3">
+
+    <div class="col-4">
+
+      <div class="small text-muted">
+        المبيعات
+      </div>
+
+      <div class="fw-bold text-success">
+        {{ '%.0f'|format(r.sales_total or 0) }}
+      </div>
+
+    </div>
+
+    <div class="col-4">
+
+      <div class="small text-muted">
+        المرتجعات
+      </div>
+
+      <div class="fw-bold text-danger">
+        -{{ '%.0f'|format(r.returns_total or 0) }}
+      </div>
+
+    </div>
+
+    <div class="col-4">
+
+      <div class="small text-muted">
+        المصروفات
+      </div>
+
+      <div class="fw-bold text-danger">
+        -{{ '%.0f'|format(r.expenses_total or 0) }}
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="small text-muted text-center mb-3">
+    صافي اليوم
+  </div>
+
+  <div class="d-grid gap-2">
+
+    <a class="btn btn-outline-secondary"
+       href="/settlements/close?date={{ r.date }}">
+
+      👁️ عرض
+
+    </a>
+
+    <form method="post"
+          action="/settlements/delete"
+          onsubmit="return confirm('حذف التسوية لليوم {{ r.date }}؟');">
+
+      <input type="hidden"
+             name="sid"
+             value="{{ r.id }}">
+
+      <button class="btn btn-outline-danger w-100">
+        🗑️ حذف
+      </button>
+
+    </form>
+
+  </div>
+
+</div>
+
+{% else %}
+
+<div class="text-center text-muted py-5">
+  🧾 لا توجد تسويات حتى الآن
+</div>
+
+{% endfor %}
+
+</div>
+
+
 </div>
 {% endblock %}

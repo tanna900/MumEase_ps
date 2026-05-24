@@ -1,8 +1,142 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container-fluid py-3" style="max-width:800px;">
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <h4 class="fw-bold mb-0">{{ '✏️ تعديل مستخدم' if user else '➕ مستخدم جديد' }}</h4>
+
+<style>
+
+.user-shell{
+  max-width:1200px;
+  margin:auto;
+}
+
+.page-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:22px;
+  padding:20px;
+  box-shadow:0 2px 10px rgba(0,0,0,.04);
+}
+
+.page-title{
+  font-size:1.7rem;
+  font-weight:800;
+}
+
+.page-subtitle{
+  color:#6c757d;
+  margin-top:4px;
+}
+
+.form-control{
+  border-radius:14px !important;
+  min-height:48px;
+}
+
+.form-control[readonly]{
+  background:#f3f4f6 !important;
+  border-style:dashed;
+  opacity:.95;
+}
+
+.form-label{
+  font-weight:700;
+}
+
+.form-check{
+  padding:10px 0;
+}
+
+.form-check-input{
+  width:1.15rem;
+  height:1.15rem;
+  margin-top:.15rem;
+}
+
+.permission-group{
+  border:1px solid #eee;
+  border-radius:18px;
+  overflow:hidden;
+  transition:.18s ease;
+  background:#fff;
+}
+
+.permission-group:hover{
+  transform:translateY(-2px);
+  box-shadow:0 4px 14px rgba(0,0,0,.05);
+}
+
+.permission-header{
+  background:#faf7ff;
+  border-bottom:1px solid #eee;
+  padding:12px 14px;
+}
+
+.permission-body{
+  padding:12px 16px;
+}
+
+.permissions-disabled{
+  opacity:.65 !important;
+}
+
+.save-btn{
+  min-height:54px;
+  border-radius:16px;
+  font-size:1.05rem;
+  font-weight:800;
+}
+
+@media(max-width:768px){
+
+  .user-shell{
+    padding:0 8px;
+  }
+
+  .top-bar{
+    flex-direction:column;
+    align-items:stretch !important;
+    gap:10px;
+  }
+
+  .top-bar .btn{
+    width:100%;
+  }
+
+  .page-card{
+    padding:16px;
+    border-radius:18px;
+  }
+
+  .page-title{
+    font-size:1.35rem;
+  }
+
+  .permission-header{
+    flex-direction:column;
+    align-items:flex-start !important;
+    gap:8px;
+  }
+
+  .save-btn{
+    width:100%;
+  }
+
+}
+</style>
+
+<div class="user-shell py-3">
+  
+<div class="d-flex align-items-center justify-content-between mb-4 top-bar">
+
+  <div>
+    <div class="page-title">
+
+    <h4 class="fw-bold mb-0">{{ '✏️ تعديل مستخدم' if user else '➕ مستخدم جديد' }}</div>
+
+<div class="page-subtitle">
+  إدارة بيانات وصلاحيات المستخدم
+</div>
+
+</div>
     <a href="/admin/users" class="btn btn-outline-secondary btn-sm">← رجوع</a>
   </div>
 
@@ -11,23 +145,23 @@
   {% endif %}
 
   <form method="post" action="{{ '/admin/users/' + user.id|string + '/edit' if user else '/admin/users/new' }}">
-    <div class="card shadow-sm mb-4">
-      <div class="card-header fw-bold bg-dark text-white">بيانات المستخدم</div>
-      <div class="card-body">
+    <div class="page-card mb-4">
+      <div class="fw-bold fs-5 mb-4">👤 بيانات المستخدم</div>
+      
         <div class="row g-3">
-          <div class="col-md-4">
+          <div class="col-lg-4 col-md-6">
             <label class="form-label fw-semibold">اسم المستخدم (للدخول)</label>
             <input type="text" name="username" class="form-control"
                    value="{{ user.username if user else '' }}"
                    {{ 'readonly' if user else 'required' }}>
             {% if user %}<div class="form-text text-muted">مش ممكن يتغير</div>{% endif %}
           </div>
-          <div class="col-md-4">
+          <div class="col-lg-4 col-md-6">
             <label class="form-label fw-semibold">الاسم الظاهر</label>
             <input type="text" name="display_name" class="form-control" required
                    value="{{ user.display_name if user else '' }}">
           </div>
-          <div class="col-md-4">
+          <div class="col-lg-4 col-md-6">
             <label class="form-label fw-semibold">{{ 'باسورد جديد (اتركه فاضي لو مش عايز تغيره)' if user else 'الباسورد' }}</label>
             <input type="password" name="password" class="form-control"
                    {{ '' if user else 'required' }} minlength="6">
@@ -49,29 +183,29 @@
           </div>
           {% endif %}
         </div>
-      </div>
+      
     </div>
 
     {# ── الصلاحيات ── #}
-    <div class="card shadow-sm mb-4" id="permsCard">
-      <div class="card-header fw-bold bg-dark text-white d-flex justify-content-between align-items-center">
-        <span>🔐 الصلاحيات</span>
+    <div class="page-card mb-4" id="permsCard">
+      <div class="d-flex justify-content-between align-items-center mb-4 permission-header">
+        <div class="fw-bold fs-5">🔐 الصلاحيات</div>
         <div class="d-flex gap-2">
           <button type="button" class="btn btn-sm btn-outline-light" onclick="toggleAll(true)">تحديد الكل</button>
           <button type="button" class="btn btn-sm btn-outline-light" onclick="toggleAll(false)">إلغاء الكل</button>
         </div>
       </div>
-      <div class="card-body">
-        <div class="row g-4">
+      
+        <div class="row g-3">
           {% for group_name, group_perms in PERMISSION_GROUPS.items() %}
-          <div class="col-md-4">
-            <div class="card border-secondary h-100">
-              <div class="card-header bg-secondary bg-opacity-10 fw-semibold d-flex justify-content-between align-items-center py-1">
+          <div class="col-lg-4 col-md-6">
+            <div class="permission-group h-100">
+              <div class="permission-header d-flex justify-content-between align-items-center">
                 <span>{{ group_name }}</span>
                 <button type="button" class="btn btn-sm btn-link p-0 text-secondary"
                         onclick="toggleGroup('{{ group_name }}')">تحديد الكل</button>
               </div>
-              <div class="card-body py-2 px-3">
+              <div class="permission-body">
                 {% for perm in group_perms %}
                 <div class="form-check">
                   <input class="form-check-input perm-cb group-{{ group_name }}" type="checkbox"
@@ -90,17 +224,17 @@
       </div>
     </div>
 
-    <button type="submit" class="btn btn-success px-5 fw-bold">💾 حفظ</button>
+    <button type="submit" class="btn btn-success px-5 save-btn">💾 حفظ</button>
   </form>
 </div>
 
 <script>
 // إخفاء/إظهار الصلاحيات لو Admin
 document.getElementById('isAdmin').addEventListener('change', function() {
-  document.getElementById('permsCard').style.opacity = this.checked ? '0.4' : '1';
+  document.getElementById('permsCard').classList.toggle('permissions-disabled', this.checked);
 });
 if (document.getElementById('isAdmin').checked) {
-  document.getElementById('permsCard').style.opacity = '0.4';
+  document.getElementById('permsCard').classList.add('permissions-disabled');
 }
 
 function toggleAll(check) {

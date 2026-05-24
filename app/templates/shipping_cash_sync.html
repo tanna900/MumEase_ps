@@ -1,5 +1,28 @@
 {% extends "base.html" %}
 {% block content %}
+
+<style>
+.settlement-shell{max-width:1500px;margin:auto}
+.page-title{font-size:1.9rem;font-weight:900}
+.page-subtitle{color:#6c757d;margin-top:4px}
+.page-card,.card{background:#fff;border:1px solid #eee!important;border-radius:22px!important;box-shadow:0 2px 10px rgba(0,0,0,.04)!important}
+.card-header{background:#faf7ff!important;border-bottom:1px solid #eee!important}
+.form-control,.form-select{border-radius:14px!important;min-height:46px}
+.table{border-radius:18px;overflow:hidden}
+.table thead th{background:#faf7ff!important;border-bottom:1px solid #eee!important}
+.table tbody tr td{transition:.18s ease}
+.table tbody tr:hover td{background:#eef5ff!important}
+.pagination .page-link{border-radius:12px!important;margin-inline:2px}
+.alert{border-radius:18px}
+.btn{border-radius:14px}
+@media(max-width:768px){
+.settlement-shell{padding:0 8px}
+.page-title{font-size:1.45rem}
+.card,.page-card{border-radius:18px!important}
+.table{font-size:.9rem}
+}
+</style>
+
 <style>
   /* جدول الدفعات المُرحّلة */
   .linked-table th,
@@ -21,7 +44,12 @@
   .linked-table .col-action { width: 60px; }  /* ⬅️ صغّرناه + الزرار أقصر */
 </style>
 
-<h4 class="mb-3">🔗 ربط دفعات الشحن بالخزنة (توريد صافي)</h4>
+<div class="settlement-shell">
+
+<div class="mb-4">
+<div class="page-title">🔗 ربط دفعات الشحن</div>
+<div class="page-subtitle">مزامنة دفعات شركات الشحن مع الخزنة</div>
+</div>
 
 <!-- أزرار عامة -->
 <div class="mb-3 d-flex gap-2">
@@ -36,9 +64,9 @@
     <div class="card">
       <div class="card-header bg-light">دفعات غير مُرحّلة للخزنة</div>
       <div class="card-body">
-        <div class="mb-2 text-muted">الإجمالي: {{ '%.2f'|format(total_unlinked or 0) }}</div>
+        <div class="mb-2 text-muted">الإجمالي: {{ '%.0f'|format(total_unlinked or 0) }}</div>
         <div class="table-responsive">
-          <table class="table table-bordered align-middle">
+          <table class="table  align-middle">
             <thead>
               <tr class="text-center">
                 <th style="width:100px">التاريخ</th>
@@ -53,17 +81,17 @@
               <tr>
                 <td class="text-center">{{ p.date }}</td>
                 <td>{{ p.company }}</td>
-                <td class="text-end">{{ '%.2f'|format(p.amount or 0) }}</td>
+                <td class="text-end">{{ '%.0f'|format(p.amount or 0) }}</td>
                 <td>{{ p.note or '' }}</td>
                 <td class="text-center">
                   <form method="post" action="/shipping/cash-sync/link-one">
                     <input type="hidden" name="payment_id" value="{{ p.id }}">
-                    <button class="btn btn-sm btn-primary">ترحيل</button>
+                    <button class="btn  btn-primary">ترحيل</button>
                   </form>
                 </td>
               </tr>
               {% else %}
-              <tr><td colspan="5" class="text-center text-muted">لا يوجد</td></tr>
+              <tr><td colspan="5" class="text-center text-muted">🧾 لا يوجد</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -76,10 +104,10 @@
     <div class="card">
       <div class="card-header bg-light">دفعات مُرحّلة (مرتبطة بقيود خزنة)</div>
       <div class="card-body">
-        <div class="mb-2 text-muted">الإجمالي: {{ '%.2f'|format(total_linked or 0) }}</div>
+        <div class="mb-2 text-muted">الإجمالي: {{ '%.0f'|format(total_linked or 0) }}</div>
         <div class="table-responsive">
           <!-- ✅ ده الجدول اللي اتظبط -->
-          <table class="table table-bordered align-middle linked-table">
+          <table class="table  align-middle linked-table">
             <thead>
               <tr class="text-center">
                 <th class="col-date">التاريخ</th>
@@ -110,12 +138,12 @@
                 <td class="text-center col-action">
                   <form method="post" action="/shipping/cash-sync/unlink" onsubmit="return confirm('إلغاء قيد الخزنة لهذه الدفعة؟');">
                     <input type="hidden" name="payment_id" value="{{ p.id }}">
-                    <button class="btn btn-sm btn-outline-danger px-2">إلغاء</button>
+                    <button class="btn  btn-outline-danger px-2">إلغاء</button>
                   </form>
                 </td>
               </tr>
               {% else %}
-              <tr><td colspan="5" class="text-center text-muted">لا يوجد</td></tr>
+              <tr><td colspan="5" class="text-center text-muted">🧾 لا يوجد</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -179,5 +207,6 @@
       </div>
     </div>
   </div>
+</div>
 </div>
 {% endblock %}

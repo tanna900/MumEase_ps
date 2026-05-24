@@ -1,6 +1,34 @@
 {% extends "base.html" %}
 {% block content %}
-<h4 class="mb-3">🧮 تقفيل يومية — {{ day }}</h4>
+
+<style>
+.settlement-shell{max-width:1500px;margin:auto}
+.page-title{font-size:1.9rem;font-weight:900}
+.page-subtitle{color:#6c757d;margin-top:4px}
+.page-card,.card{background:#fff;border:1px solid #eee!important;border-radius:22px!important;box-shadow:0 2px 10px rgba(0,0,0,.04)!important}
+.card-header{background:#faf7ff!important;border-bottom:1px solid #eee!important}
+.form-control,.form-select{border-radius:14px!important;min-height:46px}
+.table{border-radius:18px;overflow:hidden}
+.table thead th{background:#faf7ff!important;border-bottom:1px solid #eee!important}
+.table tbody tr td{transition:.18s ease}
+.table tbody tr:hover td{background:#eef5ff!important}
+.pagination .page-link{border-radius:12px!important;margin-inline:2px}
+.alert{border-radius:18px}
+.btn{border-radius:14px}
+@media(max-width:768px){
+.settlement-shell{padding:0 8px}
+.page-title{font-size:1.45rem}
+.card,.page-card{border-radius:18px!important}
+.table{font-size:.9rem}
+}
+</style>
+
+<div class="settlement-shell">
+
+<div class="mb-4">
+<div class="page-title">🧮 تقفيل اليومية</div>
+<div class="page-subtitle">مراجعة وتقفيل حركة اليوم بالكامل</div>
+</div>
 
 {% if already %}
   <div class="alert alert-info">اليوم {{ day }} مقفول بالفعل — يمكنك المراجعة أو حذف التسوية من القائمة.</div>
@@ -12,10 +40,10 @@
     <div class="card h-100">
       <div class="card-body">
         <div class="text-muted">إجمالي المبيعات (total)</div>
-        <div class="fs-4 fw-bold">{{ '%.2f'|format(sales_total or 0) }}</div>
+        <div class="fs-4 fw-bold">{{ '%.0f'|format(sales_total or 0) }}</div>
         <div class="small text-muted">
           عدد الفواتير: <b>{{ sales_count or 0 }}</b>
-          <button class="btn btn-sm btn-outline-secondary ms-2" type="button"
+          <button class="btn  btn-outline-secondary ms-2" type="button"
                   data-bs-toggle="collapse" data-bs-target="#colSales">عرض الفواتير</button>
         </div>
         <div class="small text-muted mt-1">يشمل الخصم/الشحن داخل الفاتورة</div>
@@ -28,10 +56,10 @@
     <div class="card h-100">
       <div class="card-body">
         <div class="text-muted">مرتجعات</div>
-        <div class="fs-4 fw-bold text-danger">-{{ '%.2f'|format(returns_total or 0) }}</div>
+        <div class="fs-4 fw-bold text-danger">-{{ '%.0f'|format(returns_total or 0) }}</div>
         <div class="small text-muted">
           عدد المرتجعات: <b>{{ returns_count or 0 }}</b>
-          <button class="btn btn-sm btn-outline-secondary ms-2" type="button"
+          <button class="btn  btn-outline-secondary ms-2" type="button"
                   data-bs-toggle="collapse" data-bs-target="#colReturns">عرض المرتجعات</button>
         </div>
       </div>
@@ -43,7 +71,7 @@
     <div class="card h-100">
       <div class="card-body">
         <div class="text-muted">COD (تحصيل عند الاستلام)</div>
-        <div class="fs-4 fw-bold">{{ '%.2f'|format(cod_total or 0) }}</div>
+        <div class="fs-4 fw-bold">{{ '%.0f'|format(cod_total or 0) }}</div>
         <div class="small text-muted">يحسب من فواتير البيع غير المباشرة: (الإجمالي - مصروف الشحن الفعلي)</div>
       </div>
     </div>
@@ -54,7 +82,7 @@
     <div class="card h-100">
       <div class="card-body">
         <div class="text-muted">صافي اليوم (مبيعات - مرتجعات - مصروفات)</div>
-        <div class="fs-3 fw-bold">{{ '%.2f'|format(net_total or 0) }}</div>
+        <div class="fs-3 fw-bold">{{ '%.0f'|format(net_total or 0) }}</div>
       </div>
     </div>
   </div>
@@ -65,16 +93,16 @@
   <div class="col-md-4">
     <div class="card h-100"><div class="card-body">
       <div class="text-muted">مصروفات الشحن الفعلية</div>
-      <div>Actual (بيع): {{ '%.2f'|format(shipping_expense_actual or 0) }}</div>
-      <div>رسوم مرتجع: {{ '%.2f'|format(return_shipping_fees or 0) }}</div>
+      <div>Actual (بيع): {{ '%.0f'|format(shipping_expense_actual or 0) }}</div>
+      <div>رسوم مرتجع: {{ '%.0f'|format(return_shipping_fees or 0) }}</div>
       <hr class="my-2">
-      <div class="fs-5 fw-bold text-danger">-{{ '%.2f'|format(shipping_total_expense or 0) }}</div>
+      <div class="fs-5 fw-bold text-danger">-{{ '%.0f'|format(shipping_total_expense or 0) }}</div>
     </div></div>
   </div>
   <div class="col-md-4">
     <div class="card h-100"><div class="card-body">
       <div class="text-muted">مصروفات تشغيلية (من الخزنة)</div>
-      <div class="fs-5 fw-bold text-danger">-{{ '%.2f'|format(operating_expenses or 0) }}</div>
+      <div class="fs-5 fw-bold text-danger">-{{ '%.0f'|format(operating_expenses or 0) }}</div>
       <div class="small text-muted">يُستثنى تحويل/ترحيل إنستاباي/محفظة من المصروفات</div>
       <div class="small text-muted">تاريخ القيد = {{ day }}</div>
     </div></div>
@@ -82,10 +110,10 @@
   <div class="col-md-4">
     <div class="card h-100"><div class="card-body">
       <div class="text-muted">COGS (معلومات)</div>
-      <div>مبيعات: {{ '%.2f'|format(cogs_sales or 0) }}</div>
-      <div>مطروحًا مرتجعات: {{ '%.2f'|format(cogs_returns or 0) }}</div>
+      <div>مبيعات: {{ '%.0f'|format(cogs_sales or 0) }}</div>
+      <div>مطروحًا مرتجعات: {{ '%.0f'|format(cogs_returns or 0) }}</div>
       <hr class="my-2">
-      <div class="fs-5 fw-bold">{{ '%.2f'|format(cogs or 0) }}</div>
+      <div class="fs-5 fw-bold">{{ '%.0f'|format(cogs or 0) }}</div>
       <div class="small text-muted">للعرض فقط — لا يدخل في صافي اليوم هنا</div>
     </div></div>
   </div>
@@ -97,7 +125,7 @@
     <div class="card-header bg-light">فواتير البيع (S) — {{ day }} — عدد: {{ sales_count or 0 }}</div>
     <div class="card-body p-0">
       <div class="table-responsive">
-        <table class="table table-bordered align-middle mb-0">
+        <table class="table  align-middle mb-0">
           <thead class="table-light">
             <tr>
               <th style="width:90px">#</th>
@@ -115,13 +143,13 @@
               <td>{{ inv.id }}</td>
               <td>{{ inv.invoice_code }}</td>
               <td>{{ inv.customer_name or '' }}</td>
-              <td class="text-end">{{ '%.2f'|format(inv.total or 0) }}</td>
-              <td class="text-end">{{ '%.2f'|format(inv.actual_shipping_cost or 0) }}</td>
+              <td class="text-end">{{ '%.0f'|format(inv.total or 0) }}</td>
+              <td class="text-end">{{ '%.0f'|format(inv.actual_shipping_cost or 0) }}</td>
               <td>{{ inv.payment_method or '' }}</td>
               <td class="text-center d-flex gap-1 justify-content-center">
-                <a class="btn btn-sm btn-outline-primary" href="/invoices/{{ inv.id }}" target="_blank">فتح</a>
+                <a class="btn  btn-outline-primary" href="/invoices/{{ inv.id }}" target="_blank">فتح</a>
                 <!-- زر الطباعة 4×6 -->
-                <a class="btn btn-sm btn-outline-success" href="/invoices/{{ inv.id }}/print?size=4x6" target="_blank">طباعة 4×6</a>
+                <a class="btn  btn-outline-success" href="/invoices/{{ inv.id }}/print?size=4x6" target="_blank">طباعة 4×6</a>
               </td>
             </tr>
             {% else %}
@@ -140,7 +168,7 @@
     <div class="card-header bg-light">فواتير المرتجع (R) — {{ day }} — عدد: {{ returns_count or 0 }}</div>
     <div class="card-body p-0">
       <div class="table-responsive">
-        <table class="table table-bordered align-middle mb-0">
+        <table class="table  align-middle mb-0">
           <thead class="table-light">
             <tr>
               <th style="width:90px">#</th>
@@ -157,12 +185,12 @@
               <td>{{ inv.id }}</td>
               <td>{{ inv.invoice_code }}</td>
               <td>{{ inv.customer_name or '' }}</td>
-              <td class="text-end">{{ '%.2f'|format(inv.total or 0) }}</td>
-              <td class="text-end">{{ '%.2f'|format(inv.return_shipping_fee or 0) }}</td>
+              <td class="text-end">{{ '%.0f'|format(inv.total or 0) }}</td>
+              <td class="text-end">{{ '%.0f'|format(inv.return_shipping_fee or 0) }}</td>
               <td class="text-center d-flex gap-1 justify-content-center">
-                <a class="btn btn-sm btn-outline-primary" href="/invoices/{{ inv.id }}" target="_blank">فتح</a>
+                <a class="btn  btn-outline-primary" href="/invoices/{{ inv.id }}" target="_blank">فتح</a>
                 <!-- زر الطباعة 4×6 -->
-                <a class="btn btn-sm btn-outline-success" href="/invoices/{{ inv.id }}/print?size=4x6" target="_blank">طباعة 4×6</a>
+                <a class="btn  btn-outline-success" href="/invoices/{{ inv.id }}/print?size=4x6" target="_blank">طباعة 4×6</a>
               </td>
             </tr>
             {% else %}
@@ -184,14 +212,14 @@
     {% if unlinked_count and unlinked_count > 0 %}
       <div class="mb-2">
         عدد الدفعات: <strong>{{ unlinked_count }}</strong> •
-        الإجمالي: <strong>{{ '%.2f'|format(unlinked_sum or 0) }}</strong>
+        الإجمالي: <strong>{{ '%.0f'|format(unlinked_sum or 0) }}</strong>
       </div>
       <form method="post" action="/settlements/link-shipping" onsubmit="return confirm('ترحيل كل دفعات الشحن لهذا اليوم للخزنة؟');">
         <input type="hidden" name="day" value="{{ day }}">
-        <button class="btn btn-sm btn-primary"><i class="bi bi-link-45deg"></i> ترحيل/ربط الآن</button>
+        <button class="btn  btn-primary"><i class="bi bi-link-45deg"></i> ترحيل/ربط الآن</button>
       </form>
       <div class="table-responsive mt-3">
-        <table class="table table-bordered align-middle">
+        <table class="table  align-middle">
           <thead>
             <tr class="text-center">
               <th style="width:120px">التاريخ</th>
@@ -205,7 +233,7 @@
             <tr>
               <td class="text-center">{{ p.date }}</td>
               <td>{{ p.company }}</td>
-              <td class="text-end">{{ '%.2f'|format(p.amount or 0) }}</td>
+              <td class="text-end">{{ '%.0f'|format(p.amount or 0) }}</td>
               <td>{{ p.note or '' }}</td>
             </tr>
             {% endfor %}
@@ -250,4 +278,5 @@
     <i class="bi bi-check2-circle"></i> تأكيد تقفيل يومية {{ day }}
   </button>
 </form>
+</div>
 {% endblock %}

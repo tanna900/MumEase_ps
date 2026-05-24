@@ -171,9 +171,118 @@
 }
 
 
+
+/* ===============================
+   Mobile Cards Layout
+================================ */
+.mobile-products{
+  display:none;
+}
+
+.pagination{
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.pagination .page-link{
+  border-radius:10px !important;
+  min-width:42px;
+  text-align:center;
+}
+
+@media(max-width:768px){
+
+  .table-wrap{
+    display:none;
+  }
+
+  .mobile-products{
+    display:block;
+  }
+
+  .products-cards .summary-card{
+    padding:14px;
+  }
+
+  .products-cards .summary-value{
+    font-size:1.15rem;
+  }
+
+  .products-cards .summary-title{
+    font-size:.8rem;
+  }
+
+  .top-products-actions{
+    flex-direction:column;
+    align-items:stretch !important;
+    gap:10px;
+  }
+
+  .top-products-actions .btn{
+    width:100%;
+  }
+
+  #searchForm .col-md-4,
+  #searchForm .col-md-2,
+  #searchForm .col-md-12{
+    width:100%;
+  }
+
+  .mobile-product-card{
+    background:#fff;
+    border:1px solid rgba(0,0,0,.08);
+    border-radius:18px;
+    padding:14px;
+    margin-bottom:14px;
+    box-shadow:0 2px 10px rgba(0,0,0,.05);
+  }
+
+  .mobile-product-card:hover{
+    transform:translateY(-2px);
+    transition:.18s ease;
+  }
+
+  .mobile-product-title{
+    font-size:1.08rem;
+    font-weight:700;
+    margin-bottom:4px;
+  }
+
+  .mobile-product-meta{
+    color:#6c757d;
+    font-size:.88rem;
+    margin-bottom:10px;
+  }
+
+  .mobile-mini-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+    margin:12px 0;
+  }
+
+  .mobile-mini-box{
+    background:#f8f9fa;
+    border-radius:12px;
+    padding:10px;
+    text-align:center;
+  }
+
+  .mobile-mini-box .label{
+    font-size:.75rem;
+    color:#6c757d;
+  }
+
+  .mobile-mini-box .value{
+    font-weight:700;
+    margin-top:4px;
+  }
+
+}
+
 </style>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-center mb-3 top-products-actions flex-wrap">
   <h4 class="m-0">📦 إدارة الأصناف</h4>
   <div class="d-flex gap-2">
     <button type="button" class="btn btn-outline-dark" id="btnFocusScan">🎯 وضع السكان</button>
@@ -197,7 +306,7 @@
     <div class="summary-card">
       <div class="summary-title">قيمة المخزون (تكلفة)</div>
       <div class="summary-value">
-        {{ '%.2f'|format(all_cost or 0) }}
+        {{ '%.0f'|format(all_cost or 0) }}
       </div>
     </div>
   </div>
@@ -206,7 +315,7 @@
     <div class="summary-card">
       <div class="summary-title">قيمة المخزون (بيع)</div>
       <div class="summary-value">
-        {{ '%.2f'|format(all_price or 0) }}
+        {{ '%.0f'|format(all_price or 0) }}
       </div>
     </div>
   </div>
@@ -496,8 +605,8 @@
             </a>
           </td>
 
-          <td class="text-end col-money">{{ '%.2f'|format(_cost) }}</td>
-          <td class="text-end col-money">{{ '%.2f'|format(_price) }}</td>
+          <td class="text-end col-money">{{ '%.0f'|format(_cost) }}</td>
+          <td class="text-end col-money">{{ '%.0f'|format(_price) }}</td>
 
           <td class="text-end col-stock">
             <div class="stock-wrap">
@@ -541,11 +650,11 @@
           </td>
 
           <td class="text-end col-margin-u {% if _margin_u < 0 %}text-danger{% else %}text-success{% endif %}">
-            {{ '%.2f'|format(_margin_u or 0) }}
+            {{ '%.0f'|format(_margin_u or 0) }}
           </td>
           <td class="text-end col-margin-p">{{ '%.1f'|format(_margin_pct or 0) }}%</td>
           <td class="text-end col-stock-profit {% if _stock_profit < 0 %}text-danger{% else %}text-success{% endif %}">
-            {{ '%.2f'|format(_stock_profit or 0) }}
+            {{ '%.0f'|format(_stock_profit or 0) }}
           </td>
 
           <td class="col-actions text-center">
@@ -563,8 +672,8 @@
                           data-color="{{ p.color or '' }}"
                           data-size="{{ p.size or '' }}"
                           data-barcode="{{ p.barcode or '' }}"
-                          data-cost="{{ '%.2f'|format(_cost) }}"
-                          data-price="{{ '%.2f'|format(_price) }}"
+                          data-cost="{{ '%.0f'|format(_cost) }}"
+                          data-price="{{ '%.0f'|format(_price) }}"
                           data-stock="{{ _stock }}">
                     ✏️ تعديل
                   </button>
@@ -627,17 +736,17 @@
         </tr>
         <tr class="table-light">
           <th colspan="7" class="text-end">قيمة الصفحة بالتكلفة:</th>
-          <th class="text-end">{{ '%.2f'|format(page_cost or 0) }}</th>
+          <th class="text-end">{{ '%.0f'|format(page_cost or 0) }}</th>
           <th colspan="4"></th>
         </tr>
         <tr class="table-light">
           <th colspan="7" class="text-end">قيمة الصفحة بسعر البيع:</th>
-          <th class="text-end">{{ '%.2f'|format(page_price or 0) }}</th>
+          <th class="text-end">{{ '%.0f'|format(page_price or 0) }}</th>
           <th colspan="4"></th>
         </tr>
         <tr class="table-light">
           <th colspan="10" class="text-end">إجمالي ربح المخزون (داخل الصفحة):</th>
-          <th class="text-end text-success">{{ '%.2f'|format(ns.stock_profit_total or 0) }}</th>
+          <th class="text-end text-success">{{ '%.0f'|format(ns.stock_profit_total or 0) }}</th>
           <th></th>
         </tr>
       </tfoot>
@@ -645,9 +754,150 @@
   </div>
 </div>
 
+
+<!-- Mobile Products -->
+<div class="mobile-products mt-3">
+
+{% for p in products %}
+{% set _stock = (p.stock or 0) %}
+{% set _cost = (p.cost_price or 0) %}
+{% set _price = (p.price or 0) %}
+{% set _margin_u = (_price - _cost) %}
+{% set _margin_pct = (_margin_u / _price * 100) if _price and _price > 0 else 0 %}
+
+<div class="mobile-product-card">
+
+  <div class="d-flex justify-content-between align-items-start mb-2">
+
+    <div>
+
+      <div class="mobile-product-title">
+        {{ p.name }}
+      </div>
+
+      <div class="mobile-product-meta">
+        {{ p.color or '-' }} • {{ p.size or '-' }}
+      </div>
+
+    </div>
+
+    <input class="form-check-input row-check" type="checkbox" value="{{ p.id }}">
+
+  </div>
+
+  <div class="small text-muted mb-3">
+    {{ p.barcode or '-' }}
+  </div>
+
+  <div class="mobile-mini-grid">
+
+    <div class="mobile-mini-box">
+      <div class="label">السعر</div>
+      <div class="value text-primary">
+        {{ '%.0f'|format(_price or 0) }}
+      </div>
+    </div>
+
+    <div class="mobile-mini-box">
+      <div class="label">الستوك</div>
+      <div class="value
+      {% if _stock == 0 %}
+        text-danger
+      {% elif _stock < LOW_STOCK_THRESHOLD %}
+        text-warning
+      {% else %}
+        text-success
+      {% endif %}
+      ">
+        {{ _stock }}
+      </div>
+    </div>
+
+    <div class="mobile-mini-box">
+      <div class="label">هامش الربح</div>
+      <div class="value">
+        {{ '%.0f'|format(_margin_pct or 0) }}%
+      </div>
+    </div>
+
+    <div class="mobile-mini-box">
+      <div class="label">التكلفة</div>
+      <div class="value">
+        {{ '%.0f'|format(_cost or 0) }}
+      </div>
+    </div>
+
+  </div>
+
+  <div class="d-grid gap-2 mt-3">
+
+    <button type="button"
+            class="btn btn-outline-primary btnEdit"
+            data-bs-toggle="modal"
+            data-bs-target="#editModal"
+            data-id="{{ p.id }}"
+            data-name="{{ p.name }}"
+            data-color="{{ p.color or '' }}"
+            data-size="{{ p.size or '' }}"
+            data-barcode="{{ p.barcode or '' }}"
+            data-cost="{{ '%.2f'|format(_cost) }}"
+            data-price="{{ '%.2f'|format(_price) }}"
+            data-stock="{{ _stock }}">
+
+      ✏️ تعديل
+
+    </button>
+
+    <div class="dropdown">
+
+      <button class="btn btn-outline-secondary dropdown-toggle w-100"
+              data-bs-toggle="dropdown">
+
+        المزيد
+
+      </button>
+
+      <ul class="dropdown-menu dropdown-menu-end">
+
+        <li>
+          <button type="button"
+                  class="dropdown-item open-card"
+                  data-bs-toggle="modal"
+                  data-bs-target="#productCardModal"
+                  data-pid="{{ p.id }}"
+                  data-title="{{ p.name }}">
+            📄 كارت الصنف
+          </button>
+        </li>
+
+        <li>
+          <button type="button"
+                  class="dropdown-item text-danger btnWastage"
+                  data-bs-toggle="modal"
+                  data-bs-target="#wastageModal"
+                  data-pid="{{ p.id }}"
+                  data-name="{{ p.name }}"
+                  data-stock="{{ _stock }}">
+            🗑️ للهالك
+          </button>
+        </li>
+
+      </ul>
+
+    </div>
+
+  </div>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+
 {% if (not has_search) and (total_pages and total_pages > 1) %}
 <nav class="mt-3">
-  <ul class="pagination pagination-sm justify-content-center mb-0">
+  <ul class="pagination justify-content-center mb-0">
     <li class="page-item {% if page==1 %}disabled{% endif %}">
       <a class="page-link" href="/products?{{ base_qs }}&page=1">الأولى</a>
     </li>
@@ -674,6 +924,10 @@
   </ul>
 </nav>
 {% endif %}
+
+<div class="text-center text-muted small mt-3 mb-3">
+  صفحة {{ page }} من {{ total_pages }}
+</div>
 
 <!-- مودال تعديل واحد -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">

@@ -2,6 +2,123 @@
 {% block content %}
 
 <style>
+
+.returns-shell{
+  max-width:1450px;
+  margin:auto;
+}
+
+.page-title{
+  font-size:1.9rem;
+  font-weight:900;
+}
+
+.page-subtitle{
+  color:#6c757d;
+  margin-top:4px;
+}
+
+.page-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:22px;
+  padding:20px;
+  box-shadow:0 2px 10px rgba(0,0,0,.04);
+}
+
+.stats-card{
+  background:linear-gradient(135deg,#fef2f2,#fff);
+  border:1px solid #fecaca;
+  border-radius:18px;
+  padding:18px;
+  min-width:220px;
+}
+
+.stats-card .value{
+  font-size:2rem;
+  font-weight:900;
+  color:#dc2626;
+}
+
+.search-input{
+  border-radius:16px !important;
+  min-height:52px;
+  border:1px solid #e5e7eb;
+}
+
+.search-input:focus{
+  border-color:#93c5fd;
+  box-shadow:0 0 0 .2rem rgba(59,130,246,.15);
+}
+
+.return-table{
+  border-radius:18px;
+  overflow:hidden;
+}
+
+.return-table thead th{
+  background:#faf7ff !important;
+  border-bottom:1px solid #eee !important;
+}
+
+.return-table tbody tr td{
+  transition:.18s ease;
+}
+
+.return-table tbody tr:hover td{
+  background:#eef5ff !important;
+}
+
+.return-total{
+  color:#166534;
+  font-size:1.05rem;
+}
+
+.pagination .page-link{
+  border-radius:12px !important;
+  margin-inline:2px;
+  border:none;
+  background:#f8fafc;
+  color:#111827;
+}
+
+.pagination .active .page-link{
+  background:#111827;
+  color:#fff;
+}
+
+.mobile-return-card{
+  border-radius:20px !important;
+}
+
+.mobile-return-card .code{
+  font-size:1.5rem !important;
+}
+
+.mobile-return-card .amount{
+  font-size:1.4rem !important;
+}
+
+@media(max-width:768px){
+
+  .returns-shell{
+    padding:0 8px;
+  }
+
+  .page-title{
+    font-size:1.45rem;
+  }
+
+  .page-card{
+    padding:16px;
+    border-radius:18px;
+  }
+
+}
+</style>
+
+
+<style>
 .page-card{
   background:#fff;
   border-radius:18px;
@@ -110,7 +227,23 @@
 }
 </style>
 
+
+<div class="returns-shell">
+
+<div class="mb-4">
+
+<div class="page-title">
+↩️ إدارة المرتجعات
+</div>
+
+<div class="page-subtitle">
+متابعة وإدارة كل عمليات المرتجع
+</div>
+
+</div>
+
 <div class="d-flex align-items-center gap-2 mb-3">
+
   <h4 class="mb-0">↩️ قائمة المرتجعات</h4>
 </div>
 
@@ -133,7 +266,7 @@
 
     <div class="stats-card text-center">
       <div class="small text-muted mb-1">إجمالي المرتجعات</div>
-      <div class="fw-bold fs-4">{{ total_count }}</div>
+      <div class="value">{{ total_count }}</div>
       <div class="small text-muted">مرتجع</div>
     </div>
 
@@ -201,7 +334,7 @@
 
           <td class="text-center">
             <a
-              class="btn btn-outline-primary"
+              class="btn btn-outline-primary rounded-3 px-3 py-2"
               href="/invoices/{{ inv.id }}"
             >
               <i class="bi bi-eye"></i>
@@ -215,7 +348,7 @@
         {% if not invoices or invoices|length == 0 %}
         <tr>
           <td colspan="7" class="text-center text-muted py-5">
-            📦 لا توجد مرتجعات بعد
+            🧾 لا توجد مرتجعات مسجلة حتى الآن
           </td>
         </tr>
         {% endif %}
@@ -335,10 +468,11 @@
 </nav>
 
 <div class="text-center text-muted small mt-2">
-  صفحة {{ page }} من {{ pages }} — إجمالي السجلات: {{ total_count }}
+  صفحة {{ page }} من {{ pages }} • إجمالي المرتجعات: {{ total_count }}
 </div>
 {% endif %}
 
 
 
+</div>
 {% endblock %}

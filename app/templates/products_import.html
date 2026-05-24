@@ -1,125 +1,387 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h4 class="m-0">🧾 فواتير المشتريات (شيتات الإكسيل)</h4>
-</div>
+<style>
+.import-shell{
+  max-width:1200px;
+  margin:auto;
+}
 
-{% if msg %}
-  <div class="alert {% if '✅' in msg %}alert-success{% elif '⚠️' in msg %}alert-warning{% elif '🗑️' in msg %}alert-info{% else %}alert-secondary{% endif %}">
-    {{ msg }}
-  </div>
-{% endif %}
+.import-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:22px;
+  padding:22px;
+  box-shadow:0 2px 12px rgba(0,0,0,.05);
+}
 
-<!-- فورم رفع شيت مشتريات جديد -->
-<div class="card mb-3">
-  <div class="card-header">
-    رفع شيت مشتريات جديد
+.import-title{
+  font-size:2rem;
+  font-weight:800;
+  margin-bottom:6px;
+}
+
+.import-subtitle{
+  color:#6c757d;
+}
+
+.step-box{
+  background:#faf7ff;
+  border:1px solid #eee;
+  border-radius:18px;
+  padding:18px;
+}
+
+.step-number{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  background:#6f42c1;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  margin:auto;
+  margin-bottom:10px;
+}
+
+.upload-zone{
+  border:2px dashed #b99cff;
+  border-radius:20px;
+  padding:40px 20px;
+  text-align:center;
+  background:#fcfbff;
+  transition:.2s ease;
+}
+
+.upload-zone:hover{
+  background:#f8f4ff;
+}
+
+.upload-icon{
+  font-size:52px;
+  margin-bottom:12px;
+}
+
+.form-control{
+  border-radius:14px !important;
+  min-height:48px;
+}
+
+.form-label{
+  font-weight:700;
+}
+
+.tips-box{
+  background:#f6fff8;
+  border:1px solid #d7f0dd;
+  border-radius:18px;
+  padding:18px;
+}
+
+.tip-item{
+  margin-bottom:10px;
+}
+
+.import-btn{
+  min-height:58px;
+  border-radius:16px;
+  font-size:1.15rem;
+  font-weight:800;
+}
+
+.headers-box{
+  background:#f8f9fa;
+  border-radius:14px;
+  padding:14px;
+  overflow:auto;
+}
+
+@media(max-width:768px){
+
+  .import-shell{
+    padding:0 8px;
+  }
+
+  .import-title{
+    font-size:1.45rem;
+  }
+
+  .top-bar{
+    flex-direction:column;
+    align-items:stretch !important;
+    gap:12px;
+  }
+
+  .top-bar .btn{
+    width:100%;
+  }
+
+  .upload-zone{
+    padding:28px 14px;
+  }
+
+  .import-card{
+    padding:16px;
+    border-radius:18px;
+  }
+
+  .step-box{
+    padding:14px;
+  }
+
+  .tips-box{
+    padding:14px;
+  }
+
+}
+</style>
+
+<div class="import-shell">
+
+  <div class="d-flex justify-content-between align-items-center mb-4 top-bar">
+
+    <div>
+      <div class="import-title">
+        📥 استيراد شيت مشتريات
+      </div>
+
+      <div class="import-subtitle">
+        رفع ملف Excel أو CSV لاستيراد بيانات المشتريات للنظام
+      </div>
+    </div>
+
+    <a class="btn btn-outline-success"
+       href="/purchases/import/template.xlsx">
+
+      📄 تحميل قالب Excel
+
+    </a>
+
   </div>
-  <div class="card-body">
-    <form method="post" action="/purchases/upload" enctype="multipart/form-data" class="row g-2">
-      <div class="col-md-3">
-        <label class="form-label">ملف الإكسيل</label>
-        <input type="file" name="file" class="form-control" accept=".xlsx,.xls" required>
-        <div class="form-text small text-muted">
-          استخدم قالب الإكسيل المحدد للأعمدة: باركود، اسم، لون، مقاس، كمية، تكلفة، سعر بيع.
+
+  {% if msg %}
+    <div class="alert alert-info rounded-4">
+      {{ msg }}
+    </div>
+  {% endif %}
+
+  <!-- Steps -->
+  <div class="import-card mb-4">
+
+    <div class="row g-3 text-center">
+
+      <div class="col-md-4">
+        <div class="step-box">
+          <div class="step-number">1</div>
+          <div class="fw-bold mb-1">تحميل القالب</div>
+          <div class="small text-muted">
+            حمّل ملف Excel الجاهز
+          </div>
         </div>
       </div>
-      <div class="col-md-2">
-        <label class="form-label">تاريخ الشراء</label>
-        <input type="date" name="date" class="form-control" value="{{ (''|date('Y-m-d')) if false else '' }}">
-        <div class="form-text small text-muted">لو سيبتها فاضية، هتتسجل بتاريخ اليوم.</div>
-      </div>
-      <div class="col-md-3">
-        <label class="form-label">المصنع</label>
-        <select name="factory_id" class="form-select">
-          <option value="0">بدون</option>
-          {# هتقدر تضيف هنا أسماء المصانع لو حبيت من راوتر تاني #}
-          {# أو ممكن تخليها ثابتة لو مش هتستخدم جدول factories #}
-        </select>
-        <div class="form-text small text-muted">لو اخترت مصنع، المشتريات هتتحسب في حساب المصنع.</div>
-      </div>
-      <div class="col-md-2">
-        <label class="form-label">رقم فاتورة الشراء (اختياري)</label>
-        <input type="text" name="code" class="form-control" placeholder="لو سيبته فاضي، هيتولد تلقائي">
-      </div>
+
       <div class="col-md-4">
-        <label class="form-label">ملاحظات (اختياري)</label>
-        <input type="text" name="note" class="form-control" placeholder="مثال: شحنة تيشرتات من المصنع X">
+        <div class="step-box">
+          <div class="step-number">2</div>
+          <div class="fw-bold mb-1">رفع الملف</div>
+          <div class="small text-muted">
+            اختر ملف المشتريات
+          </div>
+        </div>
       </div>
-      <div class="col-12 mt-2 d-flex gap-2">
-        <button class="btn btn-success">📥 تسجيل فاتورة المشتريات</button>
-        <a href="/static/templates/purchase_template.xlsx" class="btn btn-outline-secondary" target="_blank">
-          📄 تحميل قالب الإكسيل
-        </a>
+
+      <div class="col-md-4">
+        <div class="step-box">
+          <div class="step-number">3</div>
+          <div class="fw-bold mb-1">استيراد البيانات</div>
+          <div class="small text-muted">
+            راجع البيانات واستوردها
+          </div>
+        </div>
       </div>
-    </form>
-  </div>
-</div>
 
-<!-- جدول فواتير المشتريات -->
-<div class="card">
-  <div class="card-header">
-    قائمة فواتير المشتريات
-  </div>
-  <div class="card-body p-0">
-    <div class="table-responsive mb-0">
-      <table class="table table-bordered table-striped mb-0 align-middle">
-        <thead>
-          <tr>
-            <th style="width:80px;">الكود</th>
-            <th style="width:120px;">تاريخ الشراء</th>
-            <th>المصنع</th>
-            <th class="text-end" style="width:130px;">عدد القطع</th>
-            <th class="text-end" style="width:160px;">إجمالي التكلفة</th>
-            <th style="width:240px;">إجراءات</th>
-          </tr>
-        </thead>
-        <tbody>
-        {% for p in purchases %}
-          <tr>
-            <td>{{ p.code or p.id }}</td>
-            <td>{{ p.date or '-' }}</td>
-            <td>
-              {% if p.factory_id %}
-                {{ factories_map.get(p.factory_id, 'غير معرّف') }}
-              {% else %}
-                -
-              {% endif %}
-            </td>
-            <td class="text-end">{{ '%.2f'|format(p.total_qty or 0) }}</td>
-            <td class="text-end">{{ '%.2f'|format(p.total_cost or 0) }}</td>
-            <td>
-              <a href="/purchases/{{ p.id }}" class="btn btn-sm btn-outline-dark">
-                عرض
-              </a>
-
-              <form method="post" action="/purchases/{{ p.id }}/delete"
-                    style="display:inline;"
-                    onsubmit="return confirm('هتحذف الفاتورة وهيرجع المخزون زي ما كان قبلها. متأكد؟');">
-                <button class="btn btn-sm btn-outline-danger">
-                  حذف
-                </button>
-              </form>
-
-              <!-- زر تعديل: يفتح صفحة التفاصيل وفيها فورم تعديل -->
-              <a href="/purchases/{{ p.id }}?edit=1" class="btn btn-sm btn-outline-primary">
-                تعديل
-              </a>
-            </td>
-          </tr>
-        {% endfor %}
-        {% if not purchases or purchases|length == 0 %}
-          <tr>
-            <td colspan="6" class="text-center text-muted py-4">
-              لا توجد فواتير مشتريات حتى الآن.
-            </td>
-          </tr>
-        {% endif %}
-        </tbody>
-      </table>
     </div>
+
   </div>
+
+  <form method="post"
+        action="/purchases/import"
+        enctype="multipart/form-data">
+
+    <div class="row g-4">
+
+      <!-- Upload -->
+      <div class="col-lg-6">
+
+        <div class="import-card h-100">
+
+          <div class="fw-bold fs-5 mb-3">
+            📤 رفع ملف المشتريات
+          </div>
+
+          <label class="upload-zone w-100">
+
+            <div class="upload-icon">
+              ⬆️
+            </div>
+
+            <div class="fw-bold fs-5 mb-2">
+              اسحب ملف Excel أو CSV هنا
+            </div>
+
+            <div class="text-muted mb-3">
+              أو اضغط لاختيار الملف من جهازك
+            </div>
+
+            <input type="file"
+                   name="file"
+                   class="form-control"
+                   required>
+
+            <div class="small text-muted mt-3">
+              يدعم Excel (.xlsx, .xls) و CSV
+            </div>
+
+          </label>
+
+          <div class="headers-box mt-4">
+
+            <div class="fw-bold mb-2">
+              الأعمدة المطلوبة في الملف:
+            </div>
+
+            <code>
+              barcode, name, color, size, cost_price, price, qty,
+              factory_name, purchase_date, purchase_code
+            </code>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Settings -->
+      <div class="col-lg-6">
+
+        <div class="import-card h-100">
+
+          <div class="fw-bold fs-5 mb-4">
+            ⚙️ الإعدادات الافتراضية (اختياري)
+          </div>
+
+          <div class="mb-4">
+
+            <label class="form-label">
+              تاريخ افتراضي للشراء
+            </label>
+
+            <input type="date"
+                   name="default_date"
+                   class="form-control">
+
+            <div class="small text-muted mt-2">
+              يستخدم لو عمود purchase_date فاضي.
+            </div>
+
+          </div>
+
+          <div class="mb-4">
+
+            <label class="form-label">
+              اسم مصنع افتراضي
+            </label>
+
+            <input type="text"
+                   name="default_factory"
+                   class="form-control"
+                   placeholder="مثال: مصنع أحمد">
+
+            <div class="small text-muted mt-2">
+              يستخدم لو عمود factory_name فاضي.
+            </div>
+
+          </div>
+
+          <div>
+
+            <label class="form-label">
+              رقم فاتورة شراء افتراضي
+            </label>
+
+            <input type="text"
+                   name="default_purchase_code"
+                   class="form-control"
+                   placeholder="مثال: P-2025-001">
+
+            <div class="small text-muted mt-2">
+              يستخدم لو عمود purchase_code فاضي.
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Tips -->
+      <div class="col-12">
+
+        <div class="tips-box">
+
+          <div class="fw-bold fs-5 mb-3">
+            💡 نصائح مهمة
+          </div>
+
+          <div class="row">
+
+            <div class="col-md-3">
+              <div class="tip-item">
+                ✔ تأكد من صحة الباركود
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="tip-item">
+                ✔ يدعم Excel و CSV
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="tip-item">
+                ✔ يمكن ترك بعض الخانات فارغة
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="tip-item">
+                ✔ يفضل تنسيق التاريخ YYYY-MM-DD
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Submit -->
+      <div class="col-12">
+
+        <button class="btn btn-primary w-100 import-btn">
+
+          🚀 استيراد المشتريات
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </form>
+
 </div>
 
 {% endblock %}

@@ -104,27 +104,163 @@ table th,
 }
 
 @media(max-width:992px){
+
+  .sale-shell{
+    padding:0 8px;
+  }
+
   .sale-grid{
     grid-template-columns:1fr;
+    gap:14px;
+  }
+
+  .sale-card{
+    padding:14px;
+    border-radius:18px;
+  }
+
+  .sale-title{
+    font-size:1.35rem;
+    margin-bottom:8px;
+  }
+
+  .section-title{
+    font-size:1rem;
+  }
+
+  .final-total{
+    font-size:1.5rem;
   }
 
   .action-bar{
-    padding-bottom:10px;
+    position:sticky;
+    bottom:0;
+    padding:12px;
+    border-radius:18px 18px 0 0;
+    box-shadow:0 -4px 18px rgba(0,0,0,.08);
+    padding-bottom:calc(12px + env(safe-area-inset-bottom));
   }
 
   .action-bar .btn{
     width:100%;
+    min-height:48px;
+    font-weight:700;
   }
 
   .table{
-    min-width:700px;
+    min-width:unset;
+    margin-bottom:0;
   }
 
   .table-responsive{
-    overflow:auto;
+    overflow:visible;
+  }
+
+  .table thead{
+    display:none;
+  }
+
+  #items-body{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  #items-body tr{
+    display:block;
+    background:#fff;
+    border:1px solid #eee;
+    border-radius:16px;
+    padding:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+
+  #items-body td{
+    display:block;
+    width:100% !important;
+    border:none;
+    padding:6px 0;
+  }
+
+  #items-body .cell-product{
+    min-width:unset;
+  }
+
+  .product-col{
+    min-width:unset;
+  }
+
+  #items-body .cell-product .d-flex{
+    flex-direction:column;
+  }
+
+  #items-body select.product{
+    width:100%;
+  }
+
+  #items-body .qty,
+  #items-body .price,
+  #items-body .total{
+    text-align:center;
+    font-weight:700;
+  }
+
+  #items-body td:nth-child(2)::before{
+    content:'الكمية';
+    display:block;
+    font-size:.78rem;
+    color:#6c757d;
+    margin-bottom:4px;
+  }
+
+  #items-body td:nth-child(3)::before{
+    content:'السعر';
+    display:block;
+    font-size:.78rem;
+    color:#6c757d;
+    margin-bottom:4px;
+  }
+
+  #items-body td:nth-child(4)::before{
+    content:'الإجمالي';
+    display:block;
+    font-size:.78rem;
+    color:#6c757d;
+    margin-bottom:4px;
+  }
+
+  .summary-box{
+    padding:14px;
+  }
+
+  .picker-panel{
+    width:95vw;
+    top:5vh;
+    padding:12px;
+  }
+
+  .d-flex.justify-content-between.align-items-center.mb-3{
+    flex-direction:column;
+    align-items:stretch !important;
+    gap:10px;
+  }
+
+  #btnClearDraft{
+    width:100%;
   }
 
 }
+
+@media(max-width:992px){
+  .sale-grid > div:first-child{
+    order:2;
+  }
+
+  .sale-grid > div:last-child{
+    order:1;
+  }
+}
+
 </style>
 
 <div class="sale-shell">
