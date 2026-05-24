@@ -1,13 +1,118 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h5 class="mb-3">💼 تقرير الوضع المالي (Snapshot)</h5>
+{# ========= تنسيق أرقام بدون قروش + فواصل آلاف ========= #}
+{% macro money0(v) -%}
+  {{ "{:,.0f}".format((v or 0)|float) }}
+{%- endmacro %}
 
-<!-- شريط علوي صغير فيه الرسم الشهري المضغوط -->
-<div class="card p-2 mb-3">
+{# ========= حسابات سريعة داخل التمبلت ========= #}
+{% set payables = (payables_total or 0)|float %}
+{% set liquid_assets = (cashbox_balance or 0)|float + (receivables_total or 0)|float %}
+{% if payables > 0 %}
+  {% set coverage_ratio = (liquid_assets / payables) %}
+{% else %}
+  {% set coverage_ratio = none %}
+{% endif %}
+
+<h5 class="mb-3 snap-title">💼 تقرير الوضع المالي (Snapshot)</h5>
+
+<style>
+  :root{
+    --snap-radius: 14px;
+    --snap-border: 1px solid rgba(0,0,0,.07);
+    --snap-shadow: 0 8px 18px rgba(0,0,0,.06);
+    --snap-shadow2: 0 10px 24px rgba(0,0,0,.08);
+
+    --asset-bd: rgba(25,135,84,.28);
+    --asset-tx: #0f5132;
+
+    --liab-bd: rgba(176,42,55,.28);
+    --liab-tx: #842029;
+
+    --sum-bd: rgba(13,110,253,.22);
+    --sum-tx: #0b3d91;
+  }
+
+  .snap-title{ font-size: 1.25rem; font-weight: 800; }
+
+  .snap-card{
+    border-radius: var(--snap-radius);
+    border: var(--snap-border);
+    box-shadow: var(--snap-shadow);
+    background: #fff;
+    height: 100%;
+    padding: 14px;
+  }
+  .snap-card:hover{
+    box-shadow: var(--snap-shadow2);
+    transform: translateY(-1px);
+    transition: .15s ease;
+  }
+
+  .snap-label{ font-size: 13px; color:#6c757d; font-weight: 700; white-space: nowrap; }
+  .snap-value{ font-size: 26px; font-weight: 900; line-height: 1.15; }
+  .snap-value small{ font-size: 13px; font-weight: 800; color:#6c757d; }
+  .snap-sub{ font-size: 12.5px; color:#6c757d; }
+
+  .card-asset{ border-color: var(--asset-bd); background: linear-gradient(0deg, rgba(25,135,84,.06), rgba(25,135,84,.02)); }
+  .card-asset .snap-value{ color: var(--asset-tx); }
+
+  .card-liab{ border-color: var(--liab-bd); background: linear-gradient(0deg, rgba(220,53,69,.06), rgba(220,53,69,.02)); }
+  .card-liab .snap-value{ color: var(--liab-tx); }
+
+  .card-sum{ border-color: var(--sum-bd); background: linear-gradient(0deg, rgba(13,110,253,.06), rgba(13,110,253,.02)); }
+  .card-sum .snap-value{ color: var(--sum-tx); }
+
+  .snap-topcard{
+    border-radius: var(--snap-radius);
+    border: var(--snap-border);
+    box-shadow: var(--snap-shadow);
+    background: #fff;
+    padding: 12px 14px;
+  }
+
+  .snap-cards{ display:grid; gap: .6rem; align-items: stretch; }
+
+  @media (min-width: 1200px){
+    .snap-cards{ grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .snap-pay-fact{ grid-column: 2 / span 2; }
+    .snap-pay-mkt { grid-column: 4 / span 2; }
+  }
+  @media (min-width: 992px) and (max-width: 1199.98px){
+    .snap-cards{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .snap-pay-fact,.snap-pay-mkt{ grid-column:auto; }
+  }
+  @media (min-width: 576px) and (max-width: 991.98px){
+    .snap-cards{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .snap-pay-fact,.snap-pay-mkt{ grid-column:auto; }
+  }
+  @media (max-width: 575.98px){
+    .snap-cards{ grid-template-columns: 1fr; }
+    .snap-pay-fact,.snap-pay-mkt{ grid-column:auto; }
+  }
+
+  .snap-table .table{ font-size: 14.5px; }
+  .snap-table thead th{ font-weight: 800; white-space: nowrap; }
+</style>
+
+<!-- ✅ الرسم بقى Collapse + Lazy (لا يتحسب ولا يتحمل إلا عند الفتح) -->
+<div class="snap-topcard mb-3">
   <div class="d-flex align-items-center justify-content-between">
     <div class="small text-muted">📈 قيمة الشركة شهريًا (آخر 12 شهرًا)</div>
-    <div class="small text-muted">
+    <button class="btn btn-sm btn-outline-primary"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#chartCollapse"
+            aria-expanded="false"
+            aria-controls="chartCollapse">
+      عرض الرسم
+    </button>
+  </div>
+
+  <div class="collapse mt-2" id="chartCollapse">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <div class="small text-muted">* يتم تحميل الرسم عند الفتح فقط</div>
       <form class="d-inline" method="get" action="/finance/snapshot">
         <input type="hidden" name="dfrom" value="{{ dfrom }}">
         <input type="hidden" name="dto" value="{{ dto }}">
@@ -17,16 +122,15 @@
         </select>
       </form>
     </div>
-  </div>
-  <div style="height:130px">
-    <canvas id="companyTinyChart"></canvas>
-  </div>
-  <div class="small text-muted mt-1">
-    * المخزون ومستحقات الشحن تُستخدم كقيمة حالية ثابتة بالمخطط لغياب بيانات تاريخية.
+
+    <div style="height:160px">
+      <canvas id="companyTinyChart"></canvas>
+    </div>
   </div>
 </div>
 
-<div class="card p-2 mb-3">
+<!-- فلتر -->
+<div class="snap-topcard mb-3">
   <form class="row g-2 align-items-end" method="get" action="/finance/snapshot">
     <div class="col-md-3">
       <label class="form-label small">نقدية: من</label>
@@ -50,97 +154,57 @@
   </form>
 </div>
 
-<!-- ✅ كروت ثابتة بـ CSS Grid: 5 فوق + 2 تحت (متساويين ومتمركزين) -->
-<style>
-  .snap-cards{
-    display: grid;
-    gap: .5rem;
-    align-items: stretch;
-  }
-  .snap-card{
-    height: 100%;
-  }
-  .snap-title{
-    min-height: 34px;
-    display: flex;
-    align-items: center;
-  }
-
-  /* Desktop: 5 columns */
-  @media (min-width: 1200px){
-    .snap-cards{ grid-template-columns: repeat(5, minmax(0, 1fr)); }
-    /* صف 1: 5 كروت طبيعي */
-    /* صف 2: 2 كروت متمركزين: كل واحد span 2 */
-    .snap-pay-fact{ grid-column: 2 / span 2; }
-    .snap-pay-mkt { grid-column: 4 / span 2; }
-  }
-
-  /* Large tablets / small desktop: 3 columns */
-  @media (min-width: 992px) and (max-width: 1199.98px){
-    .snap-cards{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .snap-pay-fact{ grid-column: auto; }
-    .snap-pay-mkt { grid-column: auto; }
-  }
-
-  /* Tablets: 2 columns */
-  @media (min-width: 576px) and (max-width: 991.98px){
-    .snap-cards{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .snap-pay-fact{ grid-column: auto; }
-    .snap-pay-mkt { grid-column: auto; }
-  }
-
-  /* Mobile: 1 column */
-  @media (max-width: 575.98px){
-    .snap-cards{ grid-template-columns: 1fr; }
-    .snap-pay-fact{ grid-column: auto; }
-    .snap-pay-mkt { grid-column: auto; }
-  }
-</style>
-
+<!-- ===== كروت Snapshot ===== -->
 <div class="snap-cards mb-2">
-  <!-- الصف الأول (5 كروت) -->
- <div class="card p-2 snap-card">
-    <div class="text-muted small snap-title">رصيد الخزنة (حالي)</div>
-    <div class="fs-5 fw-bold">{{ '%.2f'|format(cashbox_balance or 0) }} ج.م</div>
+
+  <!-- لينا -->
+  <div class="snap-card card-asset">
+    <div class="snap-label">🏦 رصيد الخزنة (حالي)</div>
+    <div class="snap-value">{{ money0(cashbox_balance or 0) }} <small>ج.م</small></div>
+    <div class="snap-sub">رصيد افتتاحي + (وارد − صادر) مع استبعاد SubCash</div>
   </div>
 
-  <div class="card p-2 snap-card">
-    <div class="text-muted small snap-title">المخزون بالتكلفة</div>
-    <div class="fs-5 fw-bold">{{ '%.2f'|format(inventory_cost or 0) }} ج.م</div>
+  <div class="snap-card card-asset">
+    <div class="snap-label">📦 المخزون بالتكلفة</div>
+    <div class="snap-value">{{ money0(inventory_cost or 0) }} <small>ج.م</small></div>
+    <div class="snap-sub">حساب مباشر من (الكمية × التكلفة) لكل صنف</div>
   </div>
 
-  <div class="card p-2 snap-card">
-    <div class="text-muted small snap-title">ذمم مدينة – شركات الشحن</div>
-    <div class="fs-5 fw-bold">{{ '%.2f'|format(recv_shipping or 0) }} ج.م</div>
+  <div class="snap-card card-asset">
+    <div class="snap-label">🚚 ذمم مدينة – شركات الشحن</div>
+    <div class="snap-value">{{ money0(recv_shipping or 0) }} <small>ج.م</small></div>
+    <div class="snap-sub">صافي المستحق من صفحة حسابات الشحن</div>
   </div>
 
-  <div class="card p-2 snap-card">
-    <div class="text-muted small snap-title">ذمم مدينة – المصانع</div>
-    <div class="fs-5 fw-bold">{{ '%.2f'|format(recv_factories or 0) }} ج.م</div>
+  <div class="snap-card card-asset">
+    <div class="snap-label">🏭 ذمم مدينة – المصانع</div>
+    <div class="snap-value">{{ money0(recv_factories or 0) }} <small>ج.م</small></div>
+    <div class="snap-sub">صافي المصانع سالب ⇒ لينا عند المصانع</div>
   </div>
 
-  <div class="card p-2 snap-card">
-    <div class="text-muted small snap-title">ذمم مدينة – خامات إنتاج</div>
-    <div class="fs-5 fw-bold">
-      {{ '%.2f'|format((recv_materials if recv_materials is defined else 0) or 0) }} ج.م
-    </div>
+  <div class="snap-card card-asset">
+    <div class="snap-label">🧪 ذمم مدينة – خامات إنتاج</div>
+    <div class="snap-value">{{ money0((recv_materials if recv_materials is defined else 0) or 0) }} <small>ج.م</small></div>
+    <div class="snap-sub">رصيد خامات الإنتاج (IN-OUT)</div>
   </div>
 
-  <!-- الصف الثاني (2 كروت متمركزين ومتساويين) -->
-  <div class="card p-2 snap-card snap-pay-fact">
-    <div class="text-muted small snap-title">ذمم دائنة – المصانع</div>
-    <div class="fs-5 fw-bold">{{ '%.2f'|format(pay_factories or 0) }} ج.م</div>
+  <!-- علينا -->
+  <div class="snap-card card-liab snap-pay-fact">
+    <div class="snap-label">🧾 ذمم دائنة – المصانع</div>
+    <div class="snap-value">{{ money0(pay_factories or 0) }} <small>ج.م</small></div>
+    <div class="snap-sub">صافي المصانع موجب ⇒ علينا للمصانع</div>
   </div>
 
-  <div class="card p-2 snap-card snap-pay-mkt">
-    <div class="text-muted small snap-title">ذمم دائنة – المسوقون</div>
-    <div class="fs-5 fw-bold">{{ '%.2f'|format(pay_marketers or 0) }} ج.م</div>
+  <div class="snap-card card-liab snap-pay-mkt">
+    <div class="snap-label">👥 ذمم دائنة – المسوقون</div>
+    <div class="snap-value">{{ money0(pay_marketers or 0) }} <small>ج.م</small></div>
+    <div class="snap-sub">قابلة للإضافة لاحقًا</div>
   </div>
+
 </div>
-<!-- ✅ /كروت -->
 
-<!-- الجدول التحليلي (بالجنيه) -->
-<div class="card p-2 mt-3">
+<!-- ===== جدول تحليلي (✅ رجّعناه كامل زي القديم بأرقامه) ===== -->
+<div class="snap-topcard snap-table mt-3">
   <div class="table-responsive">
     <table class="table table-sm table-bordered align-middle mb-0">
       <thead class="table-light">
@@ -153,57 +217,63 @@
       <tbody>
         <tr>
           <td>المخزون بالتكلفة</td>
-          <td class="text-end fw-bold">{{ '%.2f'|format(inventory_cost or 0) }} ج.م</td>
+          <td class="text-end fw-bold">{{ money0(inventory_cost or 0) }} ج.م</td>
           <td class="text-muted small">حساب مباشر من (الكمية × التكلفة) لكل صنف</td>
         </tr>
         <tr>
           <td>رصيد الخزنة (حالي)</td>
-          <td class="text-end fw-bold">{{ '%.2f'|format(cashbox_balance or 0) }} ج.م</td>
+          <td class="text-end fw-bold">{{ money0(cashbox_balance or 0) }} ج.م</td>
           <td class="text-muted small">رصيد افتتاحي + (وارد − صادر) مع استبعاد تحويلات SubCash</td>
         </tr>
+
         <tr>
           <td>ذمم مدينة — شركات الشحن</td>
-          <td class="text-end fw-bold">{{ '%.2f'|format(recv_shipping or 0) }} ج.م</td>
+          <td class="text-end fw-bold">{{ money0(recv_shipping or 0) }} ج.م</td>
           <td class="text-muted small">صافي المستحق من صفحة حسابات الشحن</td>
         </tr>
         <tr>
           <td>ذمم مدينة — المصانع</td>
-          <td class="text-end fw-bold">{{ '%.2f'|format(recv_factories or 0) }} ج.م</td>
+          <td class="text-end fw-bold">{{ money0(recv_factories or 0) }} ج.م</td>
           <td class="text-muted small">صافي المصانع سالب ⇒ لينا عند المصانع</td>
         </tr>
         <tr>
           <td>ذمم مدينة — خامات إنتاج</td>
-          <td class="text-end fw-bold">
-            {{ '%.2f'|format((recv_materials if recv_materials is defined else 0) or 0) }} ج.م
-          </td>
-          <td class="text-muted small">رصيد خامات الإنتاج (IN-OUT) من صفحة خامات إنتاج</td>
+          <td class="text-end fw-bold">{{ money0((recv_materials if recv_materials is defined else 0) or 0) }} ج.م</td>
+          <td class="text-muted small">رصيد خامات الإنتاج (IN-OUT)</td>
         </tr>
 
         <tr class="table-light">
           <td class="fw-bold">إجمالي الذمم المدينة</td>
-          <td class="text-end fw-bold">{{ '%.2f'|format(receivables_total or 0) }} ج.م</td>
+          <td class="text-end fw-bold">{{ money0(receivables_total or 0) }} ج.م</td>
           <td></td>
         </tr>
 
         <tr>
           <td>ذمم دائنة — المصانع</td>
-          <td class="text-end fw-bold">{{ '%.2f'|format(pay_factories or 0) }} ج.م</td>
+          <td class="text-end fw-bold">{{ money0(pay_factories or 0) }} ج.م</td>
           <td class="text-muted small">صافي المصانع موجب ⇒ علينا للمصانع</td>
         </tr>
         <tr>
           <td>ذمم دائنة — المسوقون</td>
-          <td class="text-end fw-bold">{{ '%.2f'|format(pay_marketers or 0) }} ج.م</td>
-          <td class="text-muted small">قابلة للإضافة لاحقًا لو توفرت جداول المستحقات</td>
+          <td class="text-end fw-bold">{{ money0(pay_marketers or 0) }} ج.م</td>
+          <td class="text-muted small">قابلة للإضافة لاحقًا</td>
         </tr>
+
         <tr class="table-light">
           <td class="fw-bold">إجمالي الذمم الدائنة</td>
-          <td class="text-end fw-bold">{{ '%.2f'|format(payables_total or 0) }} ج.م</td>
+          <td class="text-end fw-bold">{{ money0(payables_total or 0) }} ج.م</td>
           <td></td>
+        </tr>
+
+        <tr class="table-warning">
+          <td class="fw-bold">🗑️ قيمة مخزون الهالك (للمعلومية)</td>
+          <td class="text-end fw-bold text-warning">{{ money0(wastage_cost if wastage_cost is defined else 0) }} ج.م</td>
+          <td class="text-muted small">غير قابل للبيع حالياً — لا يؤثر على صافي قيمة الشركة</td>
         </tr>
 
         <tr class="table-primary">
           <td class="fw-bold">📈 صافي قيمة الشركة</td>
-          <td class="text-end fw-bold">{{ '%.2f'|format(company_value or 0) }} ج.م</td>
+          <td class="text-end fw-bold">{{ money0(company_value or 0) }} ج.م</td>
           <td class="text-muted small">(المخزون + الخزنة + الذمم المدينة) − (الذمم الدائنة)</td>
         </tr>
       </tbody>
@@ -211,12 +281,12 @@
   </div>
 </div>
 
-<!-- الكارت الختامي -->
-<div class="card p-3 mt-3">
+<!-- كارت ختامي -->
+<div class="snap-topcard p-3 mt-3">
   <div class="d-flex justify-content-between align-items-center">
     <div>
       <div class="text-muted">📈 القيمة الحالية للشركة</div>
-      <div class="display-6 fw-bold">{{ '%.2f'|format(company_value or 0) }} ج.م</div>
+      <div class="display-6 fw-bold">{{ money0(company_value or 0) }} ج.م</div>
     </div>
     <div class="small text-muted">
       (المخزون + الخزنة + الذمم المدينة) − (الذمم الدائنة)
@@ -224,54 +294,85 @@
   </div>
 </div>
 
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 (function(){
-  const ctx = document.getElementById('companyTinyChart');
-  if(!ctx) return;
+  let chartLoaded = false;
+  let chartInstance = null;
 
-  const labels = {{ series_labels|tojson }};
-  const values = {{ series_values|tojson }};
+  function loadScriptOnce(src){
+    return new Promise((resolve, reject)=>{
+      const existing = document.querySelector('script[data-src="'+src+'"]');
+      if(existing){ resolve(); return; }
+      const s = document.createElement('script');
+      s.src = src;
+      s.async = true;
+      s.setAttribute('data-src', src);
+      s.onload = ()=> resolve();
+      s.onerror = ()=> reject();
+      document.body.appendChild(s);
+    });
+  }
 
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: 'قيمة الشركة',
-        data: values,
-        fill: false,
-        tension: 0.25,
-        pointRadius: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => 'قيمة الشركة: ' + (ctx.parsed.y ?? 0).toFixed(2) + ' ج.م'
-          }
-        }
+  async function renderChart(){
+    if(chartLoaded) return;
+    chartLoaded = true;
+
+    // تحميل Chart.js عند الطلب فقط
+    await loadScriptOnce('https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js');
+
+    // جلب بيانات الجراف عند فتح الـ collapse
+    const params = new URLSearchParams();
+    params.set('include_admin', String({{ include_admin or 1 }}));
+    params.set('dfrom', '{{ dfrom }}');
+    params.set('dto', '{{ dto }}');
+
+    const res = await fetch('/finance/snapshot/chart-data?' + params.toString());
+    const js = await res.json();
+
+    const ctx = document.getElementById('companyTinyChart');
+    if(!ctx) return;
+
+    const labels = js.labels || [];
+    const values = js.values || [];
+
+    if(chartInstance){ chartInstance.destroy(); }
+
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'قيمة الشركة',
+          data: values,
+          fill: false,
+          tension: 0.25,
+          pointRadius: 2
+        }]
       },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: { maxTicksLimit: 6 }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (c) => 'قيمة الشركة: ' + Math.round(c.parsed.y ?? 0).toLocaleString() + ' ج.م'
+            }
+          }
         },
-        y: {
-          grid: { display: true },
-          ticks: {
-            callback: (v)=> (v ?? 0).toLocaleString() + ' ج.م'
-          }
-        }
-      },
-      elements: { line: { borderWidth: 2 } }
-    }
-  });
+        scales: {
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 6 } },
+          y: { grid: { display: true }, ticks: { callback: (v)=> Math.round(v ?? 0).toLocaleString() + ' ج.م' } }
+        },
+        elements: { line: { borderWidth: 2 } }
+      }
+    });
+  }
+
+  const collapseEl = document.getElementById('chartCollapse');
+  if(collapseEl){
+    collapseEl.addEventListener('shown.bs.collapse', ()=>{ renderChart(); });
+  }
 })();
 </script>
 

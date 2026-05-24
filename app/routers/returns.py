@@ -64,10 +64,20 @@ def returns_home(
     request: Request,
     page: int = Query(1, ge=1, description="رقم الصفحة"),
     page_size: int = Query(5, ge=1, le=100, description="عدد العناصر في الصفحة"),
+    q: str = Query("", description="بحث"),
     db: Session = Depends(get_db)
 ):
     """قائمة المرتجعات مع تقسيم صفحات."""
     base_q = db.query(models.Invoice).filter(models.Invoice.type == "R")
+
+    # البحث
+    if q and q.strip():
+        q_str = f"%{q.strip()}%"
+        base_q = base_q.filter(
+            (models.Invoice.invoice_code.like(q_str)) |
+            (models.Invoice.original_sale_code.like(q_str)) |
+            (models.Invoice.customer_name.like(q_str))
+        )
 
     # إجمالي السجلات
     total_count = base_q.count()
@@ -96,6 +106,7 @@ def returns_home(
         "pages": pages,
         "has_prev": page > 1,
         "has_next": page < pages,
+        "q": q,
     })
 
 @router.get("/new", response_class=HTMLResponse)

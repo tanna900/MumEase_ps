@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-3">
+
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <h4 class="mb-0 fw-bold">📊 تقرير مبيعات المنتجات (صافي بعد المرتجعات)</h4>
+    <a href="/reports" class="btn btn-outline-secondary btn-sm">← التقارير</a>
+  </div>
+
+  <form method="get" action="/reports/products-sales" class="row g-2 align-items-end mb-4">
+    <div class="col-auto">
+      <label class="form-label small mb-1">من</label>
+      <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from }}">
+    </div>
+    <div class="col-auto">
+      <label class="form-label small mb-1">إلى</label>
+      <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to }}">
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary btn-sm">🔍 عرض</button>
+      <a href="/reports/products-sales?date_from={{ date_from }}&date_to={{ date_to }}&export=csv"
+         class="btn btn-success btn-sm">⬇️ تصدير</a>
+    </div>
+  </form>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card text-center border-primary py-2">
+        <div class="card-body p-2">
+          <div class="text-muted small">صافي قطع مباعة</div>
+          <div class="fs-4 fw-bold text-primary">{{ total_net_qty }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center border-success py-2">
+        <div class="card-body p-2">
+          <div class="text-muted small">صافي المبيعات</div>
+          <div class="fs-5 fw-bold text-success">{{ "{:,.0f}".format(total_net_sales) }} ج</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center border-warning py-2">
+        <div class="card-body p-2">
+          <div class="text-muted small">إجمالي التكلفة</div>
+          <div class="fs-5 fw-bold text-warning">{{ "{:,.0f}".format(total_net_cost) }} ج</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center py-2 {{ 'border-success' if total_net_profit >= 0 else 'border-danger' }}">
+        <div class="card-body p-2">
+          <div class="text-muted small">صافي الربح</div>
+          <div class="fs-5 fw-bold {{ 'text-success' if total_net_profit >= 0 else 'text-danger' }}">
+            {{ "{:,.0f}".format(total_net_profit) }} ج
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-header fw-bold bg-dark text-white d-flex justify-content-between align-items-center">
+      <span>تفاصيل المنتجات</span>
+      <span class="badge bg-secondary">{{ rows|length }} صنف</span>
+    </div>
+    <div style="height:520px; overflow-y:auto;" id="tableWrapper">
+      <table class="table table-bordered table-hover table-sm align-middle mb-0" id="salesTable">
+        <thead style="position:sticky; top:0; z-index:2; background:#212529;">
+          <tr>
+            <th style="min-width:160px; color:#fff; cursor:pointer;" data-col="0" data-type="str">المنتج ↕</th>
+            <th class="text-center" style="min-width:80px; color:#fff; cursor:pointer;" data-col="1" data-type="str">اللون ↕</th>
+            <th class="text-center" style="min-width:70px; color:#fff; cursor:pointer;" data-col="2" data-type="str">المقاس ↕</th>
+            <th class="text-center" style="min-width:60px; color:#fff; cursor:pointer;" data-col="3" data-type="num">مباع ↕</th>
+            <th class="text-center" style="min-width:70px; color:#fff; cursor:pointer;" data-col="4" data-type="num">مرتجع ↕</th>
+            <th class="text-center" style="min-width:80px; color:#fff; cursor:pointer;" data-col="5" data-type="num">صافي قطع ↕</th>
+            <th class="text-center" style="min-width:90px; color:#fff;">% من الإجمالي</th>
+            <th class="text-end" style="min-width:110px; color:#fff; cursor:pointer;" data-col="6" data-type="num">صافي مبيعات ↕</th>
+            <th class="text-end" style="min-width:110px; color:#fff; cursor:pointer;" data-col="7" data-type="num">إجمالي تكلفة ↕</th>
+            <th class="text-end" style="min-width:100px; color:#fff; cursor:pointer;" data-col="8" data-type="num">صافي ربح ↕</th>
+            <th class="text-center" style="min-width:70px; color:#fff; cursor:pointer;" data-col="9" data-type="num">ستوك ↕</th>
+          </tr>
+        </thead>
+        <tbody id="salesBody">
+          {% for r in rows %}
+          <tr
+            data-name="{{ r.name }}"
+            data-color="{{ r.color }}"
+            data-size="{{ r.size }}"
+            data-sold="{{ r.sold_qty }}"
+            data-ret="{{ r.ret_qty }}"
+            data-net="{{ r.net_qty }}"
+            data-sales="{{ r.net_sales }}"
+            data-cost="{{ r.net_cost }}"
+            data-profit="{{ r.net_profit }}"
+            data-stock="{{ r.stock }}"
+          >
+            <td class="fw-semibold">{{ r.name }}</td>
+            <td class="text-center">{% if r.color %}<span class="badge bg-secondary">{{ r.color }}</span>{% else %}—{% endif %}</td>
+            <td class="text-center">{% if r.size %}<span class="badge bg-light text-dark border">{{ r.size }}</span>{% else %}—{% endif %}</td>
+            <td class="text-center">{{ r.sold_qty }}</td>
+            <td class="text-center text-danger">{% if r.ret_qty > 0 %}-{{ r.ret_qty }}{% else %}—{% endif %}</td>
+            <td class="text-center fw-bold text-success">{{ r.net_qty }}</td>
+            <td class="text-center text-primary fw-bold pct-cell">—</td>
+            <td class="text-end">{{ "{:,.0f}".format(r.net_sales) }} ج</td>
+            <td class="text-end text-muted">{{ "{:,.0f}".format(r.net_cost) }} ج</td>
+            <td class="text-end fw-bold {{ 'text-success' if r.net_profit >= 0 else 'text-danger' }}">{{ "{:,.0f}".format(r.net_profit) }} ج</td>
+            <td class="text-center {{ 'text-danger fw-bold' if r.stock < 4 else '' }}">{{ r.stock }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="11" class="text-center text-muted py-4">لا توجد مبيعات في هذه الفترة</td></tr>
+          {% endfor %}
+        </tbody>
+        <tfoot style="position:sticky; bottom:0; z-index:2; background:#e9ecef;">
+          <tr class="fw-bold">
+            <td colspan="3">الإجمالي</td>
+            <td class="text-center">—</td>
+            <td class="text-center">—</td>
+            <td class="text-center text-success">{{ total_net_qty }}</td>
+            <td class="text-center">100%</td>
+            <td class="text-end">{{ "{:,.0f}".format(total_net_sales) }} ج</td>
+            <td class="text-end">{{ "{:,.0f}".format(total_net_cost) }} ج</td>
+            <td class="text-end {{ 'text-success' if total_net_profit >= 0 else 'text-danger' }}">{{ "{:,.0f}".format(total_net_profit) }} ج</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  const dataKeys = ['name','color','size','sold','ret','net','sales','cost','profit','stock'];
+  let sortCol = 5;
+  let sortAsc = false;
+
+  const tbody = document.getElementById('salesBody');
+  const headers = document.querySelectorAll('#salesTable thead th[data-col]');
+
+  // حساب إجمالي صافي القطع عشان نحسب النسبة
+  const totalNetQty = {{ total_net_qty }};
+
+  function calcPcts() {
+    tbody.querySelectorAll('tr[data-name]').forEach(row => {
+      const net = parseFloat(row.dataset.net) || 0;
+      const pct = totalNetQty > 0 ? (net / totalNetQty * 100).toFixed(1) + '%' : '—';
+      const cell = row.querySelector('.pct-cell');
+      if (cell) cell.textContent = pct;
+    });
+  }
+
+  function sortTable(colIdx, type) {
+    const rows = Array.from(tbody.querySelectorAll('tr[data-name]'));
+    const key = dataKeys[colIdx];
+
+    rows.sort((a, b) => {
+      let va = a.dataset[key] || '';
+      let vb = b.dataset[key] || '';
+      if (type === 'num') {
+        va = parseFloat(va) || 0;
+        vb = parseFloat(vb) || 0;
+        return sortAsc ? va - vb : vb - va;
+      } else {
+        return sortAsc ? va.localeCompare(vb, 'ar') : vb.localeCompare(va, 'ar');
+      }
+    });
+
+    rows.forEach(r => tbody.appendChild(r));
+
+    document.querySelectorAll('#salesTable thead th').forEach((th, i) => {
+      const base = th.textContent.replace(/ [↑↓↕]/g, '').trim();
+      const col = parseInt(th.dataset.col);
+      if (!isNaN(col)) {
+        th.textContent = base + (col === colIdx ? (sortAsc ? ' ↑' : ' ↓') : ' ↕');
+      }
+    });
+  }
+
+  headers.forEach((th) => {
+    th.addEventListener('click', function () {
+      const col = parseInt(this.dataset.col);
+      const type = this.dataset.type;
+      if (sortCol === col) { sortAsc = !sortAsc; } else { sortCol = col; sortAsc = false; }
+      sortTable(col, type);
+    });
+  });
+
+  sortTable(sortCol, 'num');
+  calcPcts();
+})();
+</script>
+
+{% endblock %}

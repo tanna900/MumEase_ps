@@ -1,10 +1,10 @@
 # app/routers/finance.py
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 from fastapi import APIRouter, Request, Depends, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from sqlalchemy.orm import Session
-from sqlalchemy import func, case
+from sqlalchemy import func, case, and_, or_
 from fastapi.templating import Jinja2Templates
 import csv, io
 
@@ -22,10 +22,10 @@ def get_db():
     finally:
         db.close()
 
-# ---------- Sub-wallets (NEW) ----------
+# ---------- Sub-wallets ----------
 SUB_WALLETS = [
-    {"key": "instapay", "label": "InstaPay",           "cat": "SubCash:InstaPay"},
-    {"key": "ewallet",  "label": "محفظة إلكترونية",    "cat": "SubCash:EWallet"},
+    {"key": "instapay", "label": "InstaPay",        "cat": "SubCash:InstaPay"},
+    {"key": "ewallet",  "label": "محفظة إلكترونية", "cat": "SubCash:EWallet"},
 ]
 
 def _sub_wallet_by_key(key: str):
@@ -49,7 +49,7 @@ def _sub_balance(db: Session, cat: str) -> float:
     return sum_in - sum_out
 
 # =========================
-# 🆕 Raw Materials (خامات إنتاج) helpers
+# Raw Materials helpers
 # =========================
 RAW_MAT_CATS = {
     "خامات انتاج",
@@ -64,8 +64,7 @@ def _is_raw_material_cat(cat: str) -> bool:
 
 def _ensure_raw_material_tables(db: Session):
     """
-    Auto-create tables on SQLite فقط (زي أسلوبك).
-    لو DB تانية، سيبه للمهاجرات.
+    Auto-create tables on SQLite only.
     """
     try:
         engine = db.get_bind()
@@ -112,7 +111,6 @@ def _ensure_raw_material_tables(db: Session):
             pass
 
 def _gen_raw_voucher_code(db: Session, d: str) -> str:
-    # d = "YYYY-MM-DD"
     base = "RM-" + (d or datetime.now().strftime("%Y-%m-%d")).replace("-", "")
     try:
         cnt = (
@@ -127,19 +125,16 @@ def _gen_raw_voucher_code(db: Session, d: str) -> str:
 def _raw_balance(db: Session) -> float:
     try:
         _ensure_raw_material_tables(db)
-        total_in = float(
-            db.query(func.coalesce(func.sum(models.RawMaterialVoucher.amount), 0.0)).scalar() or 0.0
-        )
-        total_out = float(
-            db.query(func.coalesce(func.sum(models.RawMaterialAllocation.amount), 0.0)).scalar() or 0.0
-        )
+        total_in = float(db.query(func.coalesce(func.sum(models.RawMaterialVoucher.amount), 0.0)).scalar() or 0.0)
+        total_out = float(db.query(func.coalesce(func.sum(models.RawMaterialAllocation.amount), 0.0)).scalar() or 0.0)
         return round(total_in - total_out, 2)
     except Exception:
         return 0.0
 
 # ---------- helpers ----------
 def _parse_date(s: Optional[str]):
-    if not s: return None
+    if not s:
+        return None
     try:
         return datetime.strptime(s, "%Y-%m-%d")
     except:
@@ -170,6 +165,30 @@ def _set_opening_balance(db: Session, val: float):
         s.value = str(val)
     db.commit()
 
+def _balance_until_entry(
+    db: Session,
+    base_q,
+    opening: float,
+    entry
+) -> float:
+    """
+    Balance after (<= entry) within same filters as base_q.
+    Only 2 SUM queries per page.
+    """
+    cond = or_(
+        models.FinanceEntry.date < entry.date,
+        and_(models.FinanceEntry.date == entry.date, models.FinanceEntry.id <= entry.id)
+    )
+
+    q_in = base_q.with_entities(func.coalesce(func.sum(models.FinanceEntry.amount), 0.0)) \
+                 .filter(models.FinanceEntry.type == "IN", cond)
+    q_out = base_q.with_entities(func.coalesce(func.sum(models.FinanceEntry.amount), 0.0)) \
+                  .filter(models.FinanceEntry.type == "OUT", cond)
+
+    total_in = float(q_in.scalar() or 0.0)
+    total_out = float(q_out.scalar() or 0.0)
+    return round(float(opening or 0.0) + total_in - total_out, 2)
+
 # ---------- pages ----------
 @router.get("", response_class=HTMLResponse)
 def cash_home(
@@ -178,18 +197,18 @@ def cash_home(
     category: str = "",
     date_from: str = "",
     date_to: str = "",
-    page: int = Query(1, ge=1, description="رقم الصفحة"),          # ← NEW
-    per_page: int = Query(15, ge=1, le=200, description="عدد السجلات في الصفحة"),  # ← NEW (افتراضي 15)
+    page: int = Query(1, ge=1, description="رقم الصفحة"),
+    per_page: int = Query(15, ge=1, le=200, description="عدد السجلات في الصفحة"),
     db: Session = Depends(get_db)
 ):
-    # لستة البنود (Distinct)
+    # categories distinct
     cats = [c[0] for c in db.query(models.FinanceEntry.category)
                          .filter(models.FinanceEntry.category.isnot(None))
                          .group_by(models.FinanceEntry.category)
                          .order_by(models.FinanceEntry.category.asc())
                          .all()]
 
-    # ====== NEW: base query with filters (للاستخدام في العد والنتائج) ======
+    # base query with filters (reused)
     base_q = db.query(models.FinanceEntry)
     if category:
         base_q = base_q.filter(models.FinanceEntry.category == category)
@@ -199,16 +218,13 @@ def cash_home(
     if date_from or date_to:
         base_q = _filter_range(base_q, models.FinanceEntry.date, date_from, date_to)
 
-    # إجمالي السجلات المطابقة (قبل التقسيم)
     total_count = base_q.count()
 
-    # حساب الصفحات
     per_page = max(1, int(per_page))
     pages = max(1, (total_count + per_page - 1) // per_page)
     page = min(max(1, int(page)), pages)
     offset = (page - 1) * per_page
 
-    # الاستعلام المعروض — الأحدث أولاً + limit/offset
     qry = (
         base_q
         .order_by(models.FinanceEntry.date.desc(), models.FinanceEntry.id.desc())
@@ -216,28 +232,35 @@ def cash_home(
         .limit(per_page)
     )
     rows = qry.all()
-    # ====== /NEW ======
 
-    # إجماليات كلّية (مع فِلتر البند لو مستخدم)
-    total_in_q = db.query(func.coalesce(func.sum(models.FinanceEntry.amount), 0.0))\
-                   .filter(models.FinanceEntry.type == "IN")
-    total_out_q = db.query(func.coalesce(func.sum(models.FinanceEntry.amount), 0.0))\
-                    .filter(models.FinanceEntry.type == "OUT")
+    # totals within filters
+    total_in_q = base_q.with_entities(func.coalesce(func.sum(models.FinanceEntry.amount), 0.0)) \
+                       .filter(models.FinanceEntry.type == "IN")
+    total_out_q = base_q.with_entities(func.coalesce(func.sum(models.FinanceEntry.amount), 0.0)) \
+                        .filter(models.FinanceEntry.type == "OUT")
 
-    if category:
-        total_in_q  = total_in_q.filter(models.FinanceEntry.category == category)
-        total_out_q = total_out_q.filter(models.FinanceEntry.category == category)
-    if date_from or date_to:
-        total_in_q  = _filter_range(total_in_q,  models.FinanceEntry.date, date_from, date_to)
-        total_out_q = _filter_range(total_out_q, models.FinanceEntry.date, date_from, date_to)
-
-    total_in  = float(total_in_q.scalar()  or 0.0)
+    total_in = float(total_in_q.scalar() or 0.0)
     total_out = float(total_out_q.scalar() or 0.0)
 
     opening = _opening_balance(db)
-    balance = opening + total_in - total_out
+    balance = float(opening or 0.0) + total_in - total_out
 
-    # ملخّص حسب البند (لأزرار الفلاتر)
+    # running balance column (balance after each entry)
+    running_by_id = {}
+    if rows:
+        # newest row in this page
+        pivot = rows[0]
+        current = _balance_until_entry(db=db, base_q=base_q, opening=opening, entry=pivot)
+
+        for r in rows:
+            running_by_id[r.id] = round(current, 2)
+            amt = float(r.amount or 0.0)
+            if r.type == "IN":
+                current -= amt
+            else:
+                current += amt
+
+    # by category summary (no need for filter, your old behavior)
     by_cat = db.query(
         models.FinanceEntry.category,
         func.coalesce(
@@ -248,7 +271,7 @@ def cash_home(
         ).label("sum_out"),
     ).group_by(models.FinanceEntry.category).order_by(models.FinanceEntry.category.asc()).all()
 
-    # --------- NEW: عداد دفعات الشحن غير المُرحّلة للخزنة ---------
+    # unlinked shipping payments
     try:
         subq = db.query(models.ShippingPaymentCashMap.payment_id)
         unlinked_q = db.query(models.ShippingPayment).filter(~models.ShippingPayment.id.in_(subq))
@@ -259,23 +282,19 @@ def cash_home(
               .scalar() or 0.0
         )
     except Exception:
-        # لو جداول الربط/الدفعات مش موجودة، ما نكسرش الصفحة
         unlinked_count = 0
         unlinked_sum = 0.0
-    # ---------------------------------------------------------------
 
-    # --------- NEW: أرصدة الخزن الفرعية ---------
+    # sub-wallet balances
     sub_balances = []
     total_sub_balance = 0.0
     for w in SUB_WALLETS:
         bal = _sub_balance(db, w["cat"])
         sub_balances.append({"key": w["key"], "label": w["label"], "cat": w["cat"], "balance": bal})
         total_sub_balance += bal
-    # ---------------------------------------------
 
-    # --------- NEW: رصيد خامات إنتاج (تحت التشغيل) ---------
+    # raw materials balance
     raw_material_balance = _raw_balance(db)
-    # -------------------------------------------------------
 
     return templates.TemplateResponse("finance_cash.html", {
         "request": request,
@@ -290,19 +309,22 @@ def cash_home(
         "total_in": total_in,
         "total_out": total_out,
         "balance": balance,
-        # موجودة سابقًا:
+
         "unlinked_count": unlinked_count,
         "unlinked_sum": unlinked_sum,
-        # NEW:
+
         "sub_balances": sub_balances,
         "total_sub_balance": total_sub_balance,
-        # Pagination NEW:
+
         "page": page,
         "per_page": per_page,
         "pages": pages,
         "total_count": total_count,
-        # Raw materials NEW:
+
         "raw_material_balance": raw_material_balance,
+
+        # ✅ NEW:
+        "running_by_id": running_by_id,
     })
 
 @router.post("/add")
@@ -312,23 +334,32 @@ def cash_add(
     amount: float = Form(...),
     date: str = Form(...),
     note: str = Form(""),
+
+    # حفظ الفلاتر بعد الإضافة
+    q: str = Form(""),
+    category_filter: str = Form(""),
+    date_from: str = Form(""),
+    date_to: str = Form(""),
+    page: int = Form(1),
+    per_page: int = Form(15),
+
     db: Session = Depends(get_db)
 ):
-    if type not in ("IN","OUT"):
+    if type not in ("IN", "OUT"):
         return RedirectResponse(url="/cash?msg=⚠️ نوع الحركة غير صحيح", status_code=303)
+
     category = (category or "").strip()
     if not category:
         return RedirectResponse(url="/cash?msg=⚠️ اكتب البند", status_code=303)
+
     try:
         amount = float(amount)
     except:
         return RedirectResponse(url="/cash?msg=⚠️ المبلغ غير صالح", status_code=303)
 
-    # لو التاريخ فاضي خلّيه تاريخ اليوم بصيغة YYYY-MM-DD
     if not date:
         date = datetime.now().strftime("%Y-%m-%d")
 
-    # ✅ تأكد الجداول موجودة (SQLite auto)
     _ensure_raw_material_tables(db)
 
     fe = models.FinanceEntry(
@@ -339,9 +370,8 @@ def cash_add(
         note=(note or "").strip() or None
     )
     db.add(fe)
-    db.flush()  # عشان ناخد fe.id
+    db.flush()
 
-    # ✅ لو مصروف بند خامات إنتاج → اعمل Voucher تلقائي
     if type == "OUT" and _is_raw_material_cat(category):
         try:
             code = _gen_raw_voucher_code(db, date)
@@ -357,28 +387,101 @@ def cash_add(
             pass
 
     db.commit()
-    return RedirectResponse(url=f"/cash?msg=✓ تم الإضافة", status_code=303)
+
+    # رجّع لنفس الفلاتر
+    url = f"/cash?msg=✓ تم الإضافة&category={category_filter}&q={q}&date_from={date_from}&date_to={date_to}&page={page}&per_page={per_page}"
+    return RedirectResponse(url=url, status_code=303)
 
 @router.post("/delete")
-def cash_delete(eid: int = Form(...), db: Session = Depends(get_db)):
+def cash_delete(
+    eid: int = Form(...),
+
+    # حفظ الفلاتر بعد الحذف
+    q: str = Form(""),
+    category: str = Form(""),
+    date_from: str = Form(""),
+    date_to: str = Form(""),
+    page: int = Form(1),
+    per_page: int = Form(15),
+
+    db: Session = Depends(get_db)
+):
     row = db.query(models.FinanceEntry).get(int(eid))
     if row:
-        db.delete(row); db.commit()
-    return RedirectResponse(url="/cash?msg=✓ تم الحذف", status_code=303)
+        db.delete(row)
+        db.commit()
 
+    url = f"/cash?msg=✓ تم الحذف&category={category}&q={q}&date_from={date_from}&date_to={date_to}&page={page}&per_page={per_page}"
+    return RedirectResponse(url=url, status_code=303)
+
+# ✅ الرصيد الافتتاحي محمي بباسورد
 @router.post("/opening")
-def cash_set_opening(opening: float = Form(0), db: Session = Depends(get_db)):
+def cash_set_opening(
+    opening: float = Form(0),
+    password: str = Form(""),
+    db: Session = Depends(get_db)
+):
+    if (password or "").strip() != "00000":
+        return RedirectResponse(url="/cash?msg=⚠️ باسورد الرصيد الافتتاحي غير صحيح", status_code=303)
+
     try:
         val = float(opening or 0)
     except:
         val = 0.0
+
     _set_opening_balance(db, val)
     return RedirectResponse(url="/cash?msg=✓ تم ضبط رصيد افتتاحي", status_code=303)
 
-# --------- NEW: تحويل من خزنة فرعية إلى الخزنة الرئيسية ---------
+# ✅ NEW: تعديل حركة
+@router.post("/update")
+def cash_update(
+    eid: int = Form(...),
+    type: str = Form(...),
+    amount: float = Form(...),
+    date: str = Form(...),
+    note: str = Form(""),
+
+    # حفظ الفلاتر بعد التعديل
+    q: str = Form(""),
+    category: str = Form(""),
+    date_from: str = Form(""),
+    date_to: str = Form(""),
+    page: int = Form(1),
+    per_page: int = Form(15),
+
+    db: Session = Depends(get_db)
+):
+    row = db.query(models.FinanceEntry).get(int(eid))
+    if not row:
+        url = f"/cash?msg=⚠️ الحركة غير موجودة&category={category}&q={q}&date_from={date_from}&date_to={date_to}&page={page}&per_page={per_page}"
+        return RedirectResponse(url=url, status_code=303)
+
+    if type not in ("IN", "OUT"):
+        url = f"/cash?msg=⚠️ نوع الحركة غير صحيح&category={category}&q={q}&date_from={date_from}&date_to={date_to}&page={page}&per_page={per_page}"
+        return RedirectResponse(url=url, status_code=303)
+
+    try:
+        amt = float(amount)
+    except:
+        url = f"/cash?msg=⚠️ المبلغ غير صالح&category={category}&q={q}&date_from={date_from}&date_to={date_to}&page={page}&per_page={per_page}"
+        return RedirectResponse(url=url, status_code=303)
+
+    if not date:
+        date = row.date or datetime.now().strftime("%Y-%m-%d")
+
+    row.type = type
+    row.amount = amt
+    row.date = date
+    row.note = (note or "").strip() or None
+    db.commit()
+
+    url = f"/cash?msg=✓ تم التعديل&category={category}&q={q}&date_from={date_from}&date_to={date_to}&page={page}&per_page={per_page}"
+    return RedirectResponse(url=url, status_code=303)
+
+# تحويل من خزنة فرعية إلى الرئيسية
 @router.post("/transfer-sub")
 def transfer_sub_to_main(
-    source_key: str = Form(...),              # instapay / ewallet
+    source_key: str = Form(...),
     amount: float = Form(...),
     date: str = Form(""),
     note: str = Form(""),
@@ -393,11 +496,9 @@ def transfer_sub_to_main(
     except:
         return RedirectResponse(url="/cash?msg=⚠️ المبلغ غير صالح", status_code=303)
 
-    # التاريخ الافتراضي = اليوم
     if not date:
         date = datetime.now().strftime("%Y-%m-%d")
 
-    # لو المستخدم اختار 0 أو أقل، نجرب نستخدم “كل الرصيد”
     if amt <= 0:
         bal = _sub_balance(db, w["cat"])
         amt = round(bal, 2)
@@ -405,16 +506,13 @@ def transfer_sub_to_main(
     if amt <= 0:
         return RedirectResponse(url="/cash?msg=⚠️ لا يوجد رصيد متاح للتحويل", status_code=303)
 
-    # قيدين: OUT من الفرعية — IN في الرئيسية
-    # 1) OUT من البند الفرعي
     db.add(models.FinanceEntry(
         type="OUT",
         category=w["cat"],
         amount=amt,
         date=date,
-        note=(note or f"تحويل إلى الخزنة الرئيسية")
+        note=(note or "تحويل إلى الخزنة الرئيسية")
     ))
-    # 2) IN في الرئيسية (نخليه بند واضح)
     db.add(models.FinanceEntry(
         type="IN",
         category=f"تحويل من {w['label']}",
@@ -424,7 +522,6 @@ def transfer_sub_to_main(
     ))
     db.commit()
     return RedirectResponse(url="/cash?msg=✓ تم تحويل المبلغ للخزنة", status_code=303)
-# ---------------------------------------------------------------
 
 @router.get("/export")
 def cash_export(
@@ -434,15 +531,16 @@ def cash_export(
     q: str = "",
     db: Session = Depends(get_db)
 ):
-    # في التصدير: الأقدم -> الأحدث حسب التاريخ ثم الـ id
     qry = db.query(models.FinanceEntry).order_by(
         models.FinanceEntry.date.asc(),
         models.FinanceEntry.id.asc()
     )
+
     if category:
         qry = qry.filter(models.FinanceEntry.category == category)
     if q:
-        like = f"%{q}%"; qry = qry.filter(models.FinanceEntry.note.like(like))
+        like = f"%{q}%"
+        qry = qry.filter(models.FinanceEntry.note.like(like))
     if date_from or date_to:
         qry = _filter_range(qry, models.FinanceEntry.date, date_from, date_to)
 
@@ -450,25 +548,27 @@ def cash_export(
 
     opening = _opening_balance(db)
 
-    total_in_q = db.query(func.coalesce(func.sum(models.FinanceEntry.amount), 0.0))\
-                   .filter(models.FinanceEntry.type=="IN")
-    total_out_q = db.query(func.coalesce(func.sum(models.FinanceEntry.amount), 0.0))\
-                    .filter(models.FinanceEntry.type=="OUT")
+    total_in_q = db.query(func.coalesce(func.sum(models.FinanceEntry.amount), 0.0)) \
+                   .filter(models.FinanceEntry.type == "IN")
+    total_out_q = db.query(func.coalesce(func.sum(models.FinanceEntry.amount), 0.0)) \
+                    .filter(models.FinanceEntry.type == "OUT")
+
     if category:
-        total_in_q  = total_in_q.filter(models.FinanceEntry.category == category)
+        total_in_q = total_in_q.filter(models.FinanceEntry.category == category)
         total_out_q = total_out_q.filter(models.FinanceEntry.category == category)
     if date_from or date_to:
-        total_in_q  = _filter_range(total_in_q,  models.FinanceEntry.date, date_from, date_to)
+        total_in_q = _filter_range(total_in_q, models.FinanceEntry.date, date_from, date_to)
         total_out_q = _filter_range(total_out_q, models.FinanceEntry.date, date_from, date_to)
 
-    total_in  = float(total_in_q.scalar()  or 0.0)
+    total_in = float(total_in_q.scalar() or 0.0)
     total_out = float(total_out_q.scalar() or 0.0)
-    balance   = opening + total_in - total_out
+    balance = float(opening or 0.0) + total_in - total_out
 
-    buff = io.StringIO(); w = csv.writer(buff)
-    w.writerow(["التاريخ","النوع","البند","المبلغ","ملاحظة"])
+    buff = io.StringIO()
+    w = csv.writer(buff)
+    w.writerow(["التاريخ", "النوع", "البند", "المبلغ", "ملاحظة"])
     for r in items:
-        w.writerow([r.date, "إيراد" if r.type=="IN" else "مصروف", r.category, f"{(r.amount or 0):.2f}", r.note or ""])
+        w.writerow([r.date, "إيراد" if r.type == "IN" else "مصروف", r.category, f"{(r.amount or 0):.2f}", r.note or ""])
     w.writerow([])
     w.writerow(["الرصيد الافتتاحي", f"{opening:.2f}"])
     w.writerow(["إجمالي الإيرادات", f"{total_in:.2f}"])

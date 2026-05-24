@@ -3,6 +3,7 @@
 <h4 class="mb-3">🔔 مركز التنبيهات</h4>
 
 <div class="row g-3">
+
   <!-- عمود الأصناف -->
   <div class="col-md-6" id="lowstock">
     <div class="card h-100">
@@ -13,22 +14,22 @@
           <button class="btn btn-sm btn-outline-secondary" {% if not low_list %}disabled{% endif %}>تجاهل الكل</button>
         </form>
       </div>
-      <div class="card-body">
-        {% if low_list and low_list|length > 0 %}
-          <div class="table-responsive">
-            <table class="table table-sm table-bordered align-middle">
-              <thead class="table-light">
+      <div class="card-body p-0">
+        {% if low_list %}
+          <div style="max-height:320px; overflow-y:auto;">
+            <table class="table table-sm table-bordered align-middle mb-0">
+              <thead style="position:sticky; top:0; z-index:2; background:#f8f9fa;">
                 <tr>
                   <th>الصنف</th>
-                  <th style="width:120px" class="text-end">المخزون</th>
-                  <th style="width:100px" class="text-center">إجراء</th>
+                  <th style="width:100px" class="text-end">المخزون</th>
+                  <th style="width:90px" class="text-center">إجراء</th>
                 </tr>
               </thead>
               <tbody>
               {% for p in low_list %}
                 <tr>
                   <td>{{ p.name }}</td>
-                  <td class="text-end">{{ p.stock }}</td>
+                  <td class="text-end fw-bold text-danger">{{ p.stock }}</td>
                   <td class="text-center">
                     <form method="post" action="/alerts/ignore" class="d-inline">
                       <input type="hidden" name="kind" value="low_stock">
@@ -42,7 +43,7 @@
             </table>
           </div>
         {% else %}
-          <div class="text-muted">لا توجد أصناف منخفضة المخزون.</div>
+          <div class="text-muted p-3">لا توجد أصناف منخفضة المخزون.</div>
         {% endif %}
       </div>
       <div class="card-footer text-end">
@@ -55,25 +56,24 @@
   <div class="col-md-6" id="overdue">
     <div class="card h-100">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-clock-history me-1"></i> فواتير بيع أقدم من {{ DAYS_NO_ALLOCATION }} يوم بدون تخصيص دفعات</span>
+        <span><i class="bi bi-clock-history me-1"></i> فواتير بيع أقدم من {{ DAYS_NO_ALLOCATION }} يوم بدون تخصيص</span>
         <form method="post" action="/alerts/ignore-all" class="m-0">
           <input type="hidden" name="kind" value="overdue">
           <button class="btn btn-sm btn-outline-secondary" {% if not overdue_list %}disabled{% endif %}>تجاهل الكل</button>
         </form>
       </div>
-      <div class="card-body">
-        {% if overdue_list and overdue_list|length > 0 %}
-          <div class="table-responsive">
-            <table class="table table-sm table-bordered align-middle">
-              <thead class="table-light">
+      <div class="card-body p-0">
+        {% if overdue_list %}
+          <div style="max-height:320px; overflow-y:auto;">
+            <table class="table table-sm table-bordered align-middle mb-0">
+              <thead style="position:sticky; top:0; z-index:2; background:#f8f9fa;">
                 <tr>
-                  <th style="width:120px">رقم الفاتورة</th>
+                  <th>رقم الفاتورة</th>
                   <th>العميل</th>
-                  <th style="width:140px">الهاتف</th>
-                  <th style="width:160px">تاريخ الإنشاء</th>
-                  <th style="width:120px" class="text-end">أيام المرور</th>
-                  <th style="width:140px" class="text-end">قيمة الفاتورة</th>
-                  <th style="width:100px" class="text-center">إجراء</th>
+                  <th style="width:120px">الهاتف</th>
+                  <th style="width:80px" class="text-end">أيام</th>
+                  <th style="width:110px" class="text-end">القيمة</th>
+                  <th style="width:80px" class="text-center">إجراء</th>
                 </tr>
               </thead>
               <tbody>
@@ -82,9 +82,8 @@
                   <td><a href="/invoices/{{ r.id }}" class="text-decoration-none">{{ r.code }}</a></td>
                   <td>{{ r.customer }}</td>
                   <td dir="ltr">{{ r.phone }}</td>
-                  <td>{{ r.created_at.strftime("%Y-%m-%d %H:%M") if r.created_at else "-" }}</td>
-                  <td class="text-end">{{ r.age_days }}</td>
-                  <td class="text-end">{{ '%.2f'|format(r.total) }}</td>
+                  <td class="text-end text-danger fw-bold">{{ r.age_days }}</td>
+                  <td class="text-end">{{ '%.0f'|format(r.total) }} ج</td>
                   <td class="text-center">
                     <form method="post" action="/alerts/ignore" class="d-inline">
                       <input type="hidden" name="kind" value="overdue">
@@ -98,7 +97,7 @@
             </table>
           </div>
         {% else %}
-          <div class="text-muted">لا توجد فواتير تحتاج متابعة.</div>
+          <div class="text-muted p-3">لا توجد فواتير تحتاج متابعة.</div>
         {% endif %}
       </div>
       <div class="card-footer text-end">
@@ -106,5 +105,49 @@
       </div>
     </div>
   </div>
+
+  <!-- عمود الهالك -->
+  <div class="col-12" id="wastage">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center bg-warning bg-opacity-25">
+        <span><i class="bi bi-trash me-1"></i> أصناف هالكة أكتر من {{ HIGH_WASTAGE_THRESHOLD }} قطع</span>
+        <a href="/wastage" class="btn btn-sm btn-outline-warning">إدارة الهالك</a>
+      </div>
+      <div class="card-body p-0">
+        {% if wastage_list %}
+          <div style="max-height:300px; overflow-y:auto;">
+            <table class="table table-sm table-bordered align-middle mb-0">
+              <thead style="position:sticky; top:0; z-index:2; background:#fff3cd;">
+                <tr>
+                  <th>الصنف</th>
+                  <th class="text-center" style="width:120px;">كمية الهالك</th>
+                  <th class="text-end" style="width:140px;">قيمة الهالك</th>
+                  <th class="text-center" style="width:110px;">إجراء</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for p in wastage_list %}
+                <tr>
+                  <td class="fw-semibold">{{ p.name }}</td>
+                  <td class="text-center fw-bold text-danger">{{ p.wastage_stock }}</td>
+                  <td class="text-end text-warning fw-bold">{{ "{:,.0f}".format(p.wastage_value) }} ج</td>
+                  <td class="text-center">
+                    <a href="/wastage?q={{ p.name }}" class="btn btn-sm btn-outline-warning">عرض</a>
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-muted p-3">✅ لا توجد أصناف هالكة فوق الحد المسموح.</div>
+        {% endif %}
+      </div>
+      <div class="card-footer text-end">
+        <a href="/reports/wastage-report" class="btn btn-sm btn-outline-secondary">تقرير الهالك الكامل</a>
+      </div>
+    </div>
+  </div>
+
 </div>
 {% endblock %}

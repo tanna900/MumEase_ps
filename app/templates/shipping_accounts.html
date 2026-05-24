@@ -18,17 +18,13 @@
   white-space: nowrap;
 }
 
-.table tbody tr:hover {
-  background-color: #f5f7fa;
-}
-
 /* ================== تثبيت الكود + العميل ================== */
 .table th:first-child,
 .table td:first-child {
   position: sticky;
   left: 0;
   background: #fff;
-  z-index: 2;
+  z-index: 1;
 }
 
 .table th:nth-child(2),
@@ -92,7 +88,6 @@ tr.bg-light {
   background: #f8f9fa !important;
 }
 
-
 /* select الدفعات */
 tr.bg-light select {
   width: 220px;
@@ -132,26 +127,49 @@ tr.bg-light button.btn-outline-dark {
 
 /* ================== موبايل ================== */
 @media (max-width: 768px) {
+
   .table {
     font-size: 12px;
   }
 
   tr.bg-light form {
-    overflow-x: auto; /* سحب أفقي لو الشاشة ضيقة */
+    overflow-x: auto;
   }
+
+  .table th:first-child,
+  .table td:first-child,
+  .table th:nth-child(1),
+  .table td:nth-child(1){
+    position: static;
+    left: auto;
+  }
+
+  .alloc-form{
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .alloc-form select,
+  .alloc-form input{
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
 }
+
 /* تكبير وتوضيح عمود المتبقي */
 #tbl_unpaid td:nth-child(5) {
   font-size: 16px;
   font-weight: 800;
   color: #dc3545;
 }
+
 /* ===== سطر التخصيص (حل نهائي) ===== */
 .alloc-row {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 .alloc-form {
@@ -177,6 +195,105 @@ tr.bg-light button.btn-outline-dark {
   padding: 4px 6px;
   line-height: 1;
 }
+
+/* زر التخصيص الكامل */
+.btn-full-alloc{
+  border-color: #b97c7c !important;
+  color: #b97c7c !important;
+}
+
+.btn-full-alloc:hover{
+  background: #b97c7c !important;
+  color: #fff !important;
+}
+
+/* زر المرتجع */
+.btn-refund{
+  border-color: #dc3545 !important;
+  color: #dc3545 !important;
+}
+
+.btn-refund:hover{
+  background: #dc3545 !important;
+  color: #fff !important;
+}
+
+/* زر النقل */
+.btn-transfer{
+  border-color: #9aa0a6 !important;
+  color: #6c757d !important;
+}
+
+.btn-transfer:hover{
+  background: #6c757d !important;
+  color: #fff !important;
+}
+/* ===== تكبير خط جدول "كل الشركات" فقط ===== */
+.overall-companies-table {
+  font-size: 15px;   /* كان 13 */
+}
+
+.overall-companies-table thead th {
+  font-size: 14px;
+}
+
+.overall-companies-table tbody td {
+  font-size: 15px;
+}
+
+.overall-companies-table tbody td:last-child {
+  font-size: 16px;     /* صافي المستحق أكبر شوية */
+  font-weight: 800;
+}
+
+/* ===== تكبير فونت جدول "كل الشركات" ===== */
+.overall-companies-table {
+  font-size: 16px; /* كبر الخط داخل الجدول كله */
+}
+
+.overall-companies-table thead th {
+  font-size: 15px;
+}
+
+.overall-companies-table tbody td {
+  font-size: 16px;
+}
+
+/* خلي اسم الشركة أوضح */
+.overall-companies-table tbody td:first-child a {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* صافي المستحق أكبر */
+.overall-companies-table tbody td:last-child {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.row-selected {
+  background-color: #cfe2ff !important;
+  border-right: 4px solid #0d6efd !important;
+}
+
+.invoice-hover td{
+  background-color: #f1ddda !important;
+  transition: .15s ease;
+  box-shadow:
+    inset 0 1px 0 #d9b8b8,
+    inset 0 -1px 0 #d9b8b8;
+}
+
+.dropdown-menu{
+  z-index: 999999 !important;
+}
+
+.shipping-table-wrap{
+  overflow-x: auto;
+  overflow-y: visible !important;
+}
+
+
 </style>
 
 <h5 class="mb-3">🚚 حسابات شركات الشحن</h5>
@@ -217,25 +334,25 @@ tr.bg-light button.btn-outline-dark {
   <div class="row g-2">
     <div class="col-md-3"><div class="card p-2">
       <div class="text-muted small">إجمالي المبيعات (غير المباشرة)</div>
-      <div class="fs-5 fw-bold">{{ '%.2f'|format(sales_sum or 0) }}</div>
+      <div class="fs-5 fw-bold">{{ (sales_sum or 0) | int }}</div>
     </div></div>
     <div class="col-md-3"><div class="card p-2">
       <div class="text-muted small">مصاريف الشحن الفعلية (الكل)</div>
-      <div class="fs-5 fw-bold">{{ '%.2f'|format(actual_ship_sum or 0) }}</div>
+      <div class="fs-5 fw-bold">{{ (actual_ship_sum or 0) | int }}</div>
     </div></div>
     <div class="col-md-3"><div class="card p-2">
       <div class="text-muted small">قيمة المرتجعات + رسومها</div>
-      <div class="fs-5 fw-bold">{{ '%.2f'|format((returns_sum or 0) + (returns_ship_fees or 0)) }}</div>
+      <div class="fs-5 fw-bold">{{ ((returns_sum or 0) + (returns_ship_fees or 0)) | int }}</div>
     </div></div>
     <div class="col-md-3"><div class="card p-2">
       <div class="text-muted small">صافي المستحق</div>
-      <div class="fs-5 fw-bold">{{ '%.2f'|format(net_due or 0) }}</div>
+      <div class="fs-5 fw-bold">{{ (net_due or 0) | int }}</div>
     </div></div>
   </div>
 
   <div class="card p-0 mt-3">
     <div class="table-responsive">
-      <table class="table table-sm table-bordered align-middle mb-0">
+      <table class="table table-sm table-bordered align-middle mb-0 overall-companies-table">
         <thead class="table-light">
           <tr>
             <th>شركة</th>
@@ -251,12 +368,12 @@ tr.bg-light button.btn-outline-dark {
           {% for r in per_company %}
           <tr>
             <td><a href="/shipping?company={{ r.company }}&dfrom={{ dfrom }}&dto={{ dto }}&page_size={{ page_size or 10 }}">{{ r.company }}</a></td>
-            <td class="text-end">{{ '%.2f'|format(r.sales_sum or 0) }}</td>
-            <td class="text-end">{{ '%.2f'|format(r.actual_ship_sum or 0) }}</td>
-            <td class="text-end">{{ '%.2f'|format(r.returns_sum or 0) }}</td>
-            <td class="text-end">{{ '%.2f'|format(r.returns_ship_fees or 0) }}</td>
-            <td class="text-end">{{ '%.2f'|format(r.paid_sum or 0) }}</td>
-            <td class="text-end fw-bold">{{ '%.2f'|format(r.net_due or 0) }}</td>
+            <td class="text-end">{{ (r.sales_sum or 0) | int }}</td>
+            <td class="text-end">{{ (r.actual_ship_sum or 0) | int }}</td>
+            <td class="text-end">{{ (r.returns_sum or 0) | int }}</td>
+            <td class="text-end">{{ (r.returns_ship_fees or 0) | int }}</td>
+            <td class="text-end">{{ (r.paid_sum or 0) | int }}</td>
+            <td class="text-end fw-bold">{{ (r.net_due or 0) | int }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -269,19 +386,19 @@ tr.bg-light button.btn-outline-dark {
   <div class="row g-2">
     <div class="col-md-3"><div class="card p-2">
       <div class="text-muted small">مبيعات (غير مباشرة)</div>
-      <div class="fs-5 fw-bold">{{ '%.2f'|format(sales_sum or 0) }}</div>
+      <div class="fs-5 fw-bold">{{ (sales_sum or 0) | int }}</div>
     </div></div>
     <div class="col-md-3"><div class="card p-2">
       <div class="text-muted small">مصاريف الشحن الفعلية (الكل)</div>
-      <div class="fs-5 fw-bold">{{ '%.2f'|format(actual_ship_sum or 0) }}</div>
+      <div class="fs-5 fw-bold">{{ (actual_ship_sum or 0) | int }}</div>
     </div></div>
     <div class="col-md-3"><div class="card p-2">
       <div class="text-muted small">قيمة المرتجعات + رسومها</div>
-      <div class="fs-5 fw-bold">{{ '%.2f'|format((returns_sum or 0) + (returns_ship_fees or 0)) }}</div>
+      <div class="fs-5 fw-bold">{{ ((returns_sum or 0) + (returns_ship_fees or 0)) | int }}</div>
     </div></div>
     <div class="col-md-3"><div class="card p-2">
       <div class="text-muted small">صافي المستحق</div>
-      <div class="fs-5 fw-bold">{{ '%.2f'|format(net_due or 0) }}</div>
+      <div class="fs-5 fw-bold">{{ (net_due or 0) | int }}</div>
     </div></div>
   </div>
 
@@ -294,8 +411,8 @@ tr.bg-light button.btn-outline-dark {
         </div>
 
         {% if invoices_unpaid and invoices_unpaid|length > 0 %}
-          <div class="table-responsive">
-            <table class="table table-sm table-bordered align-middle mb-0" id="tbl_unpaid">
+          <div class="table-responsive shipping-table-wrap">
+            <table class="table table-sm table-bordered align-middle mb-0" id="tbl_unpaid" style="table-layout:fixed; width:100%;">
               <thead class="table-light">
                 <tr>
                   <th>كود</th>
@@ -307,81 +424,77 @@ tr.bg-light button.btn-outline-dark {
               </thead>
               <tbody>
                 {% for r in invoices_unpaid %}
-                <tr>
+                          <tr class="invoice-group invoice-group-main">
                   <td>
-  <a href="#" onclick="openInvoicePopup({{ r.id }}); return false;">
-    {{ r.invoice_code }}
-  </a>
-  {% if r.customer_phone %}
-    <span class="d-none inv-phone">{{ r.customer_phone }}</span>
-  {% endif %}
-</td>
+                    <a href="#" onclick="openInvoicePopup({{ r.id }}); return false;">
+                      {{ r.invoice_code }}
+                    </a>
+                    {% if r.customer_phone %}
+                      <span class="d-none inv-phone">{{ r.customer_phone }}</span>
+                    {% endif %}
+                  </td>
 
-<td>
-  {% if r.customer_name %}
-    <a href="/customers/ledger/detail?name={{ r.customer_name | urlencode }}&phone={{ r.customer_phone | urlencode }}"
-       class="fw-semibold text-decoration-none">
-      {{ r.customer_name }}
-    </a>
-  {% else %}
-    -
-  {% endif %}
-</td>
-                  <td class="text-end">{{ '%.2f'|format(r.due or 0) }}</td>
-                  <td class="text-end">{{ '%.2f'|format(r.paid or 0) }}</td>
-                  <td class="text-end fw-bold">{{ '%.2f'|format(r.outstanding or 0) }}</td>
-                                  </tr>
-<tr class="bg-light">
-  <td colspan="5">
-    {% if payments_with_avail and payments_with_avail|length > 0 %}
+                  <td>
+                    {% if r.customer_name %}
+                      <a href="/customers/ledger/detail?name={{ r.customer_name | urlencode }}&phone={{ r.customer_phone | urlencode }}"
+                         class="fw-semibold text-decoration-none">
+                        {{ r.customer_name }}
+                      </a>
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td class="text-end">{{ (r.due or 0) | int }}</td>
+                  <td class="text-end">{{ (r.paid or 0) | int }}</td>
+                  <td class="text-end fw-bold">{{ (r.outstanding or 0) | int }}</td>
+                </tr>
 
-<div class="alloc-row">
+                <tr class="bg-light invoice-group invoice-group-actions">
+                  <td colspan="5">
+                    {% if payments_with_avail and payments_with_avail|length > 0 %}
 
-      <!-- فورم التخصيص -->
-<form class="alloc-form" 
-           method="post"
-            action="/shipping/allocate">
+                    <div class="alloc-row">
 
-        <input type="hidden" name="company" value="{{ company }}">
-        <input type="hidden" name="invoice_id" value="{{ r.id }}">
-        <input type="hidden" name="q_dfrom" value="{{ dfrom }}">
-        <input type="hidden" name="q_dto" value="{{ dto }}">
-        <input type="hidden" name="unpaid_page" value="{{ unpaid_page }}">
-        <input type="hidden" name="paid_page" value="{{ paid_page }}">
-        <input type="hidden" name="page_size" value="{{ page_size }}">
+                      <!-- فورم التخصيص -->
+                      <form class="alloc-form" method="post" action="/shipping/allocate">
+                        <input type="hidden" name="company" value="{{ company }}">
+                        <input type="hidden" name="invoice_id" value="{{ r.id }}">
+                        <input type="hidden" name="q_dfrom" value="{{ dfrom }}">
+                        <input type="hidden" name="q_dto" value="{{ dto }}">
+                        <input type="hidden" name="unpaid_page" value="{{ unpaid_page }}">
+                        <input type="hidden" name="paid_page" value="{{ paid_page }}">
+                        <input type="hidden" name="page_size" value="{{ page_size }}">
 
-        <select name="payment_id"
-                class="form-select form-select-sm"
-                required
-                style="max-width:240px">
-          <option value="">اختر دفعة</option>
-          {% for p in payments_with_avail %}
-            {% if (p.available or 0) > 0 %}
-              <option value="{{ p.id }}">
-                #{{ p.id }} — {{ p.date }} (متاح {{ '%.2f'|format(p.available) }})
-              </option>
-            {% endif %}
-          {% endfor %}
-        </select>
+                        <select name="payment_id" class="form-select form-select-sm" required style="max-width:240px">
+                          <option value="">اختر دفعة</option>
+                          {% for p in payments_with_avail %}
+                            {% if (p.available or 0) > 0 %}
+                              <option value="{{ p.id }}">
+                                #{{ p.id }} — {{ p.date }} (متاح {{ (p.available or 0) | int }})
+                              </option>
+                            {% endif %}
+                          {% endfor %}
+                        </select>
 
-        <input type="number"
-               name="amount"
-               class="form-control form-control-sm"
-               placeholder="المبلغ"
-               max="{{ r.outstanding|round|int }}"
-               style="max-width:120px">
+                        <input type="number"
+                               name="amount"
+                               class="form-control form-control-sm"
+                               placeholder="المبلغ"
+                               max="{{ (r.outstanding or 0) | int }}"
+                               style="max-width:120px">
 
-        <button type="submit"
-                class="btn btn-sm btn-success"
-                title="حفظ التخصيص">
-          💾
-        </button>
-      </form>
+                        <button type="button"
+                                class="btn btn-sm btn-outline-secondary btn-full-alloc"
+                                title="تخصيص كامل"
+                                data-max="{{ r.outstanding }}">
+                          ⚡
+                        </button>
+
+                        <button type="submit" class="btn btn-sm btn-success" title="حفظ التخصيص">💾</button>
+                      </form>
+
 <!-- فورم مرتجع كامل -->
-<form method="post"
-      action="/shipping/refund-full"
-      class="alloc-form">
-
+<form method="post" action="/shipping/refund-full" class="alloc-form">
   <input type="hidden" name="company" value="{{ company }}">
   <input type="hidden" name="invoice_id" value="{{ r.id }}">
   <input type="hidden" name="amount" value="{{ r.outstanding }}">
@@ -392,43 +505,60 @@ tr.bg-light button.btn-outline-dark {
   <input type="hidden" name="page_size" value="{{ page_size }}">
 
   <button type="button"
-        class="btn btn-sm btn-outline-danger btn-refund"
-        data-invoice="{{ r.invoice_code }}"
-        data-amount="{{ '%.2f'|format(r.outstanding) }}"
-        title="مرتجع كامل">
-  📦
-</button>
+          class="btn btn-sm btn-outline-danger btn-refund"
+          title="مرتجع كامل"
+          data-id="{{ r.id }}"
+          data-invoice="{{ r.invoice_code }}"
+          data-amount="{{ (r.outstanding or 0) | int }}">
+    📦
+  </button>
 </form>
 
-      <!-- فورم تغطية إدارية (مستقل) -->
-      <form method="post"
-            action="/shipping/cover"
-            class="alloc-form">
+<!-- زرار نقل لشركة تانية -->
+<button type="button"
+        class="btn btn-sm btn-outline-secondary btn-transfer"
+        data-bs-toggle="modal"
+        data-bs-target="#transferModal"
+        data-inv-id="{{ r.id }}"
+        data-inv-code="{{ r.invoice_code }}"
+        data-inv-customer="{{ r.customer_name }}"
+        data-inv-amount="{{ (r.outstanding or 0) | int }}"
+        data-inv-gov="{{ r.governorate or '' }}"
+        title="نقل لشركة تانية">
+  ↪️
+</button>
 
-        <input type="hidden" name="company" value="{{ company }}">
-        <input type="hidden" name="invoice_id" value="{{ r.id }}">
-        <input type="hidden" name="q_dfrom" value="{{ dfrom }}">
-        <input type="hidden" name="q_dto" value="{{ dto }}">
-        <input type="hidden" name="unpaid_page" value="{{ unpaid_page }}">
-        <input type="hidden" name="paid_page" value="{{ paid_page }}">
-        <input type="hidden" name="page_size" value="{{ page_size }}">
+<!-- فورم تغطية إدارية -->
+<form method="post" action="/shipping/cover" class="alloc-form">
+  <input type="hidden" name="company" value="{{ company }}">
+  <input type="hidden" name="invoice_id" value="{{ r.id }}">
+  <input type="hidden" name="q_dfrom" value="{{ dfrom }}">
+  <input type="hidden" name="q_dto" value="{{ dto }}">
+  <input type="hidden" name="unpaid_page" value="{{ unpaid_page }}">
+  <input type="hidden" name="paid_page" value="{{ paid_page }}">
+  <input type="hidden" name="page_size" value="{{ page_size }}">
 
-        <button type="submit"
-                class="btn btn-sm btn-outline-dark"
-                title="تغطية إدارية"
-                {% if r.outstanding > 100 %}disabled{% endif %}>
-          🔒
-        </button>
+  <button type="submit"
+          class="btn btn-sm btn-outline-dark"
+          title="تغطية إدارية"
+          {% if r.outstanding > 100 %}disabled{% endif %}>
+    🔒
+  </button>
+</form>
+    </li>
 
-      </form>
+  </ul>
 
-    </div>
+</div>
 
-    {% else %}
-      <span class="text-muted small">لا توجد دفعات متاحة</span>
-    {% endif %}
-  </td>
-</tr>
+                    </div>
+
+                    {% else %}
+                      <span class="text-muted small">لا توجد دفعات متاحة</span>
+                    {% endif %}
+                  </td>
+                </tr>
+
                 {% endfor %}
               </tbody>
             </table>
@@ -477,7 +607,7 @@ tr.bg-light button.btn-outline-dark {
               <thead class="table-light">
                 <tr>
                   <th>كود</th>
-                              <th>العميل</th>
+                  <th>العميل</th>
                   <th style="width:200px">ملاحظة</th>
                   <th class="text-end" style="width:110px">مستحق</th>
                   <th class="text-end" style="width:110px">مدفوع</th>
@@ -487,24 +617,25 @@ tr.bg-light button.btn-outline-dark {
                 {% for r in invoices_paid %}
                 <tr>
                   <td>
-  <a href="#" onclick="openInvoicePopup({{ r.id }}); return false;">
-    {{ r.invoice_code }}
-  </a>
-  {% if r.customer_phone %}
-    <span class="d-none inv-phone">{{ r.customer_phone }}</span>
-  {% endif %}
-</td>
+                    <a href="#" onclick="openInvoicePopup({{ r.id }}); return false;">
+                      {{ r.invoice_code }}
+                    </a>
+                    {% if r.customer_phone %}
+                      <span class="d-none inv-phone">{{ r.customer_phone }}</span>
+                    {% endif %}
+                  </td>
 
-<td>
-  {% if r.customer_name %}
-    <a href="/customers/ledger/detail?name={{ r.customer_name | urlencode }}&phone={{ r.customer_phone | urlencode }}"
-       class="fw-semibold text-decoration-none">
-      {{ r.customer_name }}
-    </a>
-  {% else %}
-    -
-  {% endif %}
-</td>
+                  <td>
+                    {% if r.customer_name %}
+                      <a href="/customers/ledger/detail?name={{ r.customer_name | urlencode }}&phone={{ r.customer_phone | urlencode }}"
+                         class="fw-semibold text-decoration-none">
+                        {{ r.customer_name }}
+                      </a>
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+
                   <td>
                     {% if r.direct_paid %}
                       <span class="badge bg-success">مدفوع مباشرة ({{ r.payment_method }})</span>
@@ -514,8 +645,9 @@ tr.bg-light button.btn-outline-dark {
                       <span class="badge bg-secondary">مغطاة بالكامل</span>
                     {% endif %}
                   </td>
-                  <td class="text-end">{{ '%.2f'|format(r.due or 0) }}</td>
-                  <td class="text-end">{{ '%.2f'|format(r.paid or 0) }}</td>
+
+                  <td class="text-end">{{ (r.due or 0) | int }}</td>
+                  <td class="text-end">{{ (r.paid or 0) | int }}</td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -525,47 +657,38 @@ tr.bg-light button.btn-outline-dark {
          {% if paid_pages and paid_pages > 1 %}
   <nav class="mt-2">
     <ul class="pagination pagination-sm justify-content-center mb-0">
-
-      {% set base2 = "/shipping?company=" ~ company ~ "&dfrom=" ~ dfrom ~ "&dto=" ~ dto 
+      {% set base2 = "/shipping?company=" ~ company ~ "&dfrom=" ~ dfrom ~ "&dto=" ~ dto
                     ~ "&unpaid_page=" ~ unpaid_page ~ "&page_size=" ~ (page_size or 10) %}
 
-      {# زر أول صفحة #}
       <li class="page-item {% if paid_page==1 %}disabled{% endif %}">
         <a class="page-link" href="{{ base2 }}&paid_page=1">الأولى</a>
       </li>
 
-      {# زر السابق #}
       <li class="page-item {% if paid_page==1 %}disabled{% endif %}">
         <a class="page-link" href="{{ base2 }}&paid_page={{ paid_page-1 }}">السابق</a>
       </li>
 
-      {# نافذة انزلاقية 5 صفحات حوالين الصفحة الحالية #}
       {% set window = 2 %}
       {% set start_page = paid_page - window %}
       {% set end_page = paid_page + window %}
 
-      {# تصحيح الحدود #}
       {% if start_page < 1 %}{% set end_page = end_page + (1 - start_page) %}{% set start_page = 1 %}{% endif %}
       {% if end_page > paid_pages %}{% set start_page = start_page - (end_page - paid_pages) %}{% set end_page = paid_pages %}{% endif %}
       {% if start_page < 1 %}{% set start_page = 1 %}{% endif %}
 
-      {# عرض الصفحات #}
       {% for p in range(start_page, end_page + 1) %}
         <li class="page-item {% if p == paid_page %}active{% endif %}">
           <a class="page-link" href="{{ base2 }}&paid_page={{ p }}">{{ p }}</a>
         </li>
       {% endfor %}
 
-      {# زر التالي #}
       <li class="page-item {% if paid_page==paid_pages %}disabled{% endif %}">
         <a class="page-link" href="{{ base2 }}&paid_page={{ paid_page+1 }}">التالي</a>
       </li>
 
-      {# زر الأخيرة #}
       <li class="page-item {% if paid_page==paid_pages %}disabled{% endif %}">
         <a class="page-link" href="{{ base2 }}&paid_page={{ paid_pages }}">الأخيرة</a>
       </li>
-
     </ul>
   </nav>
 {% endif %}
@@ -589,7 +712,7 @@ tr.bg-light button.btn-outline-dark {
           <input type="hidden" name="paid_page" value="{{ paid_page }}">
           <input type="hidden" name="page_size" value="{{ page_size }}">
           <input type="date" name="date_" class="form-control form-control-sm" required>
-          <input type="number" step="0.01" name="amount" class="form-control form-control-sm" placeholder="المبلغ" required>
+          <input type="number" step="1" name="amount" class="form-control form-control-sm" placeholder="المبلغ" required>
           <input type="text" name="note" class="form-control form-control-sm" placeholder="ملاحظة (اختياري)">
           <button class="btn btn-sm btn-primary">إضافة دفعة</button>
         </form>
@@ -600,7 +723,7 @@ tr.bg-light button.btn-outline-dark {
       <div class="table-responsive">
         <table class="table table-sm table-bordered align-middle mb-0" id="tbl_payments">
           <thead class="table-light">
-            <tr>
+            <tr class="invoice-group invoice-group-main">
               <th>تاريخ</th>
               <th class="text-end" style="width:140px">المبلغ</th>
               <th>ملاحظة</th>
@@ -612,15 +735,15 @@ tr.bg-light button.btn-outline-dark {
             {% for p in payments_with_avail %}
             <tr>
               <td class="col-date">{{ p.date }}</td>
-              <td class="text-end col-amount">{{ '%.2f'|format(p.amount or 0) }}</td>
+              <td class="text-end col-amount">{{ (p.amount or 0) | int }}</td>
               <td class="col-note">{{ p.note or '' }}</td>
-              <td class="text-end">{{ '%.2f'|format(p.available or 0) }}</td>
+              <td class="text-end">{{ (p.available or 0) | int }}</td>
               <td class="d-flex gap-1">
                 <button
                   class="btn btn-sm btn-outline-primary"
                   data-bs-toggle="modal" data-bs-target="#mdlEditPay"
                   data-id="{{ p.id }}" data-date="{{ p.date }}"
-                  data-amount="{{ '%.2f'|format(p.amount or 0) }}"
+                  data-amount="{{ (p.amount or 0) | int }}"
                   data-note="{{ p.note or '' }}"
                   data-linked="{{ 1 if p.linked_cash else 0 }}"
                   data-feid="{{ p.finance_entry_id or '' }}"
@@ -722,7 +845,7 @@ tr.bg-light button.btn-outline-dark {
         </div>
         <div class="col-6">
           <label class="form-label small">المبلغ</label>
-          <input type="number" step="0.01" name="amount" id="ep_amount" class="form-control" required>
+          <input type="number" step="1" name="amount" id="ep_amount" class="form-control" required>
         </div>
         <div class="col-12">
           <label class="form-label small">ملاحظة</label>
@@ -826,58 +949,47 @@ tr.bg-light button.btn-outline-dark {
     function getRows(){ return Array.from(table.querySelectorAll('tbody tr')); }
 
     function renderPager(total, page){
-  pager.innerHTML = '';
+      pager.innerHTML = '';
+      const pages = Math.max(1, Math.ceil(total / pageSize));
+      const window = 2;
+      let start_page = page - window;
+      let end_page   = page + window;
 
-  const pages = Math.max(1, Math.ceil(total / pageSize));
+      if(start_page < 1){
+        end_page += (1 - start_page);
+        start_page = 1;
+      }
+      if(end_page > pages){
+        start_page -= (end_page - pages);
+        end_page = pages;
+      }
+      if(start_page < 1){ start_page = 1; }
 
-  // window size = 2 → يعني 5 صفحات
-  const window = 2;
-  let start_page = page - window;
-  let end_page   = page + window;
+      const mk = (label, p, disabled=false, active=false) => {
+        const li = document.createElement('li');
+        li.className = 'page-item' + (disabled?' disabled':'') + (active?' active':'');
 
-  if(start_page < 1){
-    end_page += (1 - start_page);
-    start_page = 1;
-  }
-  if(end_page > pages){
-    start_page -= (end_page - pages);
-    end_page = pages;
-  }
-  if(start_page < 1){ start_page = 1; }
+        const a = document.createElement('a');
+        a.className = 'page-link';
+        a.textContent = label;
+        a.addEventListener('click', ()=>{
+          if(!disabled){ currentPage = p; apply(); }
+        });
 
-  // Helper لإنشاء عناصر الصفحة
-  const mk = (label, p, disabled=false, active=false) => {
-    const li = document.createElement('li');
-    li.className = 'page-item' + (disabled?' disabled':'') + (active?' active':'');
+        li.appendChild(a);
+        return li;
+      };
 
-    const a = document.createElement('a');
-    a.className = 'page-link';
-    a.textContent = label;
-    a.addEventListener('click', ()=>{ 
-      if(!disabled){ currentPage = p; apply(); }
-    });
+      pager.appendChild(mk('الأولى', 1, page === 1));
+      pager.appendChild(mk('السابق', Math.max(1, page-1), page === 1));
 
-    li.appendChild(a);
-    return li;
-  };
+      for(let p = start_page; p <= end_page; p++){
+        pager.appendChild(mk(String(p), p, false, p === page));
+      }
 
-  // الأولى
-  pager.appendChild(mk('الأولى', 1, page === 1));
-
-  // السابق
-  pager.appendChild(mk('السابق', Math.max(1, page-1), page === 1));
-
-  // الصفحات داخل النافذة
-  for(let p = start_page; p <= end_page; p++){
-    pager.appendChild(mk(String(p), p, false, p === page));
-  }
-
-  // التالي
-  pager.appendChild(mk('التالي', Math.min(pages, page+1), page === pages));
-
-  // الأخيرة
-  pager.appendChild(mk('الأخيرة', pages, page === pages));
-}
+      pager.appendChild(mk('التالي', Math.min(pages, page+1), page === pages));
+      pager.appendChild(mk('الأخيرة', pages, page === pages));
+    }
 
     function apply(){
       const q = (document.getElementById('search_payments')?.value || '').toLowerCase().trim();
@@ -901,50 +1013,52 @@ tr.bg-light button.btn-outline-dark {
   })();
 
   function openInvoicePopup(id){
-  const modalEl = document.getElementById('invoiceModal');
-  const bodyEl  = modalEl.querySelector('.modal-body');
+    const modalEl = document.getElementById('invoiceModal');
+    const bodyEl  = modalEl.querySelector('.modal-body');
 
-  bodyEl.innerHTML = `
-    <iframe 
-      src="/invoices/${id}"
-      style="width:100%; height:70vh; border:0;"
-    ></iframe>
-  `;
+    bodyEl.innerHTML = `
+      <iframe
+        src="/shipping/invoice/${id}"
+        style="width:100%; height:70vh; border:0;"
+      ></iframe>
+    `;
 
-  const m = new bootstrap.Modal(modalEl);
-  m.show();
-}
-function fillFullAmount(btn, amount) {
-  const form = btn.closest('form');
-  if (!form) return;
+    const m = new bootstrap.Modal(modalEl);
+    m.show();
+  }
 
-  const amountInput = form.querySelector('input[name="amount"]');
-  if (!amountInput) return;
-
-  amountInput.value = amount;
-  amountInput.focus();
-}
-
-document.addEventListener('click', function(e){
+  document.addEventListener('click', function(e){
   const btn = e.target.closest('.btn-refund');
   if (!btn) return;
 
-  const row = btn.closest('tr').previousElementSibling;
-  const invoiceId = row.querySelector('a[onclick]')?.getAttribute('onclick')
-                    ?.match(/\d+/)?.[0];
-
+  const invoiceId   = btn.dataset.id;
   const invoiceCode = btn.dataset.invoice;
-  const amount = btn.dataset.amount;
+  const amount      = btn.dataset.amount;
 
   document.getElementById('refundInvoiceCode').innerText = invoiceCode;
   document.getElementById('refundAmount').innerText = amount;
-  document.getElementById('refundInvoiceId').value = invoiceId;
   document.getElementById('refundAmountInput').value = amount;
+
+  // ✅ ده اللي كان ناقص وسبب 422
+  document.getElementById('refundInvoiceId').value = invoiceId;
 
   const modal = new bootstrap.Modal(document.getElementById('mdlRefundConfirm'));
   modal.show();
 });
-</script>
+
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('.btn-full-alloc');
+    if(!btn) return;
+
+    const form = btn.closest('form');
+    if(!form) return;
+
+    const amountInput = form.querySelector('input[name="amount"]');
+    if(!amountInput) return;
+
+    const max = parseFloat(btn.dataset.max || 0);
+    amountInput.value = String(Math.round(max));  // ✅ بدون قروش
+  });
 </script>
 
 <div class="modal fade" id="invoiceModal" tabindex="-1" aria-hidden="true">
@@ -958,6 +1072,7 @@ document.addEventListener('click', function(e){
     </div>
   </div>
 </div>
+
 <div class="modal fade" id="mdlRefundConfirm" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <form class="modal-content" method="post" action="/returns/full" id="refundForm">
@@ -999,4 +1114,120 @@ document.addEventListener('click', function(e){
     </form>
   </div>
 </div>
+
+{# ════ Modal: تأكيد نقل الفاتورة ════ #}
+<div class="modal fade" id="transferModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title fw-bold">↪️ تأكيد نقل الفاتورة</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="/shipping/transfer-company">
+        <div class="modal-body">
+          <input type="hidden" name="invoice_id" id="tr_inv_id">
+          <input type="hidden" name="from_company" value="{{ company }}">
+          <input type="hidden" name="q_dfrom" value="{{ dfrom }}">
+          <input type="hidden" name="q_dto" value="{{ dto }}">
+          <input type="hidden" name="unpaid_page" value="{{ unpaid_page }}">
+          <input type="hidden" name="paid_page" value="{{ paid_page }}">
+          <input type="hidden" name="page_size" value="{{ page_size }}">
+          <input type="hidden" name="stay_company" value="{{ company }}">
+
+          <table class="table table-sm table-bordered mb-3">
+            <tr><td class="text-muted">رقم الفاتورة</td><td class="fw-bold" id="tr_code">—</td></tr>
+            <tr><td class="text-muted">العميل</td><td id="tr_customer">—</td></tr>
+            <tr><td class="text-muted">المبلغ المتبقي</td><td class="fw-bold text-danger" id="tr_amount">—</td></tr>
+            <tr><td class="text-muted">المحافظة</td><td id="tr_gov">—</td></tr>
+            <tr><td class="text-muted">من شركة</td><td class="fw-bold">{{ company }}</td></tr>
+          </table>
+
+          <label class="form-label fw-bold">نقل لشركة:</label>
+          <select name="to_company" class="form-select" required>
+            <option value="">— اختار شركة —</option>
+            {% for c in all_companies %}
+              {% if c != company %}
+              <option value="{{ c }}">{{ c }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+          <button type="submit" class="btn btn-warning fw-bold">✅ موافق — نقل الفاتورة</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// تلوين صف الفاتورة وصف التخصيص لما تختار دفعة
+document.querySelectorAll('select[name="payment_id"]').forEach(sel => {
+  sel.addEventListener('change', function() {
+    // شيل التلوين من كل الصفوف الأول
+    document.querySelectorAll('#tbl_unpaid tr.row-selected').forEach(r => {
+      r.classList.remove('row-selected');
+    });
+
+    if (this.value) {
+      const allocRow = this.closest('tr');
+      const invoiceRow = allocRow.previousElementSibling;
+      if (allocRow) allocRow.classList.add('row-selected');
+      if (invoiceRow) invoiceRow.classList.add('row-selected');
+    }
+  });
+});
+</script>
+
+
+<script>
+document.querySelectorAll('.btn-transfer').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.getElementById('tr_inv_id').value    = this.dataset.invId;
+    document.getElementById('tr_code').textContent     = this.dataset.invCode;
+    document.getElementById('tr_customer').textContent = this.dataset.invCustomer;
+    document.getElementById('tr_amount').textContent   = this.dataset.invAmount + ' ج';
+    document.getElementById('tr_gov').textContent      = this.dataset.invGov || '—';
+  });
+});
+</script>
+
+<script>
+
+document.querySelectorAll('.invoice-group').forEach(row => {
+
+  row.addEventListener('mouseenter', () => {
+
+    row.classList.add('invoice-hover');
+
+    const other =
+      row.classList.contains('invoice-group-main')
+      ? row.nextElementSibling
+      : row.previousElementSibling;
+
+    if(other && other.classList.contains('invoice-group')){
+      other.classList.add('invoice-hover');
+    }
+
+  });
+
+  row.addEventListener('mouseleave', () => {
+
+    row.classList.remove('invoice-hover');
+
+    const other =
+      row.classList.contains('invoice-group-main')
+      ? row.nextElementSibling
+      : row.previousElementSibling;
+
+    if(other && other.classList.contains('invoice-group')){
+      other.classList.remove('invoice-hover');
+    }
+
+  });
+
+});
+
+</script>
 {% endblock %}

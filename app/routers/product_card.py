@@ -256,6 +256,11 @@ def product_card_page(
     total_in = 0
     total_out = 0
 
+    # حسابات مالية
+    total_sales_value  = 0.0  # إجمالي إيراد المبيعات
+    total_cogs         = 0.0  # تكلفة البضاعة المباعة
+    total_ret_value    = 0.0  # إجمالي المرتجعات
+
     for m in moves:
         running += m.qty
         if m.qty > 0:
@@ -263,27 +268,58 @@ def product_card_page(
         else:
             total_out += (-m.qty)
 
+        # حساب الإيراد والتكلفة
+        if m.kind == "بيع":
+            total_sales_value += abs(m.qty) * float(m.unit_price or 0)
+            total_cogs        += abs(m.qty) * float(prod.cost_price or 0)
+        elif m.kind == "مرتجع":
+            total_ret_value   += abs(m.qty) * float(m.unit_price or 0)
+
         table_rows.append({
-            "dt": m.dt.strftime("%Y-%m-%d %H:%M") if m.dt else "",
-            "kind": m.kind,
-            "ref": m.ref,
-            "qty": m.qty,
+            "dt":         m.dt.strftime("%Y-%m-%d %H:%M") if m.dt else "",
+            "kind":       m.kind,
+            "ref":        m.ref,
+            "qty":        m.qty,
             "unit_price": m.unit_price,
-            "note": m.note or "",
-            "running": running,
-            "extra": m.extra or {},
+            "unit_cost":  float(prod.cost_price or 0) if m.kind in ("إضافة", "مشتريات") else 0.0,
+            "line_value": abs(m.qty) * float(m.unit_price or 0),
+            "note":       m.note or "",
+            "running":    running,
+            "extra":      m.extra or {},
         })
 
+    net_sales_value = total_sales_value - total_ret_value
+    net_profit      = net_sales_value - total_cogs
+    profit_margin   = round((net_profit / max(net_sales_value, 1)) * 100, 1) if net_sales_value > 0 else 0
+    cost_price      = float(prod.cost_price or 0)
+    sale_price      = float(prod.price or 0)
+    price_margin    = round(((sale_price - cost_price) / max(sale_price, 1)) * 100, 1) if sale_price > 0 else 0
+    stock_value     = int(prod.stock or 0) * cost_price
+    wastage_stock   = int(getattr(prod, "wastage_stock", 0) or 0)
+    wastage_value   = wastage_stock * cost_price
+
     ctx = {
-        "request": request,
-        "product": prod,
-        "date_from": date_from or "",
-        "date_to": date_to or "",
-        "opening": opening,
-        "total_in": total_in,
-        "total_out": total_out,
-        "closing": running,
-        "rows": table_rows,
+        "request":           request,
+        "product":           prod,
+        "date_from":         date_from or "",
+        "date_to":           date_to or "",
+        "opening":           opening,
+        "total_in":          total_in,
+        "total_out":         total_out,
+        "closing":           running,
+        "rows":              table_rows,
+        "total_sales_value": round(total_sales_value, 2),
+        "total_ret_value":   round(total_ret_value, 2),
+        "net_sales_value":   round(net_sales_value, 2),
+        "total_cogs":        round(total_cogs, 2),
+        "net_profit":        round(net_profit, 2),
+        "profit_margin":     profit_margin,
+        "cost_price":        round(cost_price, 2),
+        "sale_price":        round(sale_price, 2),
+        "price_margin":      price_margin,
+        "stock_value":       round(stock_value, 2),
+        "wastage_stock":     wastage_stock,
+        "wastage_value":     round(wastage_value, 2),
     }
     return templates.TemplateResponse("product_card.html", ctx)
 

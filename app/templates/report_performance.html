@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-3">
+
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <h4 class="mb-0 fw-bold">🎯 تقرير الأداء</h4>
+    <a href="/reports" class="btn btn-outline-secondary btn-sm">← التقارير</a>
+  </div>
+
+  <form method="get" class="row g-2 align-items-end mb-4">
+    <div class="col-auto">
+      <label class="form-label small mb-1">من</label>
+      <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from }}">
+    </div>
+    <div class="col-auto">
+      <label class="form-label small mb-1">إلى</label>
+      <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to }}">
+    </div>
+    <div class="col-auto">
+      <label class="form-label small mb-1">ترتيب المحافظات</label>
+      <select name="gov_sort" class="form-select form-select-sm">
+        <option value="orders" {{ 'selected' if gov_sort == 'orders' else '' }}>الطلبات</option>
+        <option value="total" {{ 'selected' if gov_sort == 'total' else '' }}>الإجمالي</option>
+        <option value="pct" {{ 'selected' if gov_sort == 'pct' else '' }}>%</option>
+        <option value="returns" {{ 'selected' if gov_sort == 'returns' else '' }}>المرتجعات</option>
+        <option value="avg" {{ 'selected' if gov_sort == 'avg' else '' }}>متوسط الأوردر</option>
+      </select>
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-primary btn-sm">🔍 عرض</button>
+    </div>
+  </form>
+
+  {# ── KPIs ── #}
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card text-center border-primary py-2">
+        <div class="card-body p-2">
+          <div class="text-muted small">صافي المبيعات</div>
+          <div class="fs-5 fw-bold text-primary">{{ "{:,.0f}".format(net_sales) }} ج</div>
+          <div class="text-muted" style="font-size:11px;">{{ sales_count }} فاتورة</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center border-secondary py-2">
+        <div class="card-body p-2">
+          <div class="text-muted small">متوسط قيمة الفاتورة (AOV)</div>
+          <div class="fs-5 fw-bold">{{ "{:,.0f}".format(avg_order) }} ج</div>
+          <div class="text-muted" style="font-size:11px;">متوسط خصم {{ "{:,.0f}".format(avg_discount) }} ج</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center py-2 {{ 'border-danger' if ret_rate_pct >= 10 else 'border-success' }}">
+        <div class="card-body p-2">
+          <div class="text-muted small">نسبة المرتجعات</div>
+          <div class="fs-5 fw-bold {{ 'text-danger' if ret_rate_pct >= 10 else 'text-success' }}">{{ ret_rate_pct }}%</div>
+          <div class="text-muted" style="font-size:11px;">{{ ret_count }} مرتجع | قيمة {{ ret_val_pct }}%</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center py-2 {{ 'border-success' if net_profit >= 0 else 'border-danger' }}">
+        <div class="card-body p-2">
+          <div class="text-muted small">صافي الربح</div>
+          <div class="fs-5 fw-bold {{ 'text-success' if net_profit >= 0 else 'text-danger' }}">{{ "{:,.0f}".format(net_profit) }} ج</div>
+          <div class="text-muted" style="font-size:11px;">هامش {{ net_margin }}%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+
+    {# ── تحليل الربحية ── #}
+    <div class="col-md-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-header fw-bold bg-dark text-white">📊 تحليل الربحية</div>
+        <div class="card-body p-0">
+          <table class="table table-sm table-bordered mb-0">
+            <tbody>
+              <tr>
+                <td>قيمة المنتجات المباعة بعد الخصم</td>
+                <td class="text-end fw-bold">{{ "{:,.0f}".format(sales_products_total) }} ج</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>مصاريف شحن محصلة من العملاء</td>
+                <td class="text-end fw-bold">{{ "{:,.0f}".format(shipping_income) }} ج</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>إجمالي المرتجعات</td>
+                <td class="text-end text-danger">{{ "{:,.0f}".format(ret_total) }} ج</td>
+                <td></td>
+              </tr>
+              <tr class="table-light">
+                <td class="fw-bold">صافي المبيعات</td>
+                <td class="text-end fw-bold">{{ "{:,.0f}".format(net_sales) }} ج</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>تكلفة البضاعة (COGS)</td>
+                <td class="text-end text-danger">{{ "{:,.0f}".format(cogs_net) }} ج</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>أساس عمولة التسويق بعد الشحن الفعلي</td>
+                <td class="text-end fw-bold">{{ "{:,.0f}".format(net_sales_after_shipping) }} ج</td>
+                <td></td>
+              </tr>
+              <tr class="table-success">
+                <td class="fw-bold">الربح الإجمالي (قبل المصاريف)</td>
+                <td class="text-end fw-bold text-success">{{ "{:,.0f}".format(gross_profit) }} ج</td>
+                <td class="text-center"><span class="badge bg-success">{{ gross_margin }}%</span></td>
+              </tr>
+              <tr>
+  <td colspan="3" class="fw-bold bg-light">
+    📌 تفاصيل المصاريف المحملة على المنتج
+  </td>
+</tr>
+
+{% for item in expense_breakdown %}
+<tr>
+  <td style="padding-right:25px;">
+    • {{ item.category }}
+  </td>
+
+  <td class="text-end text-danger">
+    {{ "{:,.0f}".format(item.amount) }} ج
+  </td>
+
+  <td></td>
+</tr>
+{% endfor %}
+
+<tr class="table-light">
+  <td class="fw-bold">
+    إجمالي المصاريف المحملة على المنتج
+  </td>
+
+  <td class="text-end fw-bold text-danger">
+    {{ "{:,.0f}".format(other_expenses) }} ج
+  </td>
+
+  <td></td>
+</tr>
+              <tr>
+                <td>نصيب القطعة من المصاريف</td>
+                <td class="text-end text-danger">{{ "{:,.2f}".format(expense_per_unit) }} ج</td>
+                <td class="text-center"><span class="badge bg-secondary">{{ total_net_qty }} قطعة</span></td>
+              </tr>
+              <tr class="table-warning">
+                <td class="fw-bold">إجمالي المصاريف</td>
+                <td class="text-end fw-bold">{{ "{:,.0f}".format(total_expenses) }} ج</td>
+                <td></td>
+              </tr>
+              <tr class="{{ 'table-success' if net_profit >= 0 else 'table-danger' }}">
+                <td class="fw-bold">صافي الربح (بعد المصاريف)</td>
+                <td class="text-end fw-bold {{ 'text-success' if net_profit >= 0 else 'text-danger' }}">{{ "{:,.0f}".format(net_profit) }} ج</td>
+                <td class="text-center"><span class="badge {{ 'bg-success' if net_profit >= 0 else 'bg-danger' }}">{{ net_margin }}%</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    {# ── أكتر محافظات ── #}
+    <div class="col-md-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-header fw-bold bg-dark text-white">📍 أكتر محافظات مبيعاً</div>
+        <div class="card-body p-0">
+          <table class="table table-sm table-bordered mb-0">
+            <thead style="position:sticky; top:0; background:#f8f9fa;">
+              <tr>
+                <th>المحافظة</th>
+                <th class="text-center">طلبات</th>
+                <th class="text-center">%</th>
+                <th class="text-end">متوسط</th>
+                <th class="text-center">مرتجع%</th>
+                <th class="text-end">إجمالي</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for g in top_govs %}
+              <tr>
+                <td class="fw-semibold">{{ g.gov }}</td>
+                <td class="text-center">{{ g.cnt }}</td>
+                <td class="text-center">
+                  <span class="badge bg-info text-dark">{{ g.order_pct }}%</span>
+                </td>
+                <td class="text-end">{{ "{:,.0f}".format(g.avg_order) }} ج</td>
+                <td class="text-center">
+                  <span class="badge {{ 'bg-danger' if g.return_pct >= 10 else 'bg-success' }}">{{ g.return_pct }}%</span>
+                </td>
+                <td class="text-end">{{ "{:,.0f}".format(g.total) }} ج</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="6" class="text-center text-muted py-3">لا توجد بيانات</td></tr>
+              {% endfor %}
+            </tbody>
+            <tfoot class="table-light">
+              <tr>
+                <th>الإجمالي الظاهر</th>
+                <th class="text-center">{{ top_govs_summary.cnt }}</th>
+                <th class="text-center">{{ top_govs_summary.pct }}%</th>
+                <th></th>
+                <th></th>
+                <th class="text-end">{{ "{:,.0f}".format(top_govs_summary.total) }} ج</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  {# ── أفضل 10 منتجات ── #}
+  <div class="card shadow-sm">
+    <div class="card-header fw-bold bg-success text-white d-flex justify-content-between">
+      <span>🏆 أفضل 10 منتجات مبيعاً</span>
+      <span class="badge bg-light text-dark">{{ top10|length }} منتج</span>
+    </div>
+    <div style="height:420px; overflow-y:auto;">
+      <table class="table table-sm table-bordered table-hover mb-0 align-middle">
+        <thead style="position:sticky; top:0; z-index:2; background:#198754; color:#fff;">
+          <tr>
+            <th style="color:#fff;">#</th>
+            <th style="min-width:150px; color:#fff;">المنتج</th>
+            <th class="text-center" style="min-width:80px; color:#fff;">اللون</th>
+            <th class="text-center" style="min-width:70px; color:#fff;">المقاس</th>
+            <th class="text-center" style="min-width:80px; color:#fff;">صافي قطع</th>
+            <th class="text-end" style="min-width:110px; color:#fff;">صافي مبيعات</th>
+            <th class="text-end" style="min-width:100px; color:#fff;">صافي ربح</th>
+            <th class="text-center" style="min-width:80px; color:#fff;">هامش%</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in top10 %}
+          <tr>
+            <td class="text-center fw-bold text-muted">{{ loop.index }}</td>
+            <td class="fw-semibold">{{ r.name }}</td>
+            <td class="text-center">{% if r.color %}<span class="badge bg-secondary">{{ r.color }}</span>{% else %}—{% endif %}</td>
+            <td class="text-center">{% if r.size %}<span class="badge bg-light text-dark border">{{ r.size }}</span>{% else %}—{% endif %}</td>
+            <td class="text-center fw-bold text-success">{{ r.net_qty }}</td>
+            <td class="text-end">{{ "{:,.0f}".format(r.net_sales) }} ج</td>
+            <td class="text-end fw-bold {{ 'text-success' if r.profit >= 0 else 'text-danger' }}">{{ "{:,.0f}".format(r.profit) }} ج</td>
+            <td class="text-center">
+              <span class="badge {{ 'bg-success' if r.margin >= 30 else 'bg-warning text-dark' if r.margin >= 10 else 'bg-danger' }}">{{ r.margin }}%</span>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" class="text-center text-muted py-4">لا توجد بيانات</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {# ── أسوأ 5 ── #}
+  <div class="card shadow-sm mt-4">
+    <div class="card-header fw-bold bg-danger text-white d-flex justify-content-between">
+      <span>⚠️ أسوأ 5 منتجات مبيعاً</span>
+      <span class="badge bg-light text-dark">{{ worst5|length }} منتج</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th style="min-width:180px;">المنتج</th>
+            <th class="text-center">اللون</th>
+            <th class="text-center">المقاس</th>
+            <th class="text-center">صافي قطع</th>
+            <th class="text-end">صافي مبيعات</th>
+            <th class="text-end">صافي ربح</th>
+            <th class="text-center">هامش%</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in worst5 %}
+          <tr>
+            <td class="fw-semibold">{{ r.name }}</td>
+            <td class="text-center">{% if r.color %}<span class="badge bg-secondary">{{ r.color }}</span>{% else %}—{% endif %}</td>
+            <td class="text-center">{% if r.size %}<span class="badge bg-light text-dark border">{{ r.size }}</span>{% else %}—{% endif %}</td>
+            <td class="text-center text-danger fw-bold">{{ r.net_qty }}</td>
+            <td class="text-end">{{ "{:,.0f}".format(r.net_sales) }} ج</td>
+            <td class="text-end fw-bold {{ 'text-success' if r.profit >= 0 else 'text-danger' }}">{{ "{:,.0f}".format(r.profit) }} ج</td>
+            <td class="text-center">
+              <span class="badge {{ 'bg-success' if r.margin >= 30 else 'bg-warning text-dark' if r.margin >= 10 else 'bg-danger' }}">{{ r.margin }}%</span>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="text-center text-muted py-3">لا توجد بيانات</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

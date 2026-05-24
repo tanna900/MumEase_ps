@@ -25,6 +25,24 @@ def get_db():
         db.close()
 
 # ---------- Helpers ----------
+# حد تنبيه الهالك
+HIGH_WASTAGE_THRESHOLD = 5
+
+def _high_wastage_list(db: Session, threshold: int = HIGH_WASTAGE_THRESHOLD) -> List[Dict]:
+    """أصناف وصل هالكها فوق الحد المسموح."""
+    P = models.Product
+    if not hasattr(P, "wastage_stock"):
+        return []
+    out = []
+    for p in db.query(P).filter(P.wastage_stock >= threshold).order_by(P.wastage_stock.desc()).all():
+        out.append({
+            "id": p.id,
+            "name": f"{p.name}{f' ({p.size})' if p.size else ''}{f' {p.color}' if p.color else ''}",
+            "wastage_stock": int(p.wastage_stock or 0),
+            "wastage_value": round(int(p.wastage_stock or 0) * float(p.cost_price or 0), 2),
+        })
+    return out
+
 def _low_stock_list(db: Session, threshold:int=LOW_STOCK_THRESHOLD) -> List[Dict]:
     """أصناف منخفضة المخزون غير متجاهَلة."""
     P = models.Product
@@ -106,7 +124,7 @@ def _overdue_sales_without_allocations(db: Session, days:int=DAYS_NO_ALLOCATION)
 
 def _count_all(db: Session) -> int:
     """إجمالي عدد التنبيهات (غير المتجاهَلة)."""
-    return len(_low_stock_list(db)) + len(_overdue_sales_without_allocations(db))
+    return len(_low_stock_list(db)) + len(_overdue_sales_without_allocations(db)) + len(_high_wastage_list(db))
 
 # ---------- APIs للجرس ----------
 @router.get("/alerts/summary")
@@ -118,6 +136,9 @@ def alerts_summary(db: Session = Depends(get_db)):
     overdue_list = _overdue_sales_without_allocations(db)
 
     total = len(low_list) + len(overdue_list)
+
+    wastage_list = _high_wastage_list(db)
+    total = len(low_list) + len(overdue_list) + len(wastage_list)
 
     items = []
     if overdue_list:
@@ -132,6 +153,12 @@ def alerts_summary(db: Session = Depends(get_db)):
             "text": f"{len(low_list)} صنف تحت حد المخزون ({LOW_STOCK_THRESHOLD})",
             "href": "/alerts#lowstock"
         })
+    if wastage_list:
+        items.append({
+            "icon": "bi-trash",
+            "text": f"{len(wastage_list)} صنف هالكه أكتر من {HIGH_WASTAGE_THRESHOLD} قطع",
+            "href": "/alerts#wastage"
+        })
 
     return JSONResponse({"count": total, "items": items[:3]})
 
@@ -140,12 +167,15 @@ def alerts_summary(db: Session = Depends(get_db)):
 def alerts_page(request: Request, db: Session = Depends(get_db)):
     low_list = _low_stock_list(db)
     overdue_list = _overdue_sales_without_allocations(db)
+    wastage_list = _high_wastage_list(db)
     ctx = {
         "request": request,
         "low_list": low_list,
         "overdue_list": overdue_list,
+        "wastage_list": wastage_list,
         "LOW_STOCK_THRESHOLD": LOW_STOCK_THRESHOLD,
         "DAYS_NO_ALLOCATION": DAYS_NO_ALLOCATION,
+        "HIGH_WASTAGE_THRESHOLD": HIGH_WASTAGE_THRESHOLD,
     }
     return templates.TemplateResponse("alerts.html", ctx)
 

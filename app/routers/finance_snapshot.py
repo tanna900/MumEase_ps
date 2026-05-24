@@ -1,17 +1,14 @@
 # app/routers/finance_snapshot.py
 from fastapi import APIRouter, Request, Depends, Query
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_, text, inspect
 from datetime import datetime, date, time, timedelta
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict
 
 from app.database import SessionLocal
 from app import models
 from fastapi.templating import Jinja2Templates
-
-# 🔗 ناخد نفس الحساب بتاع الشحن من صفحة الشحن
-from app.routers.shipping import totals_for_company as shipping_totals_for_company
 
 router = APIRouter(prefix="/finance", tags=["Finance"])
 templates = Jinja2Templates(directory="app/templates")
@@ -79,7 +76,6 @@ def _settings_get(db: Session, key: str, default: float = 0.0) -> float:
 def _cashbox_net_flow(db: Session, up_to: Optional[date] = None) -> float:
     """
     صافي حركة الخزنة (IN-OUT) باستبعاد SubCash:% .
-    up_to: تاريخ نهاية (اختياري) لحساب تراكمي حتى هذا التاريخ.
     """
     if not hasattr(models, "FinanceEntry"):
         return 0.0
@@ -92,16 +88,17 @@ def _cashbox_net_flow(db: Session, up_to: Optional[date] = None) -> float:
               .filter(~models.FinanceEntry.category.ilike("SubCash:%"))
 
     if up_to:
-        q_in  = q_in.filter(models.FinanceEntry.date <= up_to.strftime("%Y-%m-%d"))
-        q_out = q_out.filter(models.FinanceEntry.date <= up_to.strftime("%Y-%m-%d"))
+        d = up_to.strftime("%Y-%m-%d")
+        q_in  = q_in.filter(models.FinanceEntry.date <= d)
+        q_out = q_out.filter(models.FinanceEntry.date <= d)
 
     ins  = q_in.scalar()  or 0.0
     outs = q_out.scalar() or 0.0
     return round(float(ins) - float(outs), 2)
 
-def _cashbox_balance_current(db: Session) -> float:
+def _cashbox_balance(db: Session, up_to: Optional[date] = None) -> float:
     opening = _settings_get(db, "cash_opening_balance", 0.0)
-    net_flow = _cashbox_net_flow(db)
+    net_flow = _cashbox_net_flow(db, up_to=up_to)
     return round(float(opening) + float(net_flow), 2)
 
 def _sum_finance_period_net(db: Session, keywords: List[str], s_dt: Optional[datetime], e_dt: Optional[datetime]) -> float:
@@ -115,24 +112,22 @@ def _sum_finance_period_net(db: Session, keywords: List[str], s_dt: Optional[dat
               .filter(models.FinanceEntry.type == "OUT")\
               .filter(or_(*like_filters))
     if s_dt:
-        q_in  = q_in.filter(models.FinanceEntry.date >= s_dt.strftime("%Y-%m-%d"))
-        q_out = q_out.filter(models.FinanceEntry.date >= s_dt.strftime("%Y-%m-%d"))
+        d = s_dt.strftime("%Y-%m-%d")
+        q_in  = q_in.filter(models.FinanceEntry.date >= d)
+        q_out = q_out.filter(models.FinanceEntry.date >= d)
     if e_dt:
-        q_in  = q_in.filter(models.FinanceEntry.date <= e_dt.strftime("%Y-%m-%d"))
-        q_out = q_out.filter(models.FinanceEntry.date <= e_dt.strftime("%Y-%m-%d"))
+        d = e_dt.strftime("%Y-%m-%d")
+        q_in  = q_in.filter(models.FinanceEntry.date <= d)
+        q_out = q_out.filter(models.FinanceEntry.date <= d)
     ins  = float(q_in.scalar()  or 0.0)
     outs = float(q_out.scalar() or 0.0)
     return round(ins - outs, 2)
 
-# ─────────────── Materials (Production Materials) ───────────────
+# ─────────────── Materials ───────────────
 
 _MAT_MIGRATED = False
 
 def _ensure_materials_schema(db: Session):
-    """
-    نضمن إن جدول production_material_entries موجود حتى لو Model مش موجود.
-    (بنفس شكل materials.py)
-    """
     global _MAT_MIGRATED
     if _MAT_MIGRATED:
         return
@@ -168,10 +163,6 @@ def _ensure_materials_schema(db: Session):
         _MAT_MIGRATED = True
 
 def _materials_balance(db: Session, up_to: Optional[date] = None) -> float:
-    """
-    رصيد خامات إنتاج = IN - OUT من جدول production_material_entries.
-    up_to: لو عايز رصيد حتى تاريخ معين (مفيد للجراف).
-    """
     _ensure_materials_schema(db)
     try:
         if up_to:
@@ -195,7 +186,7 @@ def _materials_balance(db: Session, up_to: Optional[date] = None) -> float:
     except Exception:
         return 0.0
 
-# ─────────────── Shipping receivables (قديمة – سايبينها احتياطي) ───────────────
+# ─────────────── Shipping receivables (include_admin + up_to) ───────────────
 
 def _linked_returns_totals(db: Session, sale_id: int) -> Tuple[float, float]:
     rets = db.query(models.Invoice).filter(
@@ -212,47 +203,49 @@ def _allocations_sum_for_invoice(db: Session, invoice_id: int) -> float:
           .scalar()
     return float(s or 0.0)
 
-def _shipping_receivables(db: Session, include_admin: bool = True) -> float:
-    """
-    دالة قديمة لحساب مستحقات الشحن مباشرة من الفواتير.
-    سايبينها كما هي احتياطي، لكن snapshot الحالي بياخد الرقم من totals_for_company.
-    """
+def _shipping_receivables(db: Session, include_admin: bool = True, up_to: Optional[date] = None) -> float:
     if not hasattr(models, "Invoice"):
         return 0.0
-    invoices = db.query(models.Invoice).filter(
+
+    q = db.query(models.Invoice).filter(
         models.Invoice.shipping_company.isnot(None),
         models.Invoice.shipping_company != "",
-    ).all()
+    )
+    if up_to:
+        q = q.filter(models.Invoice.created_at <= _end_of_day(up_to))
+
+    invoices = q.all()
+
     receivable = 0.0
     for inv in invoices:
         if getattr(inv, "type", "S") != "S":
             continue
+
         method = (getattr(inv, "payment_method", "") or "").strip()
         if method in DIRECT_METHODS:
             continue
-        base_due = float(getattr(inv, "total", 0) or 0) - float(getattr(inv, "actual_shipping_cost", 0) or 0)
-        ret_total, ret_ship = _linked_returns_totals(db, inv.id)
-        due_after_returns = base_due - ret_total - ret_ship
-        paid_on_inv = _allocations_sum_for_invoice(db, inv.id)
-        outstanding = round(due_after_returns - paid_on_inv, 2)
-        if not include_admin and hasattr(models, "ShippingAdminCover"):
+
+        if (not include_admin) and hasattr(models, "ShippingAdminCover"):
             covered = db.query(models.ShippingAdminCover)\
                         .filter(models.ShippingAdminCover.invoice_id == int(inv.id),
                                 models.ShippingAdminCover.company == inv.shipping_company)\
                         .first() is not None
             if covered:
                 continue
+
+        base_due = float(getattr(inv, "total", 0) or 0) - float(getattr(inv, "actual_shipping_cost", 0) or 0)
+        ret_total, ret_ship = _linked_returns_totals(db, inv.id)
+        due_after_returns = base_due - ret_total - ret_ship
+        paid_on_inv = _allocations_sum_for_invoice(db, inv.id)
+        outstanding = round(due_after_returns - paid_on_inv, 2)
         if outstanding > 0.009:
             receivable += outstanding
+
     return round(receivable, 2)
 
-# ─────────────── Factories balances ───────────────
+# ─────────────── Factories ───────────────
 
 def _factories_net_balance(db: Session, up_to: Optional[date] = None) -> float:
-    """
-    صافي المصانع = (SUM(qty*unit_cost) حتى التاريخ) - (SUM(payments) حتى التاريخ)
-    موجب = علينا / سالب = لينا
-    """
     try:
         q_cost = db.query(func.coalesce(func.sum(models.ManufacturingBatch.qty * func.coalesce(models.ManufacturingBatch.unit_cost, 0)), 0.0))
         q_paid = db.query(func.coalesce(func.sum(models.FactoryPayment.amount), 0.0))
@@ -289,86 +282,70 @@ def _inventory_cost(db: Session) -> float:
         pass
     return 0.0
 
-# ─────────────── Monthly Series (compact) ───────────────
+# ─────────────── Monthly Series (heavy → used ONLY on demand) ───────────────
 
 def _company_value_series(db: Session, months: int = 12, include_admin: bool = True) -> Tuple[List[str], List[float]]:
-    """
-    سلسلة شهرية لقيمة الشركة (آخر كل شهر):
-      Cash (حتى آخر يوم في الشهر) + Inventory (حالي) + Shipping (حالي) + Factories (حتى الشهر) + Materials (حتى الشهر)
-    """
     labels, values = [], []
-
     inv_now = _inventory_cost(db)
 
-    # مستحقات الشحن: نفس رقم صفحة الشحن (ثابت لأنه مش عندنا historical)
-    try:
-        ship_now = float(shipping_totals_for_company(db, None, None, None).get("net_due", 0.0))
-    except Exception:
-        ship_now = _shipping_receivables(db, include_admin=include_admin)
-
+    ship_now = float(_shipping_receivables(db, include_admin=include_admin, up_to=None))
     opening = _settings_get(db, "cash_opening_balance", 0.0)
 
     for mend in _iter_month_ends(months):
-        # خزنة حتى نهاية الشهر
         cashNet = _cashbox_net_flow(db, up_to=mend)
         cash_at_m = round(float(opening) + float(cashNet), 2)
 
-        # مصانع حتى نهاية الشهر
         fact_net_m = _factories_net_balance(db, up_to=mend)
         recv_fact_m = abs(fact_net_m) if fact_net_m < 0 else 0.0
         pay_fact_m  = fact_net_m if fact_net_m > 0 else 0.0
 
-        # ✅ خامات إنتاج حتى نهاية الشهر
         mat_m = _materials_balance(db, up_to=mend)
 
         receivables_total = round(ship_now + recv_fact_m + mat_m, 2)
         payables_total    = round(pay_fact_m, 2)
 
         company_val = round(inv_now + cash_at_m + receivables_total - payables_total, 2)
-
         labels.append(mend.strftime("%Y-%m"))
         values.append(company_val)
 
     return labels, values
 
-# ─────────────── Route ───────────────
+# ─────────────── Routes ───────────────
 
 @router.get("/snapshot", response_class=HTMLResponse)
 def financial_snapshot(
     request: Request,
     dfrom: Optional[str] = Query(None),
     dto: Optional[str] = Query(None),
-    include_admin: int = Query(1, description="Include admin-covered shipping invoices (1=yes,0=no)"),
+    include_admin: int = Query(0, description="Include admin-covered shipping invoices (1=yes,0=no)"),
     db: Session = Depends(get_db),
 ):
     """
-    تقرير "الوضع المالي الحالي" + مخطط شهري صغير:
-      - رصيد الخزنة الجاري = رصيد افتتاحي + (IN-OUT) باستبعاد SubCash:%.
-      - الذمم: الشحن الحالي + صافي المصانع + خامات إنتاج (رصيدها).
-      - المخزون: بالتكلفة (قيمة حالية).
-      - قيمة الشركة = (المخزون + الخزنة + الذمم المدينة) − (الذمم الدائنة).
-      - الرسم الشهري يحسب cash/factories/materials حتى آخر يوم في كل شهر.
+    ✅ نسخة سريعة:
+    - نعرض الكروت + الجدول التحليلي (بالأرقام القديمة كاملة)
+    - الجراف لا يتحسب هنا إطلاقاً (Lazy عبر endpoint منفصل)
     """
     s_dt = _start_of_day(_parse_date(dfrom)) if dfrom else None
     e_dt = _end_of_day(_parse_date(dto)) if dto else None
+    up_to = _parse_date(dto) if dto else None
 
-    # قيم حالية
-    inventory_cost = _inventory_cost(db)
-    cashbox_balance = _cashbox_balance_current(db)
+    inventory_cost = _inventory_cost(db)  # حالي
 
-    # الشحن: نفس رقم "صافي المستحق" لجميع شركات الشحن من صفحة الشحن
-    try:
-        recv_shipping = float(shipping_totals_for_company(db, None, None, None).get("net_due", 0.0))
-    except Exception:
-        recv_shipping = _shipping_receivables(db, include_admin=bool(include_admin))
+    # قيمة الهالك للمعلومية
+    wastage_cost = float(
+        db.query(func.coalesce(func.sum(
+            models.Product.wastage_stock * models.Product.cost_price
+        ), 0.0)).scalar() or 0.0
+    ) if hasattr(models.Product, "wastage_stock") else 0.0
+    cashbox_balance = _cashbox_balance(db, up_to=up_to)
 
-    # مصانع
-    factories_net = _factories_net_balance(db)
+    recv_shipping = float(_shipping_receivables(db, include_admin=False, up_to=up_to))
+
+    factories_net = _factories_net_balance(db, up_to=up_to)
     recv_factories = abs(factories_net) if factories_net < 0 else 0.0
     pay_factories  = factories_net       if factories_net > 0 else 0.0
 
-    # ✅ خامات إنتاج (حالي)
-    recv_materials = _materials_balance(db)
+    recv_materials = _materials_balance(db, up_to=up_to)
 
     pay_marketers = 0.0
 
@@ -376,12 +353,8 @@ def financial_snapshot(
     payables_total    = round(pay_marketers + pay_factories, 2)
     company_value     = round(inventory_cost + cashbox_balance + receivables_total - payables_total, 2)
 
-    # معلوماتية للفترة
     instapay_period = _sum_finance_period_net(db, KEYS_INSTAPAY, s_dt, e_dt) if (s_dt or e_dt) else None
     ewallet_period  = _sum_finance_period_net(db, KEYS_EWALLET,  s_dt, e_dt) if (s_dt or e_dt) else None
-
-    # سلسلة شهرية صغيرة
-    series_labels, series_values = _company_value_series(db, months=12, include_admin=bool(include_admin))
 
     ctx = {
         "request": request,
@@ -389,14 +362,11 @@ def financial_snapshot(
         "dto": dto or "",
         "include_admin": int(bool(include_admin)),
 
-        # القيم الحالية
         "inventory_cost": inventory_cost,
         "cashbox_balance": cashbox_balance,
 
         "recv_shipping": recv_shipping,
         "recv_factories": recv_factories,
-
-        # ✅ جديد: خامات إنتاج كذمم مدينة
         "recv_materials": recv_materials,
 
         "receivables_total": receivables_total,
@@ -404,14 +374,27 @@ def financial_snapshot(
         "pay_marketers": pay_marketers,
         "pay_factories": pay_factories,
         "payables_total": payables_total,
-        "company_value": company_value,
 
-        # معلوماتية للفترة
+        "company_value": company_value,
+        "wastage_cost": round(wastage_cost, 2),
+
         "instapay_period": instapay_period,
         "ewallet_period": ewallet_period,
 
-        # السلسلة الشهرية
-        "series_labels": series_labels,
-        "series_values": series_values,
+        # ✅ الجراف مش بيتحسب هنا علشان السرعة
+        "chart_lazy": True,
     }
     return templates.TemplateResponse("finance_snapshot.html", ctx)
+
+@router.get("/snapshot/chart-data", response_class=JSONResponse)
+def finance_snapshot_chart_data(
+    dfrom: Optional[str] = Query(None),
+    dto: Optional[str] = Query(None),
+    include_admin: int = Query(1),
+    db: Session = Depends(get_db),
+):
+    """
+    ✅ بيانات الجراف (تقيلة) — تتحسب بس لما اليوزر يفتح الـ Collapse
+    """
+    labels, values = _company_value_series(db, months=12, include_admin=False)
+    return JSONResponse({"labels": labels, "values": values})

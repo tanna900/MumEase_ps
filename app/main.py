@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -33,7 +33,12 @@ from app.routers import (
     finance_snapshot,
     purchases,   # ✅ مشتريات
     materials,
+    wastage,
+    users,       # ✅ نظام المستخدمين
 )
+
+from app.auth import User, ensure_admin_user, get_current_user, has_permission, get_session
+from app.database import Base
 
 # =========================
 # [NEW] اختياري: استيراد روترات الخزنة وP&L والمسوّقين إن وُجدت
@@ -54,6 +59,28 @@ except Exception:
 # =========================
 
 app = FastAPI(title="MumEase POS")
+
+# ── Middleware للتحقق من الـ Login ──
+from fastapi import HTTPException
+from fastapi.responses import RedirectResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+
+PUBLIC_PATHS = ["/login", "/static", "/health", "/favicon.ico"]
+
+class AuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        path = request.url.path
+        # صفحات عامة مش محتاجة login
+        if any(path.startswith(p) for p in PUBLIC_PATHS):
+            return await call_next(request)
+        # تحقق من الـ session
+        token = request.cookies.get("session_token")
+        from app.auth import get_session
+        if not token or not get_session(token):
+            return RedirectResponse(url="/login", status_code=302)
+        return await call_next(request)
+
+app.add_middleware(AuthMiddleware)
 
 # Static & Templates
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -169,6 +196,14 @@ def home(request: Request):
 
         start_dt, end_dt = today_range()
         today_str = date.today().strftime("%Y-%m-%d")
+
+        token = request.cookies.get("session_token")
+        session_user = get_session(token) if token else None
+
+        username = "User"
+
+        if session_user:
+            username = session_user.get("username", "User")
 
         # هل يومية اليوم مقفولة؟
         today_settlement = (
@@ -346,6 +381,8 @@ def home(request: Request):
 
         ctx = {
             "request": request,
+            "username": username,
+            "today_date": date.today().strftime("%d/%m/%Y"),
 
             # الموجودين عندك أصلاً
             "today_str": today_str,
@@ -441,6 +478,8 @@ app.include_router(invoices.router)
 app.include_router(finance_snapshot.router)
 app.include_router(purchases.router)
 app.include_router(materials.router)
+app.include_router(wastage.router)
+app.include_router(users.router)
 
 
 # ربط الروترات الجديدة لو موجودة
@@ -572,6 +611,12 @@ async def auto_close_daemon():
         except Exception:
             pass
         await _sleep_until_next_0005()
+
+@app.get("/logout")
+def logout():
+    response = RedirectResponse(url="/login", status_code=302)
+    response.delete_cookie("session_token")
+    return response
 
 
 @app.on_event("startup")

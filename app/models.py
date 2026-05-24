@@ -16,9 +16,10 @@ class Product(Base):
     color = Column(String)
     size = Column(String)
     barcode = Column(String, unique=True, index=True)
-    cost_price = Column(Float, default=0)   # ✅ متوسط تكلفة المخزون
-    price = Column(Float, default=0)        # ✅ آخر سعر بيع
+    cost_price = Column(Float, default=0)
+    price = Column(Float, default=0)
     stock = Column(Integer, default=0)
+    wastage_stock = Column(Integer, default=0)
 
 # 🆕 جدول المسوّقين
 class Marketer(Base):

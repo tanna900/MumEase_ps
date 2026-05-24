@@ -1,19 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
+{% macro n(x) -%}
+  {{ "{:,.0f}".format((x or 0)|float) }}
+{%- endmacro %}
+
 <h5 class="mb-3">💰 الخزنة</h5>
 
 {% if request.query_params.get("msg") %}
   <div class="alert alert-info">{{ request.query_params.get("msg") }}</div>
 {% endif %}
 
-<!-- ============ NEW: تنبيه أرصدة الخزن الفرعية + دفعات الشحن غير المربوطة ============ -->
+<!-- ============ تنبيه أرصدة الخزن الفرعية + دفعات الشحن غير المربوطة ============ -->
 <div class="row g-2">
   <div class="col-md-8">
     <div class="card p-2 h-100">
       <div class="d-flex align-items-center justify-content-between mb-2">
         <div class="fw-bold"><i class="bi bi-wallet2"></i> الخزن الفرعية</div>
         {% if total_sub_balance and total_sub_balance > 0 %}
-          <span class="badge bg-warning text-dark">إجمالي غير مُرحّل: {{ '%.2f'|format(total_sub_balance) }}</span>
+          <span class="badge bg-warning text-dark">إجمالي غير مُرحّل: {{ n(total_sub_balance) }}</span>
         {% endif %}
       </div>
 
@@ -32,12 +36,12 @@
               {% for w in sub_balances %}
               <tr>
                 <td class="fw-semibold">{{ w.label }}</td>
-                <td class="text-end">{{ '%.2f'|format(w.balance) }}</td>
+                <td class="text-end">{{ n(w.balance) }}</td>
                 <td>
                   <form class="row g-1 align-items-center" method="post" action="/cash/transfer-sub">
                     <input type="hidden" name="source_key" value="{{ w.key }}">
                     <div class="col-4">
-                      <input type="number" step="0.01" min="0" name="amount" class="form-control form-control-sm" placeholder="المبلغ (اتركه فاضي = الكل)">
+                      <input type="number" step="1" min="0" name="amount" class="form-control form-control-sm" placeholder="المبلغ (اتركه فاضي = الكل)">
                     </div>
                     <div class="col-4">
                       <input type="date" name="date" class="form-control form-control-sm" value="">
@@ -51,7 +55,7 @@
                       </button>
                       {% if w.balance and w.balance > 0 %}
                         <button class="btn btn-sm btn-outline-dark" type="submit" onclick="this.form.amount.value='0'">
-                          تحويل كل الرصيد ({{ '%.2f'|format(w.balance) }})
+                          تحويل كل الرصيد ({{ n(w.balance) }})
                         </button>
                       {% endif %}
                     </div>
@@ -80,7 +84,7 @@
       <div class="fw-bold mb-2"><i class="bi bi-truck"></i> دفعات شركات الشحن غير المربوطة</div>
       {% if unlinked_count and unlinked_count > 0 %}
         <div class="alert alert-warning py-2 mb-2">
-          عدد: <b>{{ unlinked_count }}</b> — إجمالي: <b>{{ '%.2f'|format(unlinked_sum or 0) }}</b><br>
+          عدد: <b>{{ unlinked_count }}</b> — إجمالي: <b>{{ n(unlinked_sum) }}</b><br>
           <a class="small" href="/shipping/cash-sync">ربط الآن ↗️</a>
         </div>
       {% else %}
@@ -96,34 +100,40 @@
   <div class="col-md-3">
     <div class="card p-2">
       <div class="text-muted small">الرصيد الافتتاحي</div>
-      <div class="fs-5 fw-bold">{{ '%.2f'|format(opening or 0) }}</div>
+      <div class="fs-5 fw-bold">{{ n(opening) }}</div>
+
+      <!-- ✅ محمي بباسورد -->
       <form class="d-flex gap-1 mt-2" method="post" action="/cash/opening">
-        <input type="number" step="0.01" name="opening" class="form-control form-control-sm" placeholder="تعديل…">
+        <input type="number" step="1" name="opening" class="form-control form-control-sm" placeholder="تعديل…">
+        <input type="password" name="password" class="form-control form-control-sm" placeholder="00000" style="max-width:110px">
         <button class="btn btn-sm btn-outline-primary">حفظ</button>
       </form>
     </div>
   </div>
+
   <div class="col-md-3">
     <a class="text-decoration-none" href="/cash?category=&q={{ q }}&date_from={{ date_from }}&date_to={{ date_to }}">
-      <div class="card p-2 h-100">
-        <div class="text-muted small">إجمالي الإيرادات</div>
-        <div class="fs-5 fw-bold text-success">{{ '%.2f'|format(total_in or 0) }}</div>
-      </div>
+      <div class="card p-3 h-100 stat-card">
+  <div class="stat-label">إجمالي الإيرادات</div>
+  <div class="stat-value text-success">{{ n(total_in) }}</div>
+</div>
     </a>
   </div>
+
   <div class="col-md-3">
     <a class="text-decoration-none" href="/cash?category=&q={{ q }}&date_from={{ date_from }}&date_to={{ date_to }}">
-      <div class="card p-2 h-100">
-        <div class="text-muted small">إجمالي المصروفات</div>
-        <div class="fs-5 fw-bold text-danger">{{ '%.2f'|format(total_out or 0) }}</div>
-      </div>
+      <div class="card p-3 h-100 stat-card">
+  <div class="stat-label">إجمالي المصروفات</div>
+  <div class="stat-value text-danger">{{ n(total_out) }}</div>
+</div>
     </a>
   </div>
+
   <div class="col-md-3">
-    <div class="card p-2 h-100">
-      <div class="text-muted small">صافي الخزنة</div>
-      <div class="fs-5 fw-bold">{{ '%.2f'|format(balance or 0) }}</div>
-    </div>
+    <div class="card p-3 h-100 stat-card">
+  <div class="stat-label">صافي الخزنة</div>
+  <div class="stat-value">{{ n(balance) }}</div>
+</div>
   </div>
 </div>
 
@@ -155,6 +165,10 @@
       <button class="btn btn-sm btn-primary flex-fill">تطبيق</button>
       <a class="btn btn-sm btn-outline-secondary flex-fill" href="/cash">مسح</a>
     </div>
+
+    <!-- ✅ خلي per_page محفوظ -->
+    <input type="hidden" name="per_page" value="{{ per_page or 15 }}">
+    <input type="hidden" name="page" value="1">
   </form>
 </div>
 
@@ -175,7 +189,6 @@
         {% for c in categories %}
           <option value="{{ c }}"></option>
         {% endfor %}
-        <!-- NEW: نقترح البنود الفرعية لو حابب تسجّل عليها مباشرة -->
         {% if sub_balances %}
           {% for w in sub_balances %}
             <option value="{{ w.cat }}"></option>
@@ -185,7 +198,7 @@
     </div>
     <div class="col-md-2">
       <label class="form-label small">المبلغ</label>
-      <input name="amount" type="number" step="0.01" class="form-control form-control-sm" required>
+      <input name="amount" type="number" step="1" class="form-control form-control-sm" required>
     </div>
     <div class="col-md-2">
       <label class="form-label small">التاريخ</label>
@@ -201,8 +214,78 @@
         <i class="bi bi-filetype-csv"></i> تصدير CSV
       </a>
     </div>
+
+    <!-- ✅ حفظ الفلاتر -->
+    <input type="hidden" name="q" value="{{ q }}">
+    <input type="hidden" name="category_filter" value="{{ category }}">
+    <input type="hidden" name="date_from" value="{{ date_from }}">
+    <input type="hidden" name="date_to" value="{{ date_to }}">
+    <input type="hidden" name="page" value="{{ page or 1 }}">
+    <input type="hidden" name="per_page" value="{{ per_page or 15 }}">
   </form>
 </div>
+
+<style>
+/* عمود المبلغ أوسع شوية */
+.col-amt{
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+/* عمود الرصيد على قد الرقم */
+.col-bal{
+  width: 1%;
+  white-space: nowrap;
+}
+
+  /* خلي الملاحظات تاخد أكبر مساحة */
+  .col-note{
+    width: auto;
+  }
+
+  /* تحسين صغير للأرقام */
+  .money-num{
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+/* خلي كل الكلام في الجدول في نص العمود */
+.table th,
+.table td{
+  text-align: center;
+  vertical-align: middle; /* bonus: النص في نص الخلية عموديًا */
+}
+
+/* Hover شغال مع Bootstrap: طبّقه على خلايا الصف */
+.table tbody tr:hover > *{
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* كروت الخزنة */
+.stat-card{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;   /* توسيط عمودي */
+  align-items: center;       /* توسيط أفقي */
+  height: 100%;
+  text-align: center;
+}
+
+.stat-card .stat-label{
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 4px;
+}
+
+.stat-card .stat-value{
+  font-size: 1.9rem;   /* حجم الرقم */
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+</style>
+
 
 <!-- الجدول -->
 <div class="table-responsive mt-2">
@@ -211,16 +294,21 @@
       <tr>
         <th style="width:110px">التاريخ</th>
         <th style="width:100px">النوع</th>
-        <th>البند</th>
-        <th style="width:140px" class="text-end">المبلغ</th>
-        <th>ملاحظة</th>
-        <th style="width:90px"></th>
+        <th class="col-cat text-center">البند</th>
+        <th class="col-amt">المبلغ</th>
+             <th class="col-note">ملاحظة</th>
+             <th class="col-bal">الرصيد بعد الحركة</th>
+
+
+
+        <th style="width:140px"></th>
       </tr>
     </thead>
     <tbody>
       {% for r in rows %}
       <tr>
         <td>{{ r.date }}</td>
+
         <td>
           {% if r.type=='IN' %}
             <span class="badge bg-success">إيراد</span>
@@ -228,33 +316,69 @@
             <span class="badge bg-danger">مصروف</span>
           {% endif %}
         </td>
-        <td>{{ r.category }}</td>
-        <td class="text-end">{{ '%.2f'|format(r.amount or 0) }}</td>
+
+        <td class="col-cat text-center">{{ r.category }}</td>
+
+        <!-- ✅ رقم 2: تلوين المبلغ -->
+<td class="fw-semibold money-num {% if r.type=='IN' %}text-success{% else %}text-danger{% endif %}">
+  {{ n(r.amount) }}
+</td>
         <td>{{ r.note or '' }}</td>
+
+        <!-- ✅ رقم 3: الرصيد بعد الحركة -->
+<td class="money-num">
+  {{ n(running_by_id.get(r.id)) }}
+</td>
+
+
         <td class="text-center">
-          <form method="post" action="/cash/delete" onsubmit="return confirm('حذف الحركة؟');">
+          <!-- ✅ زر تعديل -->
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-primary btnEditCash"
+            data-bs-toggle="modal"
+            data-bs-target="#editCashModal"
+            data-eid="{{ r.id }}"
+            data-type="{{ r.type }}"
+            data-amount="{{ (r.amount or 0)|int }}"
+            data-date="{{ r.date }}"
+            data-note="{{ r.note or '' }}"
+          >
+            تعديل
+          </button>
+
+          <!-- حذف -->
+          <form method="post" action="/cash/delete" class="d-inline" onsubmit="return confirm('حذف الحركة؟');">
             <input type="hidden" name="eid" value="{{ r.id }}">
+
+            <!-- حفظ الفلاتر -->
+            <input type="hidden" name="q" value="{{ q }}">
+            <input type="hidden" name="category" value="{{ category }}">
+            <input type="hidden" name="date_from" value="{{ date_from }}">
+            <input type="hidden" name="date_to" value="{{ date_to }}">
+            <input type="hidden" name="page" value="{{ page or 1 }}">
+            <input type="hidden" name="per_page" value="{{ per_page or 15 }}">
+
             <button class="btn btn-sm btn-outline-danger">حذف</button>
           </form>
         </td>
       </tr>
       {% endfor %}
+
       {% if not rows or rows|length == 0 %}
-      <tr><td colspan="6" class="text-center text-muted">لا توجد حركات.</td></tr>
+      <tr><td colspan="7" class="text-center text-muted">لا توجد حركات.</td></tr>
       {% endif %}
     </tbody>
   </table>
 </div>
 
-<!-- ===== NEW: ترقيم الصفحات ===== -->
+<!-- ===== ترقيم الصفحات ===== -->
 {% if pages and pages > 1 %}
 <nav aria-label="pagination">
   <ul class="pagination pagination-sm justify-content-center">
-    {% set qp = request.query_params %}
     {% set cur = page or 1 %}
     {% set pp = per_page or 15 %}
 
-    {# رابط مساعد لبناء URL مع الحفاظ على الفلاتر #}
     {% macro page_url(p) -%}
       {{ request.url.replace_query_params(
           date_from=date_from,
@@ -270,7 +394,6 @@
       <a class="page-link" href="{{ page_url(cur-1) }}" tabindex="-1">السابق</a>
     </li>
 
-    {# نعرض مدى بسيط حول الصفحة الحالية #}
     {% set start = (1 if cur-2 < 1 else cur-2) %}
     {% set end = (pages if cur+2 > pages else cur+2) %}
 
@@ -300,6 +423,72 @@
   </ul>
 </nav>
 {% endif %}
-<!-- ===== /NEW ===== -->
+<!-- ===== /ترقيم الصفحات ===== -->
+
+<!-- ✅ Modal تعديل الحركة -->
+<div class="modal fade" id="editCashModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post" action="/cash/update">
+      <div class="modal-header">
+        <h5 class="modal-title">تعديل الحركة</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" name="eid" id="edit_eid">
+
+        <div class="row g-2">
+          <div class="col-md-4">
+            <label class="form-label small">النوع</label>
+            <select name="type" id="edit_type" class="form-select form-select-sm" required>
+              <option value="IN">إيراد</option>
+              <option value="OUT">مصروف</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">المبلغ</label>
+            <input type="number" step="1" name="amount" id="edit_amount" class="form-control form-control-sm" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">التاريخ</label>
+            <input type="date" name="date" id="edit_date" class="form-control form-control-sm" required>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label small">ملاحظة</label>
+            <input type="text" name="note" id="edit_note" class="form-control form-control-sm">
+          </div>
+        </div>
+
+        <!-- ✅ حفظ الفلاتر -->
+        <input type="hidden" name="q" value="{{ q }}">
+        <input type="hidden" name="category" value="{{ category }}">
+        <input type="hidden" name="date_from" value="{{ date_from }}">
+        <input type="hidden" name="date_to" value="{{ date_to }}">
+        <input type="hidden" name="page" value="{{ page or 1 }}">
+        <input type="hidden" name="per_page" value="{{ per_page or 15 }}">
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary">حفظ التعديل</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('.btnEditCash').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('edit_eid').value = btn.dataset.eid || '';
+      document.getElementById('edit_type').value = btn.dataset.type || 'IN';
+      document.getElementById('edit_amount').value = btn.dataset.amount || '0';
+      document.getElementById('edit_date').value = btn.dataset.date || '';
+      document.getElementById('edit_note').value = btn.dataset.note || '';
+    });
+  });
+});
+</script>
 
 {% endblock %}

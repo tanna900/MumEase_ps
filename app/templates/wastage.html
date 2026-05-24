@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% block title %}مخزون الهالك{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+  {# ── رسالة النجاح / الخطأ ── #}
+  {% if msg %}
+  <div class="alert alert-{{ 'success' if '✅' in msg else 'warning' }} alert-dismissible fade show" role="alert">
+    {{ msg }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endif %}
+
+  {# ── Header ── #}
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <h4 class="mb-0 fw-bold">🗑️ مخزون الهالك</h4>
+    <div class="d-flex gap-2">
+      <a href="/products" class="btn btn-outline-secondary btn-sm">← المنتجات</a>
+    </div>
+  </div>
+
+  {# ── Summary Cards ── #}
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-danger text-center py-2">
+        <div class="card-body p-2">
+          <div class="text-muted small">إجمالي قطع الهالك</div>
+          <div class="fs-4 fw-bold text-danger">{{ total_wastage_qty }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-warning text-center py-2">
+        <div class="card-body p-2">
+          <div class="text-muted small">قيمة الهالك (بالتكلفة)</div>
+          <div class="fs-5 fw-bold text-warning">{{ "{:,.0f}".format(total_wastage_value) }} ج</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Search ── #}
+  <form method="get" action="/wastage" class="row g-2 mb-3">
+    <div class="col-auto flex-grow-1">
+      <input type="text" name="q" class="form-control form-control-sm"
+             placeholder="ابحث باسم المنتج أو الباركود..." value="{{ q }}">
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-sm btn-primary">بحث</button>
+      {% if q %}
+      <a href="/wastage" class="btn btn-sm btn-outline-secondary">مسح</a>
+      {% endif %}
+    </div>
+  </form>
+
+  {# ── Products Table ── #}
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover table-sm align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>المنتج</th>
+          <th>اللون / المقاس</th>
+          <th class="text-center">المخزون الحالي</th>
+          <th class="text-center text-danger">مخزون الهالك</th>
+          <th class="text-center">تحويل للهالك</th>
+          <th class="text-center">استرداد من الهالك</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in products %}
+        {% set w = (p.wastage_stock or 0) %}
+        {% set s = (p.stock or 0) %}
+        <tr class="{{ 'table-danger' if w > 0 else '' }}">
+          <td>
+            <div class="fw-semibold">{{ p.name }}</div>
+            <small class="text-muted">{{ p.barcode or '' }}</small>
+          </td>
+          <td>
+            {% if p.color %}
+              <span class="badge bg-secondary">{{ p.color }}</span>
+            {% endif %}
+            {% if p.size %}
+              <span class="badge bg-light text-dark border">{{ p.size }}</span>
+            {% endif %}
+          </td>
+
+          {# مخزون حالي #}
+          <td class="text-center fw-bold {{ 'text-danger' if s < 4 else '' }}">{{ s }}</td>
+
+          {# مخزون هالك #}
+          <td class="text-center fw-bold text-danger">
+            {% if w > 0 %}
+              {{ w }}
+              <br>
+              <small class="text-muted fw-normal">
+                {{ "{:,.0f}".format(w * (p.cost_price or 0)) }} ج
+              </small>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+
+          {# ── تحويل للهالك ── #}
+          <td class="text-center">
+            {% if s > 0 %}
+            <button class="btn btn-sm btn-outline-danger"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalTransfer"
+                    data-pid="{{ p.id }}"
+                    data-name="{{ p.name }}"
+                    data-stock="{{ s }}">
+              ➡️ للهالك
+            </button>
+            {% else %}
+            <span class="text-muted small">لا يوجد ستوك</span>
+            {% endif %}
+          </td>
+
+          {# ── استرداد من الهالك ── #}
+          <td class="text-center">
+            {% if w > 0 %}
+            <button class="btn btn-sm btn-outline-success"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalRecover"
+                    data-pid="{{ p.id }}"
+                    data-name="{{ p.name }}"
+                    data-wastage="{{ w }}">
+              ↩️ استرداد
+            </button>
+            {% else %}
+            <span class="text-muted small">لا يوجد هالك</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="text-center text-muted py-4">لا توجد منتجات مطابقة</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+{# ════════════════════════════════════════
+   Modal: تحويل للهالك
+═════════════════════════════════════════ #}
+<div class="modal fade" id="modalTransfer" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">🗑️ تحويل للهالك</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="/wastage/transfer">
+        <div class="modal-body">
+          <input type="hidden" name="product_id" id="transfer_pid">
+          <input type="hidden" name="q" value="{{ q }}">
+
+          <p class="mb-2">
+            المنتج: <strong id="transfer_name"></strong><br>
+            المخزون الحالي: <strong id="transfer_stock" class="text-success"></strong>
+          </p>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">الكمية للهالك</label>
+            <input type="number" name="qty" id="transfer_qty"
+                   class="form-control" min="1" value="1" required>
+            <div class="form-text text-danger" id="transfer_warn"></div>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label fw-semibold">ملاحظة (اختياري)</label>
+            <input type="text" name="note" class="form-control form-control-sm"
+                   placeholder="مثال: عيب تصنيع، بقعة...">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+          <button type="submit" class="btn btn-danger btn-sm">تأكيد التحويل</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+{# ════════════════════════════════════════
+   Modal: استرداد من الهالك
+═════════════════════════════════════════ #}
+<div class="modal fade" id="modalRecover" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">↩️ استرداد من الهالك</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="/wastage/recover">
+        <div class="modal-body">
+          <input type="hidden" name="product_id" id="recover_pid">
+          <input type="hidden" name="q" value="{{ q }}">
+
+          <p class="mb-2">
+            المنتج: <strong id="recover_name"></strong><br>
+            مخزون الهالك: <strong id="recover_wastage" class="text-danger"></strong>
+          </p>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">الكمية للاسترداد</label>
+            <input type="number" name="qty" id="recover_qty"
+                   class="form-control" min="1" value="1" required>
+            <div class="form-text text-danger" id="recover_warn"></div>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label fw-semibold">ملاحظة (اختياري)</label>
+            <input type="text" name="note" class="form-control form-control-sm"
+                   placeholder="مثال: تمت إصلاحها...">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+          <button type="submit" class="btn btn-success btn-sm">تأكيد الاسترداد</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ── Transfer Modal ──
+document.getElementById('modalTransfer').addEventListener('show.bs.modal', function(e) {
+  const btn = e.relatedTarget;
+  document.getElementById('transfer_pid').value   = btn.dataset.pid;
+  document.getElementById('transfer_name').textContent  = btn.dataset.name;
+  document.getElementById('transfer_stock').textContent = btn.dataset.stock + ' قطعة';
+  const qtyInput = document.getElementById('transfer_qty');
+  qtyInput.max = btn.dataset.stock;
+  qtyInput.value = 1;
+  document.getElementById('transfer_warn').textContent = '';
+
+  qtyInput.addEventListener('input', function() {
+    const max = parseInt(btn.dataset.stock);
+    const val = parseInt(this.value) || 0;
+    document.getElementById('transfer_warn').textContent =
+      val > max ? `⚠️ الحد الأقصى ${max}` : '';
+  });
+});
+
+// ── Recover Modal ──
+document.getElementById('modalRecover').addEventListener('show.bs.modal', function(e) {
+  const btn = e.relatedTarget;
+  document.getElementById('recover_pid').value    = btn.dataset.pid;
+  document.getElementById('recover_name').textContent    = btn.dataset.name;
+  document.getElementById('recover_wastage').textContent = btn.dataset.wastage + ' قطعة';
+  const qtyInput = document.getElementById('recover_qty');
+  qtyInput.max = btn.dataset.wastage;
+  qtyInput.value = 1;
+  document.getElementById('recover_warn').textContent = '';
+
+  qtyInput.addEventListener('input', function() {
+    const max = parseInt(btn.dataset.wastage);
+    const val = parseInt(this.value) || 0;
+    document.getElementById('recover_warn').textContent =
+      val > max ? `⚠️ الحد الأقصى ${max}` : '';
+  });
+});
+</script>
+{% endblock %}

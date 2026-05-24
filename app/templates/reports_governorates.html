@@ -6,11 +6,11 @@
 <form class="row g-2 mb-3" id="filterForm">
   <div class="col-auto">
     <label class="form-label">من</label>
-    <input type="date" class="form-control" id="date_from" name="date_from" value="{{ request.query_params.get('date_from') or '' }}">
+    <input type="date" class="form-control" id="date_from" name="date_from">
   </div>
   <div class="col-auto">
     <label class="form-label">إلى</label>
-    <input type="date" class="form-control" id="date_to" name="date_to" value="{{ request.query_params.get('date_to') or '' }}">
+    <input type="date" class="form-control" id="date_to" name="date_to">
   </div>
   <div class="col-auto align-self-end d-flex gap-2">
     <button class="btn btn-primary">تحديث</button>
@@ -20,41 +20,57 @@
   </div>
 </form>
 
-<div class="table-responsive">
-  <table class="table table-bordered align-middle" id="govTable">
-    <thead class="text-center">
-      <tr>
-        <th style="min-width:180px">المحافظة</th>
-        <th class="text-end" style="min-width:120px">عدد فواتير البيع</th>
-        <th class="text-end" style="min-width:140px">إجمالي البيع</th>
-        <th class="text-end" style="min-width:120px">عدد المرتجعات</th>
-        <th class="text-end" style="min-width:140px">إجمالي المرتجعات</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-    <tfoot>
-      <tr class="fw-bold">
-        <td>الإجمالي</td>
-        <td class="text-end" id="t_sales_cnt">0</td>
-        <td class="text-end" id="t_sales_sum">0.00</td>
-        <td class="text-end" id="t_rets_cnt">0</td>
-        <td class="text-end" id="t_rets_sum">0.00</td>
-      </tr>
-    </tfoot>
-  </table>
+<div class="card shadow-sm">
+  <div class="card-header fw-bold bg-dark text-white d-flex justify-content-between">
+    <span>تفاصيل المحافظات</span>
+    <span class="badge bg-secondary" id="gov-count">0</span>
+  </div>
+  <div style="height:520px; overflow-y:auto;">
+    <table class="table table-bordered table-hover table-sm align-middle mb-0" id="govTable">
+      <thead style="position:sticky; top:0; z-index:2; background:#212529;">
+        <tr>
+          <th style="min-width:160px; color:#fff;">المحافظة</th>
+          <th class="text-end" style="min-width:100px; color:#fff;">عدد البيع</th>
+          <th class="text-end" style="min-width:130px; color:#fff;">إجمالي البيع</th>
+          <th class="text-center" style="min-width:110px; color:#fff;">% من الإجمالي</th>
+          <th class="text-end" style="min-width:100px; color:#fff;">عدد المرتجعات</th>
+          <th class="text-end" style="min-width:130px; color:#fff;">إجمالي المرتجعات</th>
+          <th class="text-center" style="min-width:110px; color:#fff;">نسبة المرتجعات</th>
+        </tr>
+      </thead>
+      <tbody id="govBody"></tbody>
+      <tfoot style="position:sticky; bottom:0; z-index:2; background:#e9ecef;">
+        <tr class="fw-bold">
+          <td>الإجمالي</td>
+          <td class="text-end" id="t_sales_cnt">0</td>
+          <td class="text-end" id="t_sales_sum">0.00</td>
+          <td class="text-center">100%</td>
+          <td class="text-end" id="t_rets_cnt">0</td>
+          <td class="text-end" id="t_rets_sum">0.00</td>
+          <td class="text-center" id="t_ret_pct">0%</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
 </div>
 
 <script>
-  // تنسيقات أرقام بالإنجليزي
-  function fmtMoney(n){
-    return (Number(n||0)).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  function fmtMoney(n){ return (Number(n||0)).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function fmtInt(n){ return (Number(n||0)).toLocaleString('en-US', {maximumFractionDigits:0}); }
+  function fmtPct(ret, sale){
+    if (!sale || sale == 0) return '—';
+    return (ret / sale * 100).toFixed(1) + '%';
   }
-  function fmtInt(n){
-    return (Number(n||0)).toLocaleString('en-US', {maximumFractionDigits: 0});
+  function pctColor(ret, sale){
+    if (!sale || sale == 0) return '';
+    const p = ret / sale * 100;
+    if (p >= 20) return 'text-danger fw-bold';
+    if (p >= 10) return 'text-warning fw-bold';
+    return 'text-success';
   }
 
-  // نخزن آخر بيانات للتصدير
   let _lastRows = [];
+  let _totalSalesSum = 0;
 
   async function loadData() {
     const df = document.getElementById('date_from').value || '';
@@ -69,12 +85,17 @@
     const rows = data.rows || [];
     _lastRows = rows.slice();
 
-    const tbody = document.querySelector('#govTable tbody');
+    // حساب الإجمالي الكلي أولاً عشان نحسب النسبة
+    _totalSalesSum = rows.reduce((sum, r) => sum + Number(r.sales_total||0), 0);
+
+    const tbody = document.getElementById('govBody');
     tbody.innerHTML = '';
     let tSalesCnt=0, tSalesSum=0, tRetCnt=0, tRetSum=0;
 
+    document.getElementById('gov-count').textContent = rows.length + ' محافظة';
+
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">لا توجد بيانات</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">لا توجد بيانات</td></tr>';
     } else {
       rows.forEach(r => {
         const sc = Number(r.sales_count||0);
@@ -82,18 +103,21 @@
         const rc = Number(r.returns_count||0);
         const rs = Number(r.returns_total||0);
 
-        tSalesCnt += sc;
-        tSalesSum += ss;
-        tRetCnt   += rc;
-        tRetSum   += rs;
+        tSalesCnt += sc; tSalesSum += ss;
+        tRetCnt   += rc; tRetSum   += rs;
+
+        const retPctClass  = pctColor(rc, sc);
+        const salesSharePct = _totalSalesSum > 0 ? (ss / _totalSalesSum * 100).toFixed(1) + '%' : '—';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${r.governorate || 'غير محدد'}</td>
-          <td class="text-end" dir="ltr">${fmtInt(sc)}</td>
-          <td class="text-end" dir="ltr">${fmtMoney(ss)}</td>
-          <td class="text-end" dir="ltr">${fmtInt(rc)}</td>
-          <td class="text-end" dir="ltr">${fmtMoney(rs)}</td>
+          <td class="fw-semibold">${r.governorate || 'غير محدد'}</td>
+          <td class="text-end">${fmtInt(sc)}</td>
+          <td class="text-end">${fmtMoney(ss)}</td>
+          <td class="text-center text-primary fw-bold">${salesSharePct}</td>
+          <td class="text-end">${fmtInt(rc)}</td>
+          <td class="text-end">${fmtMoney(rs)}</td>
+          <td class="text-center ${retPctClass}">${fmtPct(rc, sc)}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -103,67 +127,43 @@
     document.getElementById('t_sales_sum').textContent = fmtMoney(tSalesSum);
     document.getElementById('t_rets_cnt').textContent  = fmtInt(tRetCnt);
     document.getElementById('t_rets_sum').textContent  = fmtMoney(tRetSum);
+    document.getElementById('t_ret_pct').textContent   = fmtPct(tRetCnt, tSalesCnt);
+    document.getElementById('t_ret_pct').className     = 'text-center fw-bold ' + pctColor(tRetCnt, tSalesCnt);
   }
 
-  // زر التصدير CSV
   function exportCsv(){
-    if(!_lastRows.length){
-      alert("⚠️ لا توجد بيانات للتصدير");
-      return;
-    }
-    let csv = "Governorate,Sales Count,Sales Total,Returns Count,Returns Total\n";
+    if(!_lastRows.length){ alert("⚠️ لا توجد بيانات للتصدير"); return; }
+    let csv = "المحافظة,عدد البيع,إجمالي البيع,% من الإجمالي,عدد المرتجعات,إجمالي المرتجعات,نسبة المرتجعات\n";
     _lastRows.forEach(r=>{
-      csv += `"${r.governorate||'غير محدد'}",${r.sales_count||0},${r.sales_total||0},${r.returns_count||0},${r.returns_total||0}\n`;
+      const retPct   = r.sales_count > 0 ? (r.returns_count / r.sales_count * 100).toFixed(1) + '%' : '0%';
+      const shareRct = _totalSalesSum > 0 ? (r.sales_total / _totalSalesSum * 100).toFixed(1) + '%' : '0%';
+      csv += `"${r.governorate||'غير محدد'}",${r.sales_count||0},${r.sales_total||0},${shareRct},${r.returns_count||0},${r.returns_total||0},${retPct}\n`;
     });
-    const blob = new Blob([csv], {type: "text/csv;charset=utf-8;"});
+    const blob = new Blob(["\ufeff"+csv], {type:"text/csv;charset=utf-8;"});
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = "governorates_report.csv";
     link.click();
   }
 
-  // زر التصدير Excel (بصيغة HTML Table)
   function exportExcel(){
-    if(!_lastRows.length){
-      alert("⚠️ لا توجد بيانات للتصدير");
-      return;
-    }
-    let html = `
-      <table border="1">
-        <tr>
-          <th>Governorate</th>
-          <th>Sales Count</th>
-          <th>Sales Total</th>
-          <th>Returns Count</th>
-          <th>Returns Total</th>
-        </tr>`;
+    if(!_lastRows.length){ alert("⚠️ لا توجد بيانات للتصدير"); return; }
+    let html = `<table border="1"><tr><th>المحافظة</th><th>عدد البيع</th><th>إجمالي البيع</th><th>% من الإجمالي</th><th>عدد المرتجعات</th><th>إجمالي المرتجعات</th><th>نسبة المرتجعات</th></tr>`;
     _lastRows.forEach(r=>{
-      html += `
-        <tr>
-          <td>${r.governorate||'غير محدد'}</td>
-          <td>${r.sales_count||0}</td>
-          <td>${r.sales_total||0}</td>
-          <td>${r.returns_count||0}</td>
-          <td>${r.returns_total||0}</td>
-        </tr>`;
+      const retPct   = r.sales_count > 0 ? (r.returns_count / r.sales_count * 100).toFixed(1) + '%' : '0%';
+      const shareRct = _totalSalesSum > 0 ? (r.sales_total / _totalSalesSum * 100).toFixed(1) + '%' : '0%';
+      html += `<tr><td>${r.governorate||'غير محدد'}</td><td>${r.sales_count||0}</td><td>${r.sales_total||0}</td><td>${shareRct}</td><td>${r.returns_count||0}</td><td>${r.returns_total||0}</td><td>${retPct}</td></tr>`;
     });
     html += "</table>";
-    const blob = new Blob([html], {type: "application/vnd.ms-excel"});
+    const blob = new Blob([html], {type:"application/vnd.ms-excel"});
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = "governorates_report.xls";
     link.click();
   }
 
-  document.getElementById('filterForm').addEventListener('submit', function(e){
-    e.preventDefault();
-    loadData();
-  });
-  document.getElementById('clearBtn').addEventListener('click', function(){
-    document.getElementById('date_from').value = '';
-    document.getElementById('date_to').value = '';
-    loadData();
-  });
+  document.getElementById('filterForm').addEventListener('submit', function(e){ e.preventDefault(); loadData(); });
+  document.getElementById('clearBtn').addEventListener('click', function(){ document.getElementById('date_from').value=''; document.getElementById('date_to').value=''; loadData(); });
   document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
   document.getElementById('exportExcelBtn').addEventListener('click', exportExcel);
 

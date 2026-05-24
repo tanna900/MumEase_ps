@@ -2,29 +2,175 @@
 {% block content %}
 
 <style>
-  table.products-table{ table-layout: fixed; width: 100%; }
-  table.products-table th, table.products-table td{
-    vertical-align: middle; padding: .35rem .5rem; white-space: nowrap;
+  /* =======================
+     Table + UI (Professional / Calm)
+     ======================= */
+
+  /* Wrapper للجدول: هو اللي بيعمل scroll (بيحل مشكلة الـ header في نص الجدول) */
+  .table-wrap{
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
   }
+  .table-wrap .table-responsive{
+    max-height: 72vh;     /* تقدر تغيرها */
+    overflow: auto;
+  }
+
+  table.products-table{
+    table-layout: auto;   /* مهم: بدل fixed عشان الأعمدة ما تتكسرش */
+    width: 100%;
+    min-width: 1100px;    /* يخلي الأعمدة تتنفس + سكرول أفقي لو الشاشة ضيقة */
+  }
+
+  table.products-table th, table.products-table td{
+    vertical-align: middle;
+    padding: .48rem .6rem;
+    white-space: nowrap;
+  }
+
+  /* Sticky header داخل الـ scroll container */
+.table-wrap thead th{
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;   /* خط أوضح */
+  font-weight: 800;
+  font-size: .92rem;                 /* تكبير بسيط */
+}
+
+/* أقل فرق ممكن بين الصفوف (striped خفيف جدًا) */
+.products-table.table-striped > tbody > tr:nth-of-type(odd) > *{
+  background-color: rgba(0,0,0,.004) !important;
+}
+.products-table.table-striped > tbody > tr:nth-of-type(even) > *{
+  background-color: transparent !important;
+}
+
+
+
+  /* تحسين القراءة */
+  table.products-table tbody td{ font-size: .92rem; }
+
   .cell-ellipsis{ overflow: hidden; text-overflow: ellipsis; }
   .col-check{ width: 32px; }
-  .col-name{ width: 28%; }
+  .col-name{ width: 32%; }
   .col-color{ width: 9%; }
   .col-size{ width: 7%; }
   .col-barcode{ width: 12%; }
-  .col-money{ width: 8.5%; }
+  .col-money{ width: 9%; }
   .col-stock{ width: 10%; }
   .col-margin-u{ width: 9%; }
   .col-margin-p{ width: 7%; }
   .col-stock-profit{ width: 11%; }
-  .col-actions{ width: 70px; }
-  tr.low-stock-row{ background: rgba(255, 193, 7, .18); }
-  table.products-table thead th{ font-size: .85rem; }
-  .stock-wrap{ display:flex; align-items:center; justify-content:flex-end; gap:.35rem; }
-  .stock-num{ font-weight:700; min-width: 28px; text-align: right; }
+  .col-actions{ width: 72px; }
+
+
+  .stock-wrap{ display:flex; align-items:center; justify-content:flex-end; gap:.3rem; }
+  .stock-num{ font-weight:800; min-width: 26px; text-align: right; }
+
   .sort-link{ color: inherit; text-decoration:none; display:inline-flex; gap:.25rem; align-items:center; }
   .sort-link:hover{ text-decoration: underline; }
   .sort-ind{ font-size:.75rem; opacity:.75; }
+
+  /* أرقام ثابتة الشكل */
+  .col-money, .col-stock, .col-margin-u, .col-margin-p, .col-stock-profit{
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* كروت أعلى الصفحة هادية */
+  .soft-card{
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 8px 18px rgba(0,0,0,.05);
+  }
+  .soft-card.bg-light{
+    background: #fafafa !important;
+  }
+/* ===============================
+   تلوين رقم الستوك فقط (Low Stock)
+================================ */
+
+.stock-num{
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+/* ===============================
+   Stock badges (0 / low)
+================================ */
+
+.stock-num{
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+/* الأيقونة الصغيرة جنب الرقم */
+.stock-flag{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:22px;
+  height:22px;
+  border-radius:6px;
+  font-size:.75rem;
+  font-weight:800;
+  margin-left:6px;
+}
+
+/* لو الستوك = 0 */
+.stock-zero{
+  background:#f8d7da;
+  color:#842029;
+}
+
+/* لو الستوك أقل من الحد */
+.stock-low{
+  background:#fff3cd;
+  color:#664d03;
+}
+
+/* ===============================
+   Summary Cards (Top Stats)
+================================ */
+
+.products-cards .summary-card{
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 14px;
+  padding: 18px 16px;
+  height: 100%;
+  text-align: center;
+}
+
+.products-cards .summary-title{
+  font-size: .9rem;
+  color: #6c757d;
+  margin-bottom: 6px;
+}
+
+.products-cards .summary-value{
+  font-size: 1.4rem;   /* 👈 كبرت الرقم */
+  font-weight: 800;
+  color: #212529;
+}
+
+/* كارت Low Stock */
+.products-cards .summary-card.warning{
+  background: #fff9e6;
+  border-color: #ffe3a3;
+}
+
+.products-cards .summary-card.warning .summary-value{
+  color: #b78103;
+}
+
+
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -36,19 +182,46 @@
   </div>
 </div>
 
-<div class="card p-2 mb-3 bg-light">
-  <div class="row g-2 text-end small">
-    <div class="col-md-3"><b>إجمالي كل القطع:</b> {{ '%.0f'|format(all_qty or 0) }}</div>
-    <div class="col-md-3"><b>قيمة المخزون بالتكلفة:</b> {{ '%.2f'|format(all_cost or 0) }}</div>
-    <div class="col-md-3"><b>قيمة المخزون بسعر البيع:</b> {{ '%.2f'|format(all_price or 0) }}</div>
-    <div class="col-md-3">
-      <b>Low Stock (&lt; {{ LOW_STOCK_THRESHOLD }}):</b> {{ low_stock_global_count or 0 }}
-      {% if (q or color or size or low_only or in_stock) %}
-        <span class="text-muted">• داخل الفلاتر: {{ low_stock_filtered_count or 0 }}</span>
-      {% endif %}
+<div class="row g-3 mb-3 products-cards">
+
+  <div class="col-md-3">
+    <div class="summary-card">
+      <div class="summary-title">إجمالي القطع</div>
+      <div class="summary-value">
+        {{ '%.0f'|format(all_qty or 0) }}
+      </div>
     </div>
   </div>
+
+  <div class="col-md-3">
+    <div class="summary-card">
+      <div class="summary-title">قيمة المخزون (تكلفة)</div>
+      <div class="summary-value">
+        {{ '%.2f'|format(all_cost or 0) }}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="summary-card">
+      <div class="summary-title">قيمة المخزون (بيع)</div>
+      <div class="summary-value">
+        {{ '%.2f'|format(all_price or 0) }}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="summary-card warning">
+      <div class="summary-title">Low Stock (&lt; {{ LOW_STOCK_THRESHOLD }})</div>
+      <div class="summary-value">
+        {{ low_stock_global_count or 0 }}
+      </div>
+    </div>
+  </div>
+
 </div>
+
 
 {% if msg %}
   <div class="alert {% if '✅' in msg %}alert-success{% elif '⚠️' in msg %}alert-warning{% elif '🗑️' in msg %}alert-info{% else %}alert-secondary{% endif %}">
@@ -69,7 +242,7 @@
     ➕ إضافة صنف يدوي
   </button>
   <div class="collapse mt-2" id="addProductCollapse">
-    <div class="card p-2">
+    <div class="card p-2 soft-card">
       <form method="post" action="/products/add" class="row g-2">
         <div class="col-md-4">
           <label class="form-label small mb-1">الاسم *</label>
@@ -196,7 +369,7 @@
 </form>
 
 <!-- شريط Bulk Action -->
-<div class="card p-2 mb-2">
+<div class="card p-2 mb-2 soft-card">
   <div class="d-flex align-items-center gap-3">
     <div class="form-check mb-0">
       <input class="form-check-input" type="checkbox" id="check_all_toolbar">
@@ -212,134 +385,217 @@
 
 {% set ns = namespace(margin_total=0, stock_profit_total=0) %}
 
-<div class="table-responsive">
-  <table class="table table-sm table-bordered table-striped table-hover align-middle products-table">
-    <thead class="table-light">
-      <tr class="small text-muted">
-        <th class="col-check"><input class="form-check-input" type="checkbox" id="check_all_header"></th>
+<!-- ✅ الجدول داخل wrapper يحل مشكلة الهيدر في النص -->
+<div class="table-wrap">
+  <div class="table-responsive">
+    <table class="table table-sm table-bordered table-hover align-middle products-table">
+      <thead class="table-light">
+        <tr class="small text-muted">
+          <th class="col-check"><input class="form-check-input" type="checkbox" id="check_all_header"></th>
 
-        {# ---- Sorting helpers inline ---- #}
-        {% set cur_sort = (sort or 'name') %}
-        {% set cur_dir = (dir or 'asc') %}
+          {% set cur_sort = (sort or 'name') %}
+          {% set cur_dir = (dir or 'asc') %}
 
-        {% set nd = 'desc' if (cur_sort=='name' and cur_dir!='desc') else 'asc' %}
-        <th class="col-name">
-          <a class="sort-link" href="/products?{{ base_qs_filters }}&sort=name&dir={{ nd }}&page=1">
-            الاسم
-            {% if cur_sort=='name' %}<span class="sort-ind">{{ '▲' if cur_dir!='desc' else '▼' }}</span>{% endif %}
-          </a>
-        </th>
+          {% set nd = 'desc' if (cur_sort=='name' and cur_dir!='desc') else 'asc' %}
+          <th class="col-name">
+            <a class="sort-link" href="/products?{{ base_qs_filters }}&sort=name&dir={{ nd }}&page=1">
+              الاسم
+              {% if cur_sort=='name' %}<span class="sort-ind">{{ '▲' if cur_dir!='desc' else '▼' }}</span>{% endif %}
+            </a>
+          </th>
 
-        {% set nd = 'desc' if (cur_sort=='color' and cur_dir!='desc') else 'asc' %}
-        <th class="col-color">
-          <a class="sort-link" href="/products?{{ base_qs_filters }}&sort=color&dir={{ nd }}&page=1">
-            اللون
-            {% if cur_sort=='color' %}<span class="sort-ind">{{ '▲' if cur_dir!='desc' else '▼' }}</span>{% endif %}
-          </a>
-        </th>
+          {% set nd = 'desc' if (cur_sort=='color' and cur_dir!='desc') else 'asc' %}
+          <th class="col-color">
+            <a class="sort-link" href="/products?{{ base_qs_filters }}&sort=color&dir={{ nd }}&page=1">
+              اللون
+              {% if cur_sort=='color' %}<span class="sort-ind">{{ '▲' if cur_dir!='desc' else '▼' }}</span>{% endif %}
+            </a>
+          </th>
 
-        {% set nd = 'desc' if (cur_sort=='size' and cur_dir!='desc') else 'asc' %}
-        <th class="col-size">
-          <a class="sort-link" href="/products?{{ base_qs_filters }}&sort=size&dir={{ nd }}&page=1">
-            المقاس
-            {% if cur_sort=='size' %}<span class="sort-ind">{{ '▲' if cur_dir!='desc' else '▼' }}</span>{% endif %}
-          </a>
-        </th>
+          {% set nd = 'desc' if (cur_sort=='size' and cur_dir!='desc') else 'asc' %}
+          <th class="col-size">
+            <a class="sort-link" href="/products?{{ base_qs_filters }}&sort=size&dir={{ nd }}&page=1">
+              المقاس
+              {% if cur_sort=='size' %}<span class="sort-ind">{{ '▲' if cur_dir!='desc' else '▼' }}</span>{% endif %}
+            </a>
+          </th>
 
-        {% set nd = 'desc' if (cur_sort=='barcode' and cur_dir!='desc') else 'asc' %}
-        <th class="col-barcode">
-          <a class="sort-link" href="/products?{{ base_qs_filters }}&sort=barcode&dir={{ nd }}&page=1">
-            الباركود
-            {% if cur_sort=='barcode' %}<span class="sort-ind">{{ '▲' if cur_dir!='desc' else '▼' }}</span>{% endif %}
-          </a>
-        </th>
+          {% set nd = 'desc' if (cur_sort=='barcode' and cur_dir!='desc') else 'asc' %}
+          <th class="col-barcode">
+            <a class="sort-link" href="/products?{{ base_qs_filters }}&sort=barcode&dir={{ nd }}&page=1">
+              الباركود
+              {% if cur_sort=='barcode' %}<span class="sort-ind">{{ '▲' if cur_dir!='desc' else '▼' }}</span>{% endif %}
+            </a>
+          </th>
 
-        {% set nd = 'desc' if (cur_sort=='cost' and cur_dir!='desc') else 'asc' %}
-        <th class="text-end col-money">
-          <a class="sort-link" href="/products?{{ base_qs_filters }}&sort=cost&dir={{ nd }}&page=1">
-            التكلفة
-            {% if cur_sort=='cost' %}<span class="sort-ind">{{ '▲' if cur_dir!='desc' else '▼' }}</span>{% endif %}
-          </a>
-        </th>
+          {% set nd = 'desc' if (cur_sort=='cost' and cur_dir!='desc') else 'asc' %}
+          <th class="text-end col-money">
+            <a class="sort-link" href="/products?{{ base_qs_filters }}&sort=cost&dir={{ nd }}&page=1">
+              التكلفة
+              {% if cur_sort=='cost' %}<span class="sort-ind">{{ '▲' if cur_dir!='desc' else '▼' }}</span>{% endif %}
+            </a>
+          </th>
 
-        {% set nd = 'desc' if (cur_sort=='price' and cur_dir!='desc') else 'asc' %}
-        <th class="text-end col-money">
-          <a class="sort-link" href="/products?{{ base_qs_filters }}&sort=price&dir={{ nd }}&page=1">
-            السعر
-            {% if cur_sort=='price' %}<span class="sort-ind">{{ '▲' if cur_dir!='desc' else '▼' }}</span>{% endif %}
-          </a>
-        </th>
+          {% set nd = 'desc' if (cur_sort=='price' and cur_dir!='desc') else 'asc' %}
+          <th class="text-end col-money">
+            <a class="sort-link" href="/products?{{ base_qs_filters }}&sort=price&dir={{ nd }}&page=1">
+              السعر
+              {% if cur_sort=='price' %}<span class="sort-ind">{{ '▲' if cur_dir!='desc' else '▼' }}</span>{% endif %}
+            </a>
+          </th>
 
-        {% set nd = 'desc' if (cur_sort=='stock' and cur_dir!='desc') else 'asc' %}
-        <th class="text-end col-stock">
-          <a class="sort-link" href="/products?{{ base_qs_filters }}&sort=stock&dir={{ nd }}&page=1">
-            الستوك
-            {% if cur_sort=='stock' %}<span class="sort-ind">{{ '▲' if cur_dir!='desc' else '▼' }}</span>{% endif %}
-          </a>
-        </th>
+          {% set nd = 'desc' if (cur_sort=='stock' and cur_dir!='desc') else 'asc' %}
+          <th class="text-end col-stock">
+            <a class="sort-link" href="/products?{{ base_qs_filters }}&sort=stock&dir={{ nd }}&page=1">
+              الستوك
+              {% if cur_sort=='stock' %}<span class="sort-ind">{{ '▲' if cur_dir!='desc' else '▼' }}</span>{% endif %}
+            </a>
+          </th>
 
-        <th class="text-end col-margin-u">هامش/قطعة</th>
-        <th class="text-end col-margin-p">هامش%</th>
-        <th class="text-end col-stock-profit">ربح المخزون</th>
-        <th class="col-actions text-center">⋮</th>
-      </tr>
-    </thead>
+          <th class="text-end col-margin-u">هامش/قطعة</th>
+          <th class="text-end col-margin-p">هامش%</th>
+          <th class="text-end col-stock-profit">ربح المخزون</th>
+          <th class="col-actions text-center">⋮</th>
+        </tr>
+      </thead>
 
-    <tbody>
-    {% for p in products %}
-      {% set _stock = (p.stock or 0) %}
-      {% set _cost = (p.cost_price or 0) %}
-      {% set _price = (p.price or 0) %}
-      {% set _margin_u = (_price - _cost) %}
-      {% set _margin_pct = (_margin_u / _price * 100) if _price and _price > 0 else 0 %}
-      {% set _stock_profit = (_stock * _margin_u) %}
+      <tbody>
+      {% for p in products %}
+        {% set _stock = (p.stock or 0) %}
+        {% set _cost = (p.cost_price or 0) %}
+        {% set _price = (p.price or 0) %}
+        {% set _margin_u = (_price - _cost) %}
+        {% set _margin_pct = (_margin_u / _price * 100) if _price and _price > 0 else 0 %}
+        {% set _stock_profit = (_stock * _margin_u) %}
 
-      {% set ns.stock_profit_total = ns.stock_profit_total + _stock_profit %}
+        {% set ns.stock_profit_total = ns.stock_profit_total + _stock_profit %}
 
-      <tr class="{% if _stock < LOW_STOCK_THRESHOLD %}low-stock-row{% endif %}">
-        <td class="col-check">
-          <input class="form-check-input row-check" type="checkbox" value="{{ p.id }}">
-        </td>
+<tr>
+          <td class="col-check">
+            <input class="form-check-input row-check" type="checkbox" value="{{ p.id }}">
+          </td>
 
-        <td class="col-name cell-ellipsis" title="{{ p.name }}">
-          <a href="#" class="open-card text-decoration-none"
-             data-bs-toggle="modal" data-bs-target="#productCardModal"
-             data-pid="{{ p.id }}"
-             data-title="{{ p.name }}{% if p.size %} ({{ p.size }}){% endif %}{% if p.color %} {{ p.color }}{% endif %}">
-            {{ p.name }}
-          </a>
-        </td>
+          <td class="col-name cell-ellipsis" title="{{ p.name }}">
+            <a href="#" class="open-card text-decoration-none"
+               data-bs-toggle="modal" data-bs-target="#productCardModal"
+               data-pid="{{ p.id }}"
+               data-title="{{ p.name }}{% if p.size %} ({{ p.size }}){% endif %}{% if p.color %} {{ p.color }}{% endif %}">
+              {{ p.name }}
+            </a>
+          </td>
 
-        <td class="col-color cell-ellipsis" title="{{ p.color or '-' }}">{{ p.color or '-' }}</td>
-        <td class="col-size cell-ellipsis" title="{{ p.size or '-' }}">{{ p.size or '-' }}</td>
+          <td class="col-color cell-ellipsis" title="{{ p.color or '-' }}">{{ p.color or '-' }}</td>
+          <td class="col-size cell-ellipsis" title="{{ p.size or '-' }}">{{ p.size or '-' }}</td>
 
-        <td class="col-barcode cell-ellipsis" title="{{ p.barcode or '-' }}">
-          <a href="#" class="open-card text-decoration-none"
-             data-bs-toggle="modal" data-bs-target="#productCardModal"
-             data-pid="{{ p.id }}"
-             data-title="{{ p.name }}{% if p.size %} ({{ p.size }}){% endif %}{% if p.color %} {{ p.color }}{% endif %}">
-            {{ p.barcode or '-' }}
-          </a>
-        </td>
+          <td class="col-barcode cell-ellipsis" title="{{ p.barcode or '-' }}">
+            <a href="#" class="open-card text-decoration-none"
+               data-bs-toggle="modal" data-bs-target="#productCardModal"
+               data-pid="{{ p.id }}"
+               data-title="{{ p.name }}{% if p.size %} ({{ p.size }}){% endif %}{% if p.color %} {{ p.color }}{% endif %}">
+              {{ p.barcode or '-' }}
+            </a>
+          </td>
 
-        <td class="text-end col-money">{{ '%.2f'|format(_cost) }}</td>
-        <td class="text-end col-money">{{ '%.2f'|format(_price) }}</td>
+          <td class="text-end col-money">{{ '%.2f'|format(_cost) }}</td>
+          <td class="text-end col-money">{{ '%.2f'|format(_price) }}</td>
 
-        <td class="text-end col-stock">
-          <div class="stock-wrap">
-            <span class="stock-num">{{ _stock }}</span>
+          <td class="text-end col-stock">
+            <div class="stock-wrap">
+              <span class="stock-num">{{ _stock }}</span>
 
+{% if _stock == 0 %}
+  <span class="stock-flag stock-zero" title="نفد المخزون">⛔</span>
+{% elif _stock < LOW_STOCK_THRESHOLD %}
+  <span class="stock-flag stock-low" title="مخزون منخفض">⚠️</span>
+{% endif %}
+
+
+              <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2 dropdown-toggle" data-bs-toggle="dropdown" title="تعديل سريع">
+                  ±
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  {% for d in [-1, 1, 5] %}
+                  <li>
+                    <form method="post" action="/products/stock-delta" class="m-0">
+                      <input type="hidden" name="pid" value="{{ p.id }}">
+                      <input type="hidden" name="delta" value="{{ d }}">
+
+                      <input type="hidden" name="q" value="{{ q }}">
+                      <input type="hidden" name="color_filter" value="{{ color }}">
+                      <input type="hidden" name="size_filter" value="{{ size }}">
+                      <input type="hidden" name="low_only" value="{{ low_only or 0 }}">
+                      <input type="hidden" name="in_stock" value="{{ in_stock or 0 }}">
+                      <input type="hidden" name="sort" value="{{ sort }}">
+                      <input type="hidden" name="dir" value="{{ dir }}">
+                      <input type="hidden" name="page" value="{{ page }}">
+                      <input type="hidden" name="page_size" value="{{ page_size or 15 }}">
+
+                      <button class="dropdown-item">{{ '+' if d>0 else ''}}{{ d }}</button>
+                    </form>
+                  </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          </td>
+
+          <td class="text-end col-margin-u {% if _margin_u < 0 %}text-danger{% else %}text-success{% endif %}">
+            {{ '%.2f'|format(_margin_u or 0) }}
+          </td>
+          <td class="text-end col-margin-p">{{ '%.1f'|format(_margin_pct or 0) }}%</td>
+          <td class="text-end col-stock-profit {% if _stock_profit < 0 %}text-danger{% else %}text-success{% endif %}">
+            {{ '%.2f'|format(_stock_profit or 0) }}
+          </td>
+
+          <td class="col-actions text-center">
             <div class="dropdown">
-              <button class="btn btn-sm btn-outline-secondary py-0 px-2 dropdown-toggle" data-bs-toggle="dropdown" title="تعديل سريع">
-                ±
+              <button class="btn btn-sm btn-outline-secondary py-0 px-2 dropdown-toggle" data-bs-toggle="dropdown" title="إجراءات">
+                ⋮
               </button>
               <ul class="dropdown-menu dropdown-menu-end">
-                {% for d in [-1, 1, 5] %}
                 <li>
-                  <form method="post" action="/products/stock-delta" class="m-0">
-                    <input type="hidden" name="pid" value="{{ p.id }}">
-                    <input type="hidden" name="delta" value="{{ d }}">
+                  <button type="button"
+                          class="dropdown-item btnEdit"
+                          data-bs-toggle="modal" data-bs-target="#editModal"
+                          data-id="{{ p.id }}"
+                          data-name="{{ p.name }}"
+                          data-color="{{ p.color or '' }}"
+                          data-size="{{ p.size or '' }}"
+                          data-barcode="{{ p.barcode or '' }}"
+                          data-cost="{{ '%.2f'|format(_cost) }}"
+                          data-price="{{ '%.2f'|format(_price) }}"
+                          data-stock="{{ _stock }}">
+                    ✏️ تعديل
+                  </button>
+                </li>
 
+                <li>
+                  <button type="button"
+                          class="dropdown-item open-card"
+                          data-bs-toggle="modal" data-bs-target="#productCardModal"
+                          data-pid="{{ p.id }}"
+                          data-title="{{ p.name }}{% if p.size %} ({{ p.size }}){% endif %}{% if p.color %} {{ p.color }}{% endif %}">
+                    📄 كارت الصنف
+                  </button>
+                </li>
+
+                <li>
+                  <button type="button"
+                          class="dropdown-item text-danger btnWastage"
+                          data-bs-toggle="modal" data-bs-target="#wastageModal"
+                          data-pid="{{ p.id }}"
+                          data-name="{{ p.name }}{% if p.size %} ({{ p.size }}){% endif %}{% if p.color %} {{ p.color }}{% endif %}"
+                          data-stock="{{ _stock }}">
+                    🗑️ للهالك
+                  </button>
+                </li>
+
+                <li><hr class="dropdown-divider"></li>
+
+                <li>
+                  <form method="post" action="/products/delete" onsubmit="return confirm('هل أنت متأكد من الحذف؟');" class="m-0">
+                    <input type="hidden" name="pid" value="{{ p.id }}">
                     <input type="hidden" name="q" value="{{ q }}">
                     <input type="hidden" name="color_filter" value="{{ color }}">
                     <input type="hidden" name="size_filter" value="{{ size }}">
@@ -349,107 +605,44 @@
                     <input type="hidden" name="dir" value="{{ dir }}">
                     <input type="hidden" name="page" value="{{ page }}">
                     <input type="hidden" name="page_size" value="{{ page_size or 15 }}">
-
-                    <button class="dropdown-item">{{ '+' if d>0 else ''}}{{ d }}</button>
+                    <button class="dropdown-item text-danger">🗑️ حذف</button>
                   </form>
                 </li>
-                {% endfor %}
               </ul>
             </div>
-          </div>
-        </td>
+          </td>
+        </tr>
+      {% endfor %}
 
-        <td class="text-end col-margin-u {% if _margin_u < 0 %}text-danger{% else %}text-success{% endif %}">
-          {{ '%.2f'|format(_margin_u or 0) }}
-        </td>
-        <td class="text-end col-margin-p">{{ '%.1f'|format(_margin_pct or 0) }}%</td>
-        <td class="text-end col-stock-profit {% if _stock_profit < 0 %}text-danger{% else %}text-success{% endif %}">
-          {{ '%.2f'|format(_stock_profit or 0) }}
-        </td>
+      {% if not products or products|length == 0 %}
+        <tr><td colspan="12" class="text-center text-muted">لا توجد أصناف مطابقة.</td></tr>
+      {% endif %}
+      </tbody>
 
-        <td class="col-actions text-center">
-          <div class="dropdown">
-            <button class="btn btn-sm btn-outline-secondary py-0 px-2 dropdown-toggle" data-bs-toggle="dropdown" title="إجراءات">
-              ⋮
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li>
-                <button type="button"
-                        class="dropdown-item btnEdit"
-                        data-bs-toggle="modal" data-bs-target="#editModal"
-                        data-id="{{ p.id }}"
-                        data-name="{{ p.name }}"
-                        data-color="{{ p.color or '' }}"
-                        data-size="{{ p.size or '' }}"
-                        data-barcode="{{ p.barcode or '' }}"
-                        data-cost="{{ '%.2f'|format(_cost) }}"
-                        data-price="{{ '%.2f'|format(_price) }}"
-                        data-stock="{{ _stock }}">
-                  ✏️ تعديل
-                </button>
-              </li>
-
-              <li>
-                <button type="button"
-                        class="dropdown-item open-card"
-                        data-bs-toggle="modal" data-bs-target="#productCardModal"
-                        data-pid="{{ p.id }}"
-                        data-title="{{ p.name }}{% if p.size %} ({{ p.size }}){% endif %}{% if p.color %} {{ p.color }}{% endif %}">
-                  📄 كارت الصنف
-                </button>
-              </li>
-
-              <li><hr class="dropdown-divider"></li>
-
-              <li>
-                <form method="post" action="/products/delete" onsubmit="return confirm('هل أنت متأكد من الحذف؟');" class="m-0">
-                  <input type="hidden" name="pid" value="{{ p.id }}">
-                  <input type="hidden" name="q" value="{{ q }}">
-                  <input type="hidden" name="color_filter" value="{{ color }}">
-                  <input type="hidden" name="size_filter" value="{{ size }}">
-                  <input type="hidden" name="low_only" value="{{ low_only or 0 }}">
-                  <input type="hidden" name="in_stock" value="{{ in_stock or 0 }}">
-                  <input type="hidden" name="sort" value="{{ sort }}">
-                  <input type="hidden" name="dir" value="{{ dir }}">
-                  <input type="hidden" name="page" value="{{ page }}">
-                  <input type="hidden" name="page_size" value="{{ page_size or 15 }}">
-                  <button class="dropdown-item text-danger">🗑️ حذف</button>
-                </form>
-              </li>
-            </ul>
-          </div>
-        </td>
-      </tr>
-    {% endfor %}
-
-    {% if not products or products|length == 0 %}
-      <tr><td colspan="12" class="text-center text-muted">لا توجد أصناف مطابقة.</td></tr>
-    {% endif %}
-    </tbody>
-
-    <tfoot>
-      <tr class="table-light">
-        <th colspan="7" class="text-end">إجمالي عدد القطع (داخل الصفحة):</th>
-        <th class="text-end">{{ '%.0f'|format(page_qty or 0) }}</th>
-        <th colspan="4"></th>
-      </tr>
-      <tr class="table-light">
-        <th colspan="7" class="text-end">قيمة الصفحة بالتكلفة:</th>
-        <th class="text-end">{{ '%.2f'|format(page_cost or 0) }}</th>
-        <th colspan="4"></th>
-      </tr>
-      <tr class="table-light">
-        <th colspan="7" class="text-end">قيمة الصفحة بسعر البيع:</th>
-        <th class="text-end">{{ '%.2f'|format(page_price or 0) }}</th>
-        <th colspan="4"></th>
-      </tr>
-      <tr class="table-light">
-        <th colspan="10" class="text-end">إجمالي ربح المخزون (داخل الصفحة):</th>
-        <th class="text-end text-success">{{ '%.2f'|format(ns.stock_profit_total or 0) }}</th>
-        <th></th>
-      </tr>
-    </tfoot>
-  </table>
+      <tfoot>
+        <tr class="table-light">
+          <th colspan="7" class="text-end">إجمالي عدد القطع (داخل الصفحة):</th>
+          <th class="text-end">{{ '%.0f'|format(page_qty or 0) }}</th>
+          <th colspan="4"></th>
+        </tr>
+        <tr class="table-light">
+          <th colspan="7" class="text-end">قيمة الصفحة بالتكلفة:</th>
+          <th class="text-end">{{ '%.2f'|format(page_cost or 0) }}</th>
+          <th colspan="4"></th>
+        </tr>
+        <tr class="table-light">
+          <th colspan="7" class="text-end">قيمة الصفحة بسعر البيع:</th>
+          <th class="text-end">{{ '%.2f'|format(page_price or 0) }}</th>
+          <th colspan="4"></th>
+        </tr>
+        <tr class="table-light">
+          <th colspan="10" class="text-end">إجمالي ربح المخزون (داخل الصفحة):</th>
+          <th class="text-end text-success">{{ '%.2f'|format(ns.stock_profit_total or 0) }}</th>
+          <th></th>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
 </div>
 
 {% if (not has_search) and (total_pages and total_pages > 1) %}
@@ -744,6 +937,63 @@ document.addEventListener('DOMContentLoaded', function () {
       qInput.select();
     });
   }
+});
+</script>
+
+{# ════════ Modal: تحويل للهالك ════════ #}
+<div class="modal fade" id="wastageModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white py-2">
+        <h6 class="modal-title mb-0">🗑️ تحويل للهالك</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="/wastage/transfer">
+        <div class="modal-body">
+          <input type="hidden" name="product_id" id="w_pid">
+          {# نرجع لنفس صفحة المخزون بنفس الفلاتر #}
+          <input type="hidden" name="next" value="/products?q={{ q }}&color={{ color }}&size={{ size }}&low_only={{ low_only or 0 }}&in_stock={{ in_stock or 0 }}&sort={{ sort }}&dir={{ dir }}&page={{ page }}&page_size={{ page_size or 15 }}">
+
+          <p class="mb-1 fw-semibold" id="w_name"></p>
+          <p class="mb-3 text-muted small">المخزون الحالي: <strong id="w_stock" class="text-success"></strong> قطعة</p>
+
+          <label class="form-label fw-semibold">الكمية للهالك</label>
+          <input type="number" name="qty" id="w_qty"
+                 class="form-control" min="1" value="1" required>
+          <div class="text-danger small mt-1" id="w_warn"></div>
+
+          <div class="mt-2">
+            <label class="form-label fw-semibold">ملاحظة (اختياري)</label>
+            <input type="text" name="note" class="form-control form-control-sm"
+                   placeholder="مثال: عيب تصنيع...">
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+          <button type="submit" class="btn btn-danger btn-sm">✅ تأكيد التحويل</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.btnWastage').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.getElementById('w_pid').value   = this.dataset.pid;
+    document.getElementById('w_name').textContent = this.dataset.name;
+    const stock = parseInt(this.dataset.stock) || 0;
+    document.getElementById('w_stock').textContent = stock;
+    const qtyInput = document.getElementById('w_qty');
+    qtyInput.max   = stock;
+    qtyInput.value = 1;
+    document.getElementById('w_warn').textContent = '';
+
+    qtyInput.oninput = function() {
+      document.getElementById('w_warn').textContent =
+        parseInt(this.value) > stock ? `⚠️ الحد الأقصى ${stock}` : '';
+    };
+  });
 });
 </script>
 

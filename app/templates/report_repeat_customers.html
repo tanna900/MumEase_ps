@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <h4 class="mb-0 fw-bold">👥 تقرير العملاء المكررين</h4>
+    <a href="/reports" class="btn btn-outline-secondary btn-sm">← التقارير</a>
+  </div>
+
+  <form method="get" class="row g-2 align-items-end mb-4">
+    <div class="col-auto">
+      <label class="form-label small mb-1">من</label>
+      <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from }}">
+    </div>
+    <div class="col-auto">
+      <label class="form-label small mb-1">إلى</label>
+      <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to }}">
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-primary btn-sm">🔍 عرض</button>
+      <a href="/reports/repeat-customers?date_from={{ date_from }}&date_to={{ date_to }}&export=csv"
+         class="btn btn-success btn-sm">⬇️ تصدير</a>
+    </div>
+  </form>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card text-center border-primary py-2">
+        <div class="card-body p-2">
+          <div class="text-muted small">إجمالي العملاء</div>
+          <div class="fs-4 fw-bold text-primary">{{ total_customers }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center border-success py-2">
+        <div class="card-body p-2">
+          <div class="text-muted small">عملاء مكررون</div>
+          <div class="fs-4 fw-bold text-success">{{ repeat_count }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center border-warning py-2">
+        <div class="card-body p-2">
+          <div class="text-muted small">نسبة التكرار</div>
+          <div class="fs-4 fw-bold text-warning">{{ repeat_pct }}%</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center border-secondary py-2">
+        <div class="card-body p-2">
+          <div class="text-muted small">مرة واحدة فقط</div>
+          <div class="fs-4 fw-bold text-secondary">{{ singles|length }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs mb-0" id="custTabs">
+    <li class="nav-item">
+      <button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#tabRepeat">
+        ⭐ مكررون ({{ repeat|length }})
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabSingle">
+        🔹 مرة واحدة ({{ singles|length }})
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content border border-top-0 rounded-bottom shadow-sm">
+
+    <div class="tab-pane fade show active" id="tabRepeat">
+      <div style="height:480px; overflow-y:auto;">
+        <table class="table table-sm table-hover table-bordered mb-0 align-middle">
+          <thead style="position:sticky; top:0; z-index:2; background:#d1e7dd;">
+            <tr>
+              <th style="min-width:160px;">الاسم</th>
+              <th style="min-width:130px;">الهاتف</th>
+              <th class="text-center" style="min-width:110px;">عدد الطلبات</th>
+              <th class="text-end" style="min-width:130px;">إجمالي الإنفاق</th>
+              <th class="text-center" style="min-width:100px;">أول طلب</th>
+              <th class="text-center" style="min-width:100px;">آخر طلب</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in repeat %}
+            <tr>
+              <td class="fw-semibold">{{ r.name }}</td>
+              <td>{{ r.phone }}</td>
+              <td class="text-center"><span class="badge bg-success">{{ r.orders }} طلبات</span></td>
+              <td class="text-end fw-bold">{{ "{:,.0f}".format(r.total_spent) }} ج</td>
+              <td class="text-center text-muted small">{{ r.first_order }}</td>
+              <td class="text-center text-muted small">{{ r.last_order }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center text-muted py-4">لا يوجد عملاء مكررون</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="tabSingle">
+      <div style="height:480px; overflow-y:auto;">
+        <table class="table table-sm table-hover table-bordered mb-0 align-middle">
+          <thead style="position:sticky; top:0; z-index:2; background:#f8f9fa;">
+            <tr>
+              <th style="min-width:160px;">الاسم</th>
+              <th style="min-width:130px;">الهاتف</th>
+              <th class="text-end" style="min-width:130px;">إجمالي الإنفاق</th>
+              <th class="text-center" style="min-width:100px;">تاريخ الطلب</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in singles %}
+            <tr>
+              <td>{{ r.name }}</td>
+              <td>{{ r.phone }}</td>
+              <td class="text-end">{{ "{:,.0f}".format(r.total_spent) }} ج</td>
+              <td class="text-center text-muted small">{{ r.last_order }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-center text-muted py-4">لا توجد بيانات</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

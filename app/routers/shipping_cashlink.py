@@ -1,10 +1,11 @@
 # app/routers/shipping_cashlink.py
 from datetime import datetime
-from fastapi import APIRouter, Request, Depends, Form
+from fastapi import APIRouter, Request, Depends, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from fastapi.templating import Jinja2Templates
+import math
 
 from app.database import SessionLocal
 from app import models
@@ -47,6 +48,7 @@ def _create_cash_entry_for_payment(db: Session, pay: models.ShippingPayment) -> 
 @router.get("", response_class=HTMLResponse)
 def sync_page(
     request: Request,
+    page: int = Query(1, ge=1),
     db: Session = Depends(get_db)
 ):
     """
@@ -54,6 +56,7 @@ def sync_page(
     - دفعات شحن غير مُرحّلة للخزنة
     - دفعات شحن مُرحّلة (مع إمكانية إلغاء قيّد الخزنة)
     """
+
     # غير مُرحّلة
     unlinked = db.query(models.ShippingPayment).filter(
         ~models.ShippingPayment.id.in_(
@@ -61,21 +64,61 @@ def sync_page(
         )
     ).order_by(models.ShippingPayment.id.desc()).all()
 
-    # مُرحّلة
-    linked = db.query(models.ShippingPayment, models.ShippingPaymentCashMap, models.FinanceEntry).\
-        join(models.ShippingPaymentCashMap, models.ShippingPaymentCashMap.payment_id == models.ShippingPayment.id).\
-        join(models.FinanceEntry, models.FinanceEntry.id == models.ShippingPaymentCashMap.finance_entry_id).\
-        order_by(models.ShippingPayment.id.desc()).all()
+    # -----------------------------
+    # Pagination للدفعات المُرحّلة
+    # -----------------------------
+    limit = 5
+    total_linked_count = db.query(func.count(models.ShippingPaymentCashMap.id)).scalar() or 0
+    total_pages = math.ceil(total_linked_count / limit) if total_linked_count else 1
+
+    # امنع page تخرج برّه الرينج
+    if page < 1:
+        page = 1
+    if page > total_pages:
+        page = total_pages
+
+    offset = (page - 1) * limit
+
+    # مُرحّلة (آخر 5 حسب الصفحة)
+    linked = (
+        db.query(models.ShippingPayment, models.ShippingPaymentCashMap, models.FinanceEntry)
+        .join(models.ShippingPaymentCashMap, models.ShippingPaymentCashMap.payment_id == models.ShippingPayment.id)
+        .join(models.FinanceEntry, models.FinanceEntry.id == models.ShippingPaymentCashMap.finance_entry_id)
+        .order_by(models.ShippingPayment.id.desc())
+        .limit(limit)
+        .offset(offset)
+        .all()
+    )
 
     total_unlinked = float(sum(float(r.amount or 0) for r in unlinked))
-    total_linked = float(sum(float(p.amount or 0) for (p, _, __) in linked))
+
+    # إجمالي المُرحّلة (لكل الدفعات المُرحّلة مش بس صفحة واحدة)
+    total_linked = db.query(func.coalesce(func.sum(models.ShippingPayment.amount), 0)).filter(
+        models.ShippingPayment.id.in_(db.query(models.ShippingPaymentCashMap.payment_id))
+    ).scalar()
+    total_linked = float(total_linked or 0)
+
+    # --------- أرقام صفحات جاهزة للقالب (بدون min/max داخل Jinja) ---------
+    first_pages = list(range(1, min(3, total_pages) + 1))  # 1..3
+    last_start = max(total_pages - 2, 4)                   # آخر 3 صفحات تبدأ من هنا
+    last_pages = list(range(last_start, total_pages + 1)) if total_pages >= 4 else []
+
+    show_dots = total_pages > 6  # نعرض ... لو الصفحات أكتر من 6
 
     ctx = {
         "request": request,
         "unlinked": unlinked,
         "linked": linked,
         "total_unlinked": total_unlinked,
-        "total_linked": total_linked
+        "total_linked": total_linked,
+
+        "page": page,
+        "total_pages": total_pages,
+
+        # pagination helpers
+        "first_pages": first_pages,
+        "last_pages": last_pages,
+        "show_dots": show_dots
     }
     return templates.TemplateResponse("shipping_cash_sync.html", ctx)
 

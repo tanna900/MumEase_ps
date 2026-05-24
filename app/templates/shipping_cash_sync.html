@@ -1,5 +1,26 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+  /* جدول الدفعات المُرحّلة */
+  .linked-table th,
+  .linked-table td {
+    white-space: nowrap;   /* خلي الكلام في سطر واحد */
+    vertical-align: middle;
+    font-size: 0.9rem;
+  }
+
+  /* عمود قيد الخزنة أكبر */
+  .linked-table td.cash-entry {
+    white-space: normal;   /* يسمح باللف لو النص طويل */
+    max-width: 700px;      /* ⬅️ كبرناه أكتر */
+  }
+
+  /* أعمدة */
+  .linked-table .col-date   { width: 90px; }
+  .linked-table .col-amount { width: 60px; }  /* ⬅️ صغّرناه أكتر */
+  .linked-table .col-action { width: 60px; }  /* ⬅️ صغّرناه + الزرار أقصر */
+</style>
+
 <h4 class="mb-3">🔗 ربط دفعات الشحن بالخزنة (توريد صافي)</h4>
 
 <!-- أزرار عامة -->
@@ -57,31 +78,39 @@
       <div class="card-body">
         <div class="mb-2 text-muted">الإجمالي: {{ '%.2f'|format(total_linked or 0) }}</div>
         <div class="table-responsive">
-          <table class="table table-bordered align-middle">
+          <!-- ✅ ده الجدول اللي اتظبط -->
+          <table class="table table-bordered align-middle linked-table">
             <thead>
               <tr class="text-center">
-                <th style="width:100px">التاريخ</th>
+                <th class="col-date">التاريخ</th>
                 <th>الشركة</th>
-                <th style="width:140px">المبلغ</th>
+                <th class="col-amount">المبلغ</th>
                 <th>قيد الخزنة</th>
-                <th style="width:100px"></th>
+                <th class="col-action"></th>
               </tr>
             </thead>
             <tbody>
               {% for p, link, fe in linked %}
               <tr>
-                <td class="text-center">{{ p.date }}</td>
-                <td>{{ p.company }}</td>
-                <td class="text-end">{{ '%.2f'|format(p.amount or 0) }}</td>
-                <td>
-                  <div class="small">ID: {{ fe.id }}</div>
-                  <div class="small">تاريخ: {{ fe.date }}</div>
-                  <div class="small">بند: {{ fe.category }}</div>
+                <td class="text-center col-date">{{ p.date }}</td>
+                <td title="{{ p.company }}">{{ p.company }}</td>
+
+                {# ✅ بدون قروش #}
+                <td class="text-end col-amount">{{ (p.amount or 0) | int }}</td>
+
+                <!-- ✅ قيد الخزنة أعرض ومقروء -->
+                <td class="cash-entry">
+                  <span><strong>ID:</strong> {{ fe.id }}</span>
+                  <span class="mx-2">|</span>
+                  <span><strong>تاريخ:</strong> {{ fe.date }}</span>
+                  <span class="mx-2">|</span>
+                  <span><strong>بند:</strong> {{ fe.category }}</span>
                 </td>
-                <td class="text-center">
+
+                <td class="text-center col-action">
                   <form method="post" action="/shipping/cash-sync/unlink" onsubmit="return confirm('إلغاء قيد الخزنة لهذه الدفعة؟');">
                     <input type="hidden" name="payment_id" value="{{ p.id }}">
-                    <button class="btn btn-sm btn-outline-danger">إلغاء القيد</button>
+                    <button class="btn btn-sm btn-outline-danger px-2">إلغاء</button>
                   </form>
                 </td>
               </tr>
@@ -91,6 +120,62 @@
             </tbody>
           </table>
         </div>
+
+        {# -------- Pagination للدفعات المُرحّلة -------- #}
+        {% if total_pages and total_pages > 1 %}
+        <nav aria-label="linked pagination">
+          <ul class="pagination justify-content-center mt-3">
+
+            <!-- صفحة أولى -->
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+              <a class="page-link" href="?page=1" aria-label="First">«</a>
+            </li>
+
+            <!-- سابق -->
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+              <a class="page-link" href="?page={{ page - 1 }}" aria-label="Previous">‹</a>
+            </li>
+
+            <!-- أول 3 صفحات -->
+            {% for pno in first_pages %}
+              <li class="page-item {% if pno == page %}active{% endif %}">
+                <a class="page-link" href="?page={{ pno }}">{{ pno }}</a>
+              </li>
+            {% endfor %}
+
+            {# ✅ إظهار الصفحة الحالية لما تكون في النص #}
+            {% if total_pages > 6 and page > 3 and page < total_pages - 2 %}
+              <li class="page-item disabled"><span class="page-link">...</span></li>
+              <li class="page-item active"><span class="page-link">{{ page }}</span></li>
+              <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% else %}
+              {% if show_dots %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+              {% endif %}
+            {% endif %}
+
+            <!-- آخر 3 صفحات -->
+            {% for pno in last_pages %}
+              <li class="page-item {% if pno == page %}active{% endif %}">
+                <a class="page-link" href="?page={{ pno }}">{{ pno }}</a>
+              </li>
+            {% endfor %}
+
+            <!-- تالي -->
+            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+              <a class="page-link" href="?page={{ page + 1 }}" aria-label="Next">›</a>
+            </li>
+
+            <!-- صفحة أخيرة -->
+            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+              <a class="page-link" href="?page={{ total_pages }}" aria-label="Last">»</a>
+            </li>
+
+          </ul>
+        </nav>
+        {% endif %}
+        {# -------- /Pagination -------- #}
+
       </div>
     </div>
   </div>

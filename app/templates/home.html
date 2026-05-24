@@ -1,31 +1,35 @@
-{# app/templates/home.html #}
 {% extends "base.html" %}
 {% block content %}
 
 <!-- ===== Header صغير + Quick Actions (خفيف) ===== -->
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-  <div class="d-flex align-items-center gap-2">
-    <i class="bi bi-bag-heart-fill" style="font-size:34px; color:#6f42c1;"></i>
-    <div>
-      <div class="fw-bold" style="font-size:1.2rem; line-height:1;">MumEase POS</div>
-      <div class="text-muted small">Dashboard</div>
+
+  <!-- الشمال -->
+  <div>
+
+    <div class="fw-bold" style="font-size:1rem;">
+      أهلاً، {{ username }}
     </div>
+
+    <div class="text-muted small">
+      {{ today_date }}
+    </div>
+
   </div>
 
-  <div class="d-flex gap-2">
-    <a class="btn btn-sm btn-primary" href="/sales/new">🧾 إنشاء فاتورة</a>
-    <div class="dropdown">
-      <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-        عمليات سريعة
-      </button>
-      <ul class="dropdown-menu">
-        <li><a class="dropdown-item" href="/products">📦 إدارة الأصناف</a></li>
-        <li><a class="dropdown-item" href="/today/sales">📌 فواتير اليوم</a></li>
-        <li><a class="dropdown-item" href="/cash">💰 الخزنة</a></li>
-        <li><a class="dropdown-item" href="/shipping">🚚 حسابات الشحن</a></li>
-      </ul>
-    </div>
+  <!-- اليمين -->
+  <div class="d-flex gap-2 flex-wrap">
+
+    <a class="btn btn-sm btn-success px-3" href="/sales/new">
+      🛒 بيع
+    </a>
+
+    <a class="btn btn-sm btn-dark px-3" href="/daily-settlement">
+      📋 تقفيل اليومية
+    </a>
+
   </div>
+
 </div>
 
 {% if settlement_closed %}
@@ -36,9 +40,9 @@
 
 <!-- ===== KPIs (TODAY فقط) ===== -->
 <div class="row g-2">
-  <div class="col-6 col-md-4 col-lg-2">
+  <div class="col-6 col-md-4 col-lg">
     <div class="card p-2 h-100">
-      <div class="text-muted small">مبيعات اليوم</div>
+      <div class="text-muted small">مبيعات</div>
       <div class="fs-4 fw-bold text-success">{{ '%.2f'|format(sales_sum or 0) }}</div>
     </div>
   </div>
@@ -52,38 +56,33 @@
 
   <div class="col-6 col-md-4 col-lg-2">
     <div class="card p-2 h-100">
-      <div class="text-muted small">مرتجعات اليوم</div>
+      <div class="text-muted small">مرتجعات</div>
       <div class="fs-4 fw-bold text-danger">{{ '%.2f'|format(returns_sum or 0) }}</div>
     </div>
   </div>
 
   <div class="col-6 col-md-4 col-lg-2">
     <div class="card p-2 h-100">
-      <div class="text-muted small">صافي الخزنة (اليوم)</div>
+      <div class="text-muted small">صافي الخزنة</div>
       <div class="fs-4 fw-bold">{{ '%.2f'|format(cash_net_today or 0) }}</div>
     </div>
   </div>
 
   <div class="col-6 col-md-4 col-lg-2">
     <div class="card p-2 h-100">
-      <div class="text-muted small">مصروف الشحن (اليوم)</div>
+      <div class="text-muted small">مصروف الشحن</div>
       <div class="fs-4 fw-bold">{{ '%.2f'|format(shipping_expense_today or 0) }}</div>
     </div>
   </div>
 
-  <div class="col-6 col-md-4 col-lg-2">
-    <div class="card p-2 h-100">
-      <div class="text-muted small">قيمة المخزون</div>
-      <div class="fs-4 fw-bold">{{ '%.2f'|format(inventory_value or 0) }}</div>
-    </div>
-  </div>
+ 
 </div>
 
 <!-- KPIs ثانوية (خفيفة) -->
 <div class="row g-2 mt-2">
   <div class="col-6 col-md-3">
     <div class="card p-2 text-center">
-      <div class="text-muted small">عدد فواتير اليوم</div>
+      <div class="text-muted small">عدد فواتير</div>
       <div class="fw-bold">{{ invoices_count_today or 0 }}</div>
     </div>
   </div>
@@ -233,94 +232,6 @@
   </div>
 </div>
 
-<!-- ===== متابعة سريعة (Tabs: آخر فواتير / الأكثر مبيعًا) ===== -->
-<div class="card p-2 mt-3">
-  <div class="d-flex align-items-center justify-content-between mb-2">
-    <h6 class="m-0"><i class="bi bi-grid-3x3-gap"></i> المتابعة السريعة</h6>
-    <a href="/today/sales" class="small text-decoration-none">عرض الكل</a>
-  </div>
-
-  <ul class="nav nav-tabs" id="dashTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="tab-latest" data-bs-toggle="tab" data-bs-target="#pane-latest" type="button" role="tab">
-        آخر الفواتير
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="tab-top" data-bs-toggle="tab" data-bs-target="#pane-top" type="button" role="tab">
-        الأكثر مبيعًا
-      </button>
-    </li>
-  </ul>
-
-  <div class="tab-content pt-2">
-    <!-- Latest invoices -->
-    <div class="tab-pane fade show active" id="pane-latest" role="tabpanel">
-      <div class="table-responsive">
-        <table class="table table-sm table-bordered align-middle mb-0">
-          <thead class="table-light">
-            <tr class="text-muted small">
-              <th style="width:140px">الكود</th>
-              <th>العميل</th>
-              <th style="width:80px" class="text-center">نوع</th>
-              <th style="width:140px" class="text-end">الإجمالي</th>
-              <th style="width:90px" class="text-center">فتح</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% if recent_invoices and recent_invoices|length>0 %}
-              {% for inv in recent_invoices %}
-              <tr>
-                <td>{{ inv.invoice_code }}</td>
-                <td class="text-truncate" style="max-width:260px;">{{ inv.customer_name }}</td>
-                <td class="text-center">
-                  <span class="badge {% if inv.type=='S' %}bg-success{% else %}bg-secondary{% endif %}">
-                    {{ 'بيع' if inv.type=='S' else 'مرتجع' }}
-                  </span>
-                </td>
-                <td class="text-end">{{ '%.2f'|format(inv.total or 0) }}</td>
-                <td class="text-center">
-                  <a class="btn btn-sm btn-outline-primary py-0 px-2" target="_blank" href="/invoices/{{inv.id}}">فتح</a>
-                </td>
-              </tr>
-              {% endfor %}
-            {% else %}
-              <tr><td colspan="5" class="text-center text-muted">لا توجد فواتير اليوم.</td></tr>
-            {% endif %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Top products -->
-    <div class="tab-pane fade" id="pane-top" role="tabpanel">
-      {% if top_products and top_products|length > 0 %}
-        <div class="table-responsive">
-          <table class="table table-sm table-bordered align-middle mb-0">
-            <thead class="table-light">
-              <tr class="text-muted small">
-                <th>الصنف</th>
-                <th style="width:90px" class="text-end">الكمية</th>
-                <th style="width:120px" class="text-end">الإيراد</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for p in top_products %}
-              <tr>
-                <td class="text-truncate" style="max-width: 420px;">{{ p.name }}</td>
-                <td class="text-end">{{ p.qty }}</td>
-                <td class="text-end">{{ '%.2f'|format(p.rev) }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% else %}
-        <div class="text-muted small p-2">لا توجد مبيعات اليوم حتى الآن.</div>
-      {% endif %}
-    </div>
-  </div>
-</div>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>

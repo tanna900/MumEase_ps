@@ -94,6 +94,7 @@
       <div class="card-body">
         <div class="text-muted">مصروفات تشغيلية (محددة)</div>
         <div>اعلانات: -{{ '%.2f'|format(ads_expense or 0) }}</div>
+        <div>مصروفات متغيرة أخرى: -{{ '%.2f'|format(other_variable_expense or 0) }}</div>
         <div>عموله تسويق: -{{ '%.2f'|format(marketer_commission or 0) }}</div>
         <hr class="my-2">
         <div class="text-muted small">إجمالي OUT (للمعلومية): {{ '%.2f'|format(operating_total_out or 0) }}</div>
@@ -175,7 +176,7 @@
         <div class="text-muted">صافي الربح</div>
         <div class="fs-2 fw-bold">{{ '%.2f'|format(net_profit or 0) }}</div>
         <div class="small text-muted">
-          = الربح الإجمالي - مصروفات الشحن - اعلانات - عموله تسويق - التكاليف الثابتة
+          = الربح الإجمالي - مصروفات الشحن - المصروفات المتغيرة - عموله تسويق - التكاليف الثابتة
         </div>
       </div>
     </div>
@@ -247,7 +248,7 @@
                  aria-valuenow="{{ be_progress_rev|round(2) }}" aria-valuemin="0" aria-valuemax="100"></div>
           </div>
           <div class="small mt-1">
-            {{ '%.2f'|format(net_revenue or 0) }} / {{ '%.2f'|format(be_revenue or 0) }}
+            {{ '%.2f'|format(net_product_revenue or 0) }} / {{ '%.2f'|format(be_revenue or 0) }}
             جنيه ({{ '%.1f'|format(be_progress_rev or 0) }}%)
           </div>
         </div>

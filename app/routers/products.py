@@ -138,22 +138,29 @@ def _build_page_items(page: int, total_pages: int, window: int = 2):
         prev = p
     return out
 
-def _distinct_options(db: Session):
+def _distinct_options(db: Session, limit: int = 200):
+    """
+    ✅ تحسين أداء:
+    بدل ما نجيب distinct لكل القيم لو جدول كبير،
+    بنحط limit عشان ما تبطّأش الصفحة.
+    """
     colors = [
         r[0] for r in db.query(models.Product.color)
         .filter(models.Product.color.isnot(None))
+        .filter(models.Product.color != "")
         .distinct()
         .order_by(models.Product.color.asc())
+        .limit(int(limit))
         .all()
-        if (r[0] or "").strip()
     ]
     sizes = [
         r[0] for r in db.query(models.Product.size)
         .filter(models.Product.size.isnot(None))
+        .filter(models.Product.size != "")
         .distinct()
         .order_by(models.Product.size.asc())
+        .limit(int(limit))
         .all()
-        if (r[0] or "").strip()
     ]
     return colors, sizes
 
@@ -178,6 +185,8 @@ def list_products(
     page_size = max(1, int(page_size or 15))
 
     base_query = _apply_filters_and_sort(db, q, color, size, low_only, in_stock, sort, dir)
+    # ✅ للـ COUNT / SUM من غير تأثير ORDER BY
+    base_query_no_order = base_query.order_by(None)
 
     all_qty = float(db.query(func.coalesce(func.sum(models.Product.stock), 0)).scalar() or 0)
 
@@ -199,28 +208,31 @@ def list_products(
     )
 
     low_stock_filtered_count = int(
-        base_query.with_entities(models.Product.id)
-                  .filter(func.coalesce(models.Product.stock, 0) < LOW_STOCK_THRESHOLD)
-                  .count()
+        base_query_no_order.with_entities(models.Product.id)
+                           .filter(func.coalesce(models.Product.stock, 0) < LOW_STOCK_THRESHOLD)
+                           .count()
     )
 
+    # ✅ مهم: البحث بقى Paginated (مش all() لكل النتائج)
     has_search = True if (q or "").strip() else False
+
     if has_search:
-        products_all = base_query.all()
+        products = base_query.all()
         total_pages = 1
         page = 1
-        products = products_all
     else:
-        total_count = base_query.count()
+        total_count = int(base_query_no_order.with_entities(models.Product.id).count())
         total_pages = max(1, (total_count + page_size - 1) // page_size)
         page = min(page, total_pages)
+
         products = (
             base_query
-            .offset((page - 1) * page_size)
-            .limit(page_size)
-            .all()
+           .offset((page - 1) * page_size)
+           .limit(page_size)
+           .all()
         )
-        products_all = None
+
+    products_all = None  # هنستخدمه في التصدير فقط لو احتجنا
 
     low_stock_page = [p for p in products if (p.stock or 0) < LOW_STOCK_THRESHOLD]
 
@@ -231,7 +243,9 @@ def list_products(
     # ===== تصدير =====
     exp = (export or "").lower().strip()
     if exp in ("csv", "excel"):
-        export_rows = products_all if has_search else base_query.all()
+        # ✅ التصدير: مقصود إنه يجيب كل النتائج المطابقة (عملية مقصودة)
+        export_rows = base_query.all()
+
         buf = io.StringIO()
         w = csv.writer(buf)
         w.writerow([
@@ -301,7 +315,7 @@ def list_products(
     base_qs_filters = urlencode(base_params_filters)
 
     page_items = _build_page_items(page, total_pages, window=2)
-    color_options, size_options = _distinct_options(db)
+    color_options, size_options = _distinct_options(db, limit=200)
 
     return templates.TemplateResponse("product_list.html", {
         "request": request,

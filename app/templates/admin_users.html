@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h4 class="fw-bold mb-0">👥 إدارة المستخدمين</h4>
+    <a href="/admin/users/new" class="btn btn-primary btn-sm">➕ مستخدم جديد</a>
+  </div>
+
+  {% if msg %}
+  <div class="alert {{ 'alert-success' if '✅' in msg else 'alert-danger' }} alert-dismissible fade show">
+    {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endif %}
+
+  <div class="card shadow-sm">
+    <div style="overflow-x:auto;">
+      <table class="table table-bordered table-hover align-middle mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>اسم المستخدم</th>
+            <th>الاسم</th>
+            <th class="text-center">نوع</th>
+            <th class="text-center">الحالة</th>
+            <th class="text-center">عدد الصلاحيات</th>
+            <th class="text-center">آخر دخول</th>
+            <th class="text-center">إجراء</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td class="fw-semibold">{{ u.username }}</td>
+            <td>{{ u.display_name }}</td>
+            <td class="text-center">
+              {% if u.is_admin %}
+                <span class="badge bg-danger">Admin</span>
+              {% else %}
+                <span class="badge bg-secondary">موظف</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              {% if u.is_active %}
+                <span class="badge bg-success">نشط</span>
+              {% else %}
+                <span class="badge bg-secondary">موقوف</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              {% if u.is_admin %}
+                <span class="text-muted">كل الصلاحيات</span>
+              {% else %}
+                {{ u.permissions | from_json | length if u.permissions else 0 }}
+              {% endif %}
+            </td>
+            <td class="text-center text-muted small">
+              {{ u.last_login.strftime("%Y-%m-%d %H:%M") if u.last_login else "—" }}
+            </td>
+            <td class="text-center">
+              <a href="/admin/users/{{ u.id }}/edit" class="btn btn-sm btn-outline-primary">تعديل</a>
+              {% if not u.is_admin %}
+              <form method="post" action="/admin/users/{{ u.id }}/delete" class="d-inline"
+                    onsubmit="return confirm('حذف المستخدم {{ u.username }}؟');">
+                <button class="btn btn-sm btn-outline-danger">حذف</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

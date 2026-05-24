@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-3" style="max-width:800px;">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h4 class="fw-bold mb-0">{{ '✏️ تعديل مستخدم' if user else '➕ مستخدم جديد' }}</h4>
+    <a href="/admin/users" class="btn btn-outline-secondary btn-sm">← رجوع</a>
+  </div>
+
+  {% if msg %}
+  <div class="alert {{ 'alert-success' if '✅' in msg else 'alert-danger' }}">{{ msg }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ '/admin/users/' + user.id|string + '/edit' if user else '/admin/users/new' }}">
+    <div class="card shadow-sm mb-4">
+      <div class="card-header fw-bold bg-dark text-white">بيانات المستخدم</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">اسم المستخدم (للدخول)</label>
+            <input type="text" name="username" class="form-control"
+                   value="{{ user.username if user else '' }}"
+                   {{ 'readonly' if user else 'required' }}>
+            {% if user %}<div class="form-text text-muted">مش ممكن يتغير</div>{% endif %}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">الاسم الظاهر</label>
+            <input type="text" name="display_name" class="form-control" required
+                   value="{{ user.display_name if user else '' }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">{{ 'باسورد جديد (اتركه فاضي لو مش عايز تغيره)' if user else 'الباسورد' }}</label>
+            <input type="password" name="password" class="form-control"
+                   {{ '' if user else 'required' }} minlength="6">
+          </div>
+          <div class="col-md-3">
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="checkbox" name="is_admin" value="1" id="isAdmin"
+                     {{ 'checked' if user and user.is_admin else '' }}>
+              <label class="form-check-label fw-semibold" for="isAdmin">Admin (كل الصلاحيات)</label>
+            </div>
+          </div>
+          {% if user %}
+          <div class="col-md-3">
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="checkbox" name="is_active" value="1" id="isActive"
+                     {{ 'checked' if user.is_active else '' }}>
+              <label class="form-check-label fw-semibold" for="isActive">نشط</label>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# ── الصلاحيات ── #}
+    <div class="card shadow-sm mb-4" id="permsCard">
+      <div class="card-header fw-bold bg-dark text-white d-flex justify-content-between align-items-center">
+        <span>🔐 الصلاحيات</span>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-outline-light" onclick="toggleAll(true)">تحديد الكل</button>
+          <button type="button" class="btn btn-sm btn-outline-light" onclick="toggleAll(false)">إلغاء الكل</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row g-4">
+          {% for group_name, group_perms in PERMISSION_GROUPS.items() %}
+          <div class="col-md-4">
+            <div class="card border-secondary h-100">
+              <div class="card-header bg-secondary bg-opacity-10 fw-semibold d-flex justify-content-between align-items-center py-1">
+                <span>{{ group_name }}</span>
+                <button type="button" class="btn btn-sm btn-link p-0 text-secondary"
+                        onclick="toggleGroup('{{ group_name }}')">تحديد الكل</button>
+              </div>
+              <div class="card-body py-2 px-3">
+                {% for perm in group_perms %}
+                <div class="form-check">
+                  <input class="form-check-input perm-cb group-{{ group_name }}" type="checkbox"
+                         name="perm_{{ perm }}" value="1" id="perm_{{ perm }}"
+                         {% if user and perm in (user_perms or []) %}checked{% endif %}>
+                  <label class="form-check-label small" for="perm_{{ perm }}">
+                    {{ ALL_PERMISSIONS[perm] }}
+                  </label>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-success px-5 fw-bold">💾 حفظ</button>
+  </form>
+</div>
+
+<script>
+// إخفاء/إظهار الصلاحيات لو Admin
+document.getElementById('isAdmin').addEventListener('change', function() {
+  document.getElementById('permsCard').style.opacity = this.checked ? '0.4' : '1';
+});
+if (document.getElementById('isAdmin').checked) {
+  document.getElementById('permsCard').style.opacity = '0.4';
+}
+
+function toggleAll(check) {
+  document.querySelectorAll('.perm-cb').forEach(cb => cb.checked = check);
+}
+
+const groupStates = {};
+function toggleGroup(name) {
+  const cbs = document.querySelectorAll(`.group-${name.replace(/\s+/g, '')}`);
+  // استخدم اسم الكلاس بدون مسافات
+  const allCbs = document.querySelectorAll(`[class*="group-"]`);
+  const groupCbs = Array.from(allCbs).filter(el =>
+    el.classList.contains('group-' + name.replace(/[\s\u0600-\u06FF]+/g, c => encodeURIComponent(c)))
+  );
+
+  // نبحث بطريقة تانية
+  const all = document.querySelectorAll('.perm-cb');
+  const inGroup = Array.from(all).filter(cb => {
+    const id = cb.id.replace('perm_', '');
+    const permsInGroup = {{ PERMISSION_GROUPS | tojson }};
+    return (permsInGroup[name] || []).includes(id);
+  });
+
+  const anyUnchecked = inGroup.some(cb => !cb.checked);
+  inGroup.forEach(cb => cb.checked = anyUnchecked);
+}
+</script>
+{% endblock %}
