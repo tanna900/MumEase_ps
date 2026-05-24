@@ -1,11 +1,127 @@
 
+<style id="mobile-hard-fix">
+
+html,body{
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden !important;
+}
+
+@media (max-width:768px){
+
+  body{
+    overflow-x:hidden !important;
+  }
+
+  .container,
+  .container-fluid,
+  .row,
+  .card,
+  .sale-shell,
+  .sale-grid{
+    max-width:100% !important;
+  }
+
+  .row{
+    margin-left:0 !important;
+    margin-right:0 !important;
+  }
+
+  .table-responsive{
+    width:100% !important;
+    overflow-x:auto !important;
+  }
+
+  #items-body .cell-product,
+  .product-col{
+    min-width:0 !important;
+    width:100% !important;
+    max-width:100% !important;
+  }
+
+  .sale-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  .action-bar{
+    display:flex !important;
+    flex-wrap:wrap !important;
+    gap:8px !important;
+  }
+
+  .action-bar .btn{
+    flex:1 1 calc(50% - 8px) !important;
+    min-width:140px !important;
+    width:auto !important;
+  }
+
+}
+
+  /* Mobile action buttons as compact icons */
+  .action-bar{
+    justify-content:center;
+  }
+
+  .action-bar .btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+  }
+
+  @media(max-width:768px){
+
+    .action-bar{
+      flex-wrap:nowrap !important;
+      gap:8px !important;
+      padding:10px !important;
+    }
+
+    .action-bar .btn{
+      flex:1 1 0 !important;
+      min-width:0 !important;
+      width:auto !important;
+      min-height:44px !important;
+      padding:10px !important;
+      font-size:0 !important;
+      border-radius:14px !important;
+    }
+
+    .action-bar .btn::before{
+      font-size:1.2rem;
+    }
+
+    .action-bar .btn:nth-child(1)::before{
+      content:"💾";
+    }
+
+    .action-bar .btn:nth-child(2)::before{
+      content:"🖨️";
+    }
+
+    .action-bar .btn:nth-child(3)::before{
+      content:"👁️";
+    }
+
+  }
+
+</style>
+
 {% extends "base.html" %}
 {% block content %}
 
 <style>
+html,
+body{
+  overflow-x:hidden;
+  max-width:100%;
+}
+
 .sale-shell{
   max-width:1600px;
   margin:auto;
+  width:100%;
+  overflow-x:hidden;
 }
 
 .sale-grid{
@@ -110,12 +226,13 @@ table th,
   }
 
   .sale-grid{
-    grid-template-columns:1fr;
+    grid-template-columns:minmax(0,1fr);
     gap:14px;
+    width:100%;
   }
 
   .sale-card{
-    padding:14px;
+    padding:12px;
     border-radius:18px;
   }
 
@@ -142,7 +259,8 @@ table th,
   }
 
   .action-bar .btn{
-    width:100%;
+    flex:1 1 calc(50% - 8px);
+    min-width:140px;
     min-height:48px;
     font-weight:700;
   }
@@ -153,7 +271,8 @@ table th,
   }
 
   .table-responsive{
-    overflow:visible;
+    overflow-x:auto;
+    width:100%;
   }
 
   .table thead{
@@ -454,15 +573,15 @@ table th,
 <div class="action-bar d-flex gap-2 flex-wrap">
 
   <button class="btn btn-success px-4">
-    💾 حفظ
+    حفظ
   </button>
 
   <button class="btn btn-primary px-4" formaction="/sales/create-print">
-    🖨️ حفظ & طباعة
+    حفظ & طباعة
   </button>
 
   <button class="btn btn-outline-dark px-4" formaction="/sales/create">
-    👁️ حفظ & عرض
+    حفظ & عرض
   </button>
 
 </div>
@@ -482,16 +601,14 @@ table th,
 </div>
 
 <style>
-#items-body .cell-product{
-  min-width:460px;
-}
-
 .qty-col{
   width:80px;
 }
 
+#items-body .cell-product,
 .product-col{
-  min-width:420px;
+  width:100%;
+  min-width:0;
 }
 .picker-backdrop{ position: fixed; inset: 0; background: rgba(0,0,0,.25); z-index: 1040; }
 .picker-panel{
