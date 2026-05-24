@@ -377,81 +377,95 @@ tr.bg-light button.btn-outline-dark {
 
 
 
-/* ===== Real Mobile Layout ===== */
+/* ===== Mobile Cards For Shipping ===== */
+.mobile-unpaid-cards{
+  display:none;
+}
+
 @media(max-width:768px){
 
-  .desktop-shipping-table{
+  .desktop-unpaid-table{
     display:none !important;
   }
 
-  .mobile-shipping-cards{
-    display:block !important;
+  .mobile-unpaid-cards{
+    display:block;
   }
 
-  .shipping-mobile-card{
+  .mobile-shipping-card{
     background:#fff;
     border:1px solid #ececec;
     border-radius:18px;
     padding:14px;
     margin-bottom:14px;
-    box-shadow:0 2px 8px rgba(0,0,0,.04);
+    box-shadow:0 2px 10px rgba(0,0,0,.05);
   }
 
-  .shipping-mobile-top{
-    margin-bottom:10px;
+  .mobile-shipping-head{
+    margin-bottom:12px;
   }
 
-  .shipping-mobile-name{
+  .mobile-shipping-name{
     font-size:1.05rem;
     font-weight:800;
     color:#0d6efd;
     line-height:1.4;
   }
 
-  .shipping-mobile-code{
-    font-size:.9rem;
+  .mobile-shipping-code{
     color:#6c757d;
+    font-size:.9rem;
     margin-top:4px;
   }
 
-  .shipping-mobile-grid{
+  .mobile-shipping-grid{
     display:grid;
     grid-template-columns:1fr 1fr 1fr;
     gap:8px;
     margin-bottom:12px;
   }
 
-  .shipping-mobile-box{
+  .mobile-shipping-box{
     background:#faf7ff;
     border-radius:12px;
-    padding:8px;
+    padding:10px 6px;
     text-align:center;
   }
 
-  .shipping-mobile-box small{
+  .mobile-shipping-box small{
     display:block;
     color:#6c757d;
     margin-bottom:4px;
+    font-size:.78rem;
   }
 
-  .shipping-mobile-actions{
-    display:grid;
-    grid-template-columns:1fr 1fr;
+  .mobile-shipping-box strong{
+    font-size:1rem;
+  }
+
+  .mobile-alloc{
+    display:flex;
+    flex-direction:column;
     gap:10px;
-    margin-top:12px;
+    margin-top:10px;
   }
 
-  .shipping-mobile-actions .btn{
-    border-radius:12px;
+  .mobile-alloc select,
+  .mobile-alloc input{
+    width:100%;
+  }
+
+  .mobile-actions{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+  }
+
+  .mobile-actions .btn{
     min-height:44px;
+    border-radius:12px;
   }
 
-}
-
-@media(min-width:769px){
-  .mobile-shipping-cards{
-    display:none !important;
-  }
 }
 
 
@@ -512,67 +526,7 @@ tr.bg-light button.btn-outline-dark {
   </div>
 
   <div class="card p-0 mt-3">
-    
-
-<!-- Mobile Shipping Cards -->
-<div class="mobile-shipping-cards">
-
-{% for row in unpaid_rows %}
-<div class="shipping-mobile-card">
-
-  <div class="shipping-mobile-top">
-
-    <div class="shipping-mobile-name">
-      {{ row.customer_name }}
-    </div>
-
-    <div class="shipping-mobile-code">
-      {{ row.invoice_code }}
-    </div>
-
-  </div>
-
-  <div class="shipping-mobile-grid">
-
-    <div class="shipping-mobile-box">
-      <small>المستحق</small>
-      {{ '%.0f'|format(row.amount_due or 0) }}
-    </div>
-
-    <div class="shipping-mobile-box">
-      <small>المدفوع</small>
-      {{ '%.0f'|format(row.amount_paid or 0) }}
-    </div>
-
-    <div class="shipping-mobile-box">
-      <small>المتبقي</small>
-      {{ '%.0f'|format(row.amount_left or 0) }}
-    </div>
-
-  </div>
-
-  <select class="form-select mb-2">
-    <option>اختر دفعة</option>
-  </select>
-
-  <input class="form-control mb-2" placeholder="المبلغ">
-
-  <div class="shipping-mobile-actions">
-
-    <button class="btn btn-success">💾</button>
-    <button class="btn btn-outline-warning">⚡</button>
-    <button class="btn btn-outline-danger">📦</button>
-    <button class="btn btn-outline-secondary">↩️</button>
-
-  </div>
-
-</div>
-{% endfor %}
-
-</div>
-
-
-<div class="table-responsive desktop-shipping-table">
+    <div class="table-responsive">
       <table class="table table-sm table-bordered align-middle mb-0 overall-companies-table">
         <thead class="table-light">
           <tr>
@@ -632,7 +586,155 @@ tr.bg-light button.btn-outline-dark {
         </div>
 
         {% if invoices_unpaid and invoices_unpaid|length > 0 %}
-          <div class="table-responsive shipping-table-wrap">
+          
+
+<!-- Mobile Unpaid Cards -->
+<div class="mobile-unpaid-cards">
+
+{% for r in invoices_unpaid %}
+
+<div class="mobile-shipping-card">
+
+  <div class="mobile-shipping-head">
+
+    <div class="mobile-shipping-name">
+      {{ r.customer_name or '—' }}
+    </div>
+
+    <div class="mobile-shipping-code">
+      {{ r.invoice_code }}
+    </div>
+
+  </div>
+
+  <div class="mobile-shipping-grid">
+
+    <div class="mobile-shipping-box">
+      <small>مستحق</small>
+      <strong>{{ (r.due or 0) | int }}</strong>
+    </div>
+
+    <div class="mobile-shipping-box">
+      <small>مدفوع</small>
+      <strong>{{ (r.paid or 0) | int }}</strong>
+    </div>
+
+    <div class="mobile-shipping-box">
+      <small>متبقي</small>
+      <strong class="text-danger">{{ (r.outstanding or 0) | int }}</strong>
+    </div>
+
+  </div>
+
+  {% if payments_with_avail and payments_with_avail|length > 0 %}
+
+  <div class="mobile-alloc">
+
+    <form method="post" action="/shipping/allocate">
+
+      <input type="hidden" name="company" value="{{ company }}">
+      <input type="hidden" name="invoice_id" value="{{ r.id }}">
+      <input type="hidden" name="q_dfrom" value="{{ dfrom }}">
+      <input type="hidden" name="q_dto" value="{{ dto }}">
+      <input type="hidden" name="unpaid_page" value="{{ unpaid_page }}">
+      <input type="hidden" name="paid_page" value="{{ paid_page }}">
+      <input type="hidden" name="page_size" value="{{ page_size }}">
+
+      <select name="payment_id"
+              class="form-select form-select-sm mb-2"
+              required>
+
+        <option value="">اختر دفعة</option>
+
+        {% for p in payments_with_avail %}
+          {% if (p.available or 0) > 0 %}
+            <option value="{{ p.id }}">
+              #{{ p.id }} — متاح {{ (p.available or 0) | int }}
+            </option>
+          {% endif %}
+        {% endfor %}
+
+      </select>
+
+      <input type="number"
+             name="amount"
+             class="form-control form-control-sm mb-2"
+             placeholder="المبلغ"
+             max="{{ (r.outstanding or 0) | int }}">
+
+      <div class="mobile-actions">
+
+        <button type="button"
+                class="btn btn-outline-secondary btn-full-alloc"
+                data-max="{{ r.outstanding }}">
+          ⚡
+        </button>
+
+        <button type="submit"
+                class="btn btn-success">
+          💾
+        </button>
+
+      </div>
+
+    </form>
+
+    <div class="mobile-actions">
+
+      <form method="post"
+            action="/shipping/refund-full">
+
+        <input type="hidden" name="company" value="{{ company }}">
+        <input type="hidden" name="invoice_id" value="{{ r.id }}">
+        <input type="hidden" name="amount" value="{{ r.outstanding }}">
+
+        <button type="submit"
+                class="btn btn-outline-danger w-100">
+          📦
+        </button>
+
+      </form>
+
+      <button type="button"
+              class="btn btn-outline-secondary btn-transfer"
+              data-bs-toggle="modal"
+              data-bs-target="#transferModal"
+              data-inv-id="{{ r.id }}"
+              data-inv-code="{{ r.invoice_code }}"
+              data-inv-customer="{{ r.customer_name }}"
+              data-inv-amount="{{ (r.outstanding or 0) | int }}"
+              data-inv-gov="{{ r.governorate or '' }}">
+        ↪️
+      </button>
+
+      <form method="post"
+            action="/shipping/cover">
+
+        <input type="hidden" name="company" value="{{ company }}">
+        <input type="hidden" name="invoice_id" value="{{ r.id }}">
+
+        <button type="submit"
+                class="btn btn-outline-dark w-100"
+                {% if r.outstanding > 100 %}disabled{% endif %}>
+          🔒
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+  {% endif %}
+
+</div>
+
+{% endfor %}
+
+</div>
+
+
+<div class="table-responsive shipping-table-wrap desktop-unpaid-table">
             <table class="table table-sm table-bordered align-middle mb-0" id="tbl_unpaid" style="width:100%;">
               <thead class="table-light">
                 <tr>
