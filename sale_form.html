@@ -1,4 +1,63 @@
 
+<style id="mobile-hard-fix">
+
+html,body{
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden !important;
+}
+
+@media (max-width:768px){
+
+  body{
+    overflow-x:hidden !important;
+  }
+
+  .container,
+  .container-fluid,
+  .row,
+  .card,
+  .sale-shell,
+  .sale-grid{
+    max-width:100% !important;
+  }
+
+  .row{
+    margin-left:0 !important;
+    margin-right:0 !important;
+  }
+
+  .table-responsive{
+    width:100% !important;
+    overflow-x:auto !important;
+  }
+
+  #items-body .cell-product,
+  .product-col{
+    min-width:0 !important;
+    width:100% !important;
+    max-width:100% !important;
+  }
+
+  .sale-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  .action-bar{
+    display:flex !important;
+    flex-wrap:wrap !important;
+    gap:8px !important;
+  }
+
+  .action-bar .btn{
+    flex:1 1 calc(50% - 8px) !important;
+    min-width:140px !important;
+    width:auto !important;
+  }
+
+}
+</style>
+
 {% extends "base.html" %}
 {% block content %}
 

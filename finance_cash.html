@@ -1,3 +1,45 @@
+
+<style id="cash-mobile-hard-fix">
+
+@media(max-width:768px){
+
+  .cash-summary-cards{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:10px !important;
+  }
+
+  .cash-summary-cards > div{
+    width:100% !important;
+    min-width:0 !important;
+    padding:0 !important;
+  }
+
+  .stat-card,
+  .page-card{
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  .stat-card{
+    padding:12px 8px !important;
+  }
+
+  .stat-card .stat-label{
+    font-size:.8rem !important;
+    line-height:1.2 !important;
+  }
+
+  .stat-card .stat-value{
+    font-size:1.2rem !important;
+    line-height:1.1 !important;
+    word-break:break-word !important;
+    overflow-wrap:anywhere !important;
+    white-space:normal !important;
+  }
+
+}
+</style>
 {% extends "base.html" %}
 {% block content %}
 
