@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+
+.customer-shell{
+  max-width:1450px;
+  margin:auto;
+}
+
+.page-title{
+  font-size:1.8rem;
+  font-weight:800;
+}
+
+.page-subtitle{
+  color:#6c757d;
+  margin-top:4px;
+}
+
+.page-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:22px;
+  padding:18px;
+  box-shadow:0 2px 10px rgba(0,0,0,.04);
+}
+
+.info-box{
+  background:#faf7ff;
+  border-radius:16px;
+  padding:12px 14px;
+  height:100%;
+}
+
+.info-label{
+  color:#6c757d;
+  font-size:.82rem;
+}
+
+.info-value{
+  font-weight:700;
+  margin-top:4px;
+}
+
+.table{
+  border-radius:18px;
+  overflow:hidden;
+  margin-bottom:0;
+}
+
+.table thead th{
+  background:#faf7ff !important;
+  border-bottom:1px solid #eee !important;
+  white-space:nowrap;
+}
+
+.table tbody tr td{
+  transition:.18s ease;
+}
+
+.table tbody tr:hover td{
+  background:#eef5ff !important;
+}
+
+.summary-text{
+  font-size:.85rem;
+  color:#6c757d;
+}
+
+.summary-text strong{
+  color:#111827;
+}
+
+.mobile-cards{
+  display:none;
+}
+
+.mobile-invoice-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+
+.mobile-invoice-card:hover{
+  transform:translateY(-2px);
+  transition:.18s ease;
+}
+
+.invoice-amount{
+  font-size:1.2rem;
+  font-weight:800;
+}
+
+.sales-color{
+  color:#198754;
+}
+
+.return-color{
+  color:#dc3545;
+}
+
+@media(max-width:768px){
+
+  .customer-shell{
+    padding:0 8px;
+  }
+
+  .desktop-table{
+    display:none;
+  }
+
+  .mobile-cards{
+    display:block;
+  }
+
+  .top-bar{
+    flex-direction:column;
+    align-items:stretch !important;
+    gap:10px;
+  }
+
+  .top-bar .btn{
+    width:100%;
+  }
+
+  .page-card{
+    padding:15px;
+    border-radius:18px;
+  }
+
+  .page-title{
+    font-size:1.4rem;
+  }
+
+}
+</style>
+
+
+
+<div class="customer-shell">
+
+<div class="mb-4">
+  <div class="page-title">
+    👤 معاملات العميل
+  </div>
+
+  <div class="page-subtitle">
+    متابعة فواتير ومشتريات العميل
+  </div>
+</div>
+
+
+<div class="page-card mb-3">
+  <div class="row g-2">
+    
+<div class="col-md-4">
+  <div class="info-box">
+    <div class="info-label">الاسم</div>
+    <div class="info-value">{{ name }}</div>
+  </div>
+</div>
+
+    
+<div class="col-md-4">
+  <div class="info-box">
+    <div class="info-label">الموبايل</div>
+    <div class="info-value" dir="ltr">{{ phone }}</div>
+  </div>
+</div>
+
+    
+<div class="col-md-4 text-md-end d-flex align-items-center justify-content-md-end top-bar">
+
+      <a href="/customers/ledger" class="btn btn-sm btn-outline-secondary">عودة للسجل</a>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="page-card h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="m-0">🧾 فواتير البيع</h6>
+        <div class="small text-muted">
+          عدد: {{ sales_count }} — إجمالي: <strong>{{ '%.0f'|format(sales_sum or 0) }}</strong>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm desktop-table">
+          <thead>
+            <tr class="text-center">
+              <th>الكود</th>
+              <th style="width:140px">التاريخ</th>
+              <th class="text-end" style="width:140px">الإجمالي</th>
+              <th style="width:90px">فتح</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for i in sales %}
+            <tr>
+              <td>{{ i.invoice_code }}</td>
+              <td>{{ i.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+              <td class="text-end">{{ '%.0f'|format(i.total or 0) }}</td>
+              <td class="text-center"><a class="btn btn-sm btn-outline-primary" href="/invoices/{{ i.id }}">عرض</a></td>
+            </tr>
+            {% endfor %}
+            {% if not sales or sales|length == 0 %}
+            <tr><td colspan="4" class="text-center text-muted">🧾 لا توجد بيانات</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="page-card h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="m-0">↩️ فواتير المرتجع</h6>
+        <div class="small text-muted">
+          عدد: {{ rets_count }} — إجمالي: <strong>{{ '%.0f'|format(rets_sum or 0) }}</strong>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm desktop-table">
+          <thead>
+            <tr class="text-center">
+              <th>الكود</th>
+              <th style="width:140px">التاريخ</th>
+              <th class="text-end" style="width:140px">قيمة المرتجع</th>
+              <th style="width:90px">فتح</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for i in rets %}
+            <tr>
+              <td>{{ i.invoice_code }}</td>
+              <td>{{ i.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+              <td class="text-end">{{ '%.0f'|format(i.total or 0) }}</td>
+              <td class="text-center"><a class="btn btn-sm btn-outline-primary" href="/invoices/{{ i.id }}">عرض</a></td>
+            </tr>
+            {% endfor %}
+            {% if not rets or rets|length == 0 %}
+            <tr><td colspan="4" class="text-center text-muted">🧾 لا توجد بيانات</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Mobile Sales Cards -->
+<div class="mobile-cards mt-3">
+
+{% if sales %}
+
+{% for i in sales %}
+
+<div class="mobile-invoice-card">
+
+  <div class="d-flex justify-content-between align-items-start mb-3">
+
+    <div class="fw-bold">
+      {{ i.invoice_code }}
+    </div>
+
+    <div class="invoice-amount sales-color">
+      {{ '%.0f'|format(i.total or 0) }}
+    </div>
+
+  </div>
+
+  <div class="small text-muted mb-3">
+    {{ i.created_at.strftime("%Y-%m-%d %H:%M") }}
+  </div>
+
+  <a class="btn btn-outline-primary w-100"
+     href="/invoices/{{ i.id }}">
+
+    👁️ عرض الفاتورة
+
+  </a>
+
+</div>
+
+{% endfor %}
+
+{% endif %}
+
+<!-- Mobile Returns Cards -->
+{% if rets %}
+
+{% for i in rets %}
+
+<div class="mobile-invoice-card">
+
+  <div class="d-flex justify-content-between align-items-start mb-3">
+
+    <div class="fw-bold">
+      {{ i.invoice_code }}
+    </div>
+
+    <div class="invoice-amount return-color">
+      {{ '%.0f'|format(i.total or 0) }}
+    </div>
+
+  </div>
+
+  <div class="small text-muted mb-3">
+    {{ i.created_at.strftime("%Y-%m-%d %H:%M") }}
+  </div>
+
+  <a class="btn btn-outline-danger w-100"
+     href="/invoices/{{ i.id }}">
+
+    ↩️ عرض المرتجع
+
+  </a>
+
+</div>
+
+{% endfor %}
+
+{% endif %}
+
+</div>
+
+
+</div>
+{% endblock %}

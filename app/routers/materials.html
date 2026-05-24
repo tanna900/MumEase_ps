@@ -1,0 +1,708 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.materials-shell{
+  max-width:1400px;
+  margin:auto;
+}
+
+.page-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:20px;
+  padding:20px;
+  box-shadow:0 2px 10px rgba(0,0,0,.04);
+}
+
+.balance-card{
+  background:linear-gradient(135deg,#f8f4ff,#ffffff);
+}
+
+.balance-value{
+  font-size:2.2rem;
+  font-weight:800;
+  color:#198754;
+}
+
+.form-control,
+.form-select{
+  border-radius:14px !important;
+  min-height:46px;
+}
+
+.form-label{
+  font-weight:700;
+}
+
+.table{
+  border-radius:16px;
+  overflow:hidden;
+}
+
+.table thead th{
+  background:#faf7ff;
+  border-bottom:1px solid #eee;
+  white-space:nowrap;
+}
+
+.table tbody tr td{
+  transition:all .18s ease;
+}
+
+.table tbody tr:hover td{
+  background:#eef5ff !important;
+}
+
+.badge-in{
+  background:#d1fae5;
+  color:#065f46;
+  padding:8px 14px;
+  border-radius:999px;
+  font-weight:700;
+}
+
+.badge-out{
+  background:#fee2e2;
+  color:#991b1b;
+  padding:8px 14px;
+  border-radius:999px;
+  font-weight:700;
+}
+
+.amount-in{
+  color:#198754;
+  font-weight:700;
+}
+
+.amount-out{
+  color:#dc3545;
+  font-weight:700;
+}
+
+.mobile-cards{
+  display:none;
+}
+
+.pagination{
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.pagination .page-link{
+  border-radius:10px !important;
+  min-width:42px;
+  text-align:center;
+}
+
+@media(max-width:768px){
+
+  .materials-shell{
+    padding:0 8px;
+  }
+
+  .top-bar{
+    flex-direction:column;
+    align-items:stretch !important;
+    gap:10px;
+  }
+
+  .top-bar .btn{
+    width:100%;
+  }
+
+  .page-card{
+    padding:16px;
+    border-radius:18px;
+  }
+
+  .balance-value{
+    font-size:1.8rem;
+  }
+
+  .desktop-table{
+    display:none;
+  }
+
+  .mobile-cards{
+    display:block;
+  }
+
+  .mobile-card{
+    background:#fff;
+    border:1px solid #eee;
+    border-radius:16px;
+    padding:14px;
+    margin-bottom:14px;
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+
+  .mobile-card:hover{
+    transform:translateY(-2px);
+    transition:all .18s ease;
+  }
+
+}
+
+
+.mobile-collapse-toggle{
+  display:none;
+}
+
+@media(max-width:768px){
+
+  .mobile-collapse-toggle{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:100%;
+    border:none;
+    background:#fff;
+    border-radius:14px;
+    padding:14px;
+    font-weight:700;
+    box-shadow:0 2px 10px rgba(0,0,0,.05);
+    margin-bottom:12px;
+  }
+
+  .mobile-collapse-box{
+    display:none;
+  }
+
+  .mobile-collapse-box.open{
+    display:block;
+  }
+
+}
+
+
+</style>
+
+<div class="materials-shell">
+
+  <div class="d-flex justify-content-between align-items-center mb-3 top-bar">
+
+    <div>
+      <h4 class="m-0">🧵 خامات إنتاج</h4>
+      <div class="text-muted small">
+        إدارة حركة خامات الإنتاج والتحويلات
+      </div>
+    </div>
+
+    <a class="btn btn-outline-secondary"
+       href="/cash">
+
+      💰 الخزنة
+
+    </a>
+
+  </div>
+
+  {% if request.query_params.get('msg') %}
+    <div class="alert alert-info rounded-4">
+      {{ request.query_params.get('msg') }}
+    </div>
+  {% endif %}
+
+  <!-- Balance -->
+  <div class="page-card balance-card mb-3">
+
+    <div class="text-muted mb-2">
+      رصيد خامات الإنتاج الحالي
+    </div>
+
+    <div class="balance-value">
+      {{ '%.0f'|format(balance or 0) }} جنيه
+    </div>
+
+  </div>
+
+  <!-- Mobile Filters Toggle -->
+  <button class="mobile-collapse-toggle d-md-none"
+          type="button"
+          onclick="toggleMaterialsFilters()">
+
+    🔍 بحث في الملاحظات
+
+  </button>
+
+  <!-- Filters -->
+  <div class="page-card mb-3 mobile-collapse-box d-md-block"
+       id="materialsFilters">
+
+    <form class="row g-3 align-items-end"
+          method="get"
+          action="/materials">
+
+      <div class="col-lg-5">
+
+        <label class="form-label">
+          بحث في الملاحظات
+        </label>
+
+        <input class="form-control"
+               name="q"
+               value="{{ q or '' }}"
+               placeholder="ابحث في الملاحظات...">
+
+      </div>
+
+      <div class="col-lg-3">
+
+        <label class="form-label">
+          من
+        </label>
+
+        <input class="form-control"
+               type="date"
+               name="date_from"
+               value="{{ date_from or '' }}">
+
+      </div>
+
+      <div class="col-lg-2">
+
+        <label class="form-label">
+          إلى
+        </label>
+
+        <input class="form-control"
+               type="date"
+               name="date_to"
+               value="{{ date_to or '' }}">
+
+      </div>
+
+      <div class="col-lg-2">
+
+        <div class="d-flex gap-2">
+
+          <button class="btn btn-primary w-100">
+            🔍 تطبيق
+          </button>
+
+          <a class="btn btn-outline-secondary w-100"
+             href="/materials">
+
+            مسح
+
+          </a>
+
+        </div>
+
+      </div>
+
+      <input type="hidden" name="page" value="1">
+
+    </form>
+
+  </div>
+
+  <!-- Mobile Forms Toggle -->
+  <button class="mobile-collapse-toggle d-md-none"
+          type="button"
+          onclick="toggleMaterialsForms()">
+
+    ⚙️ التحويلات والتسويات
+
+  </button>
+
+  <!-- Forms -->
+  <div class="row g-3 mb-3 mobile-collapse-box d-md-flex"
+       id="materialsForms">
+
+    <div class="col-lg-6">
+
+      <div class="page-card h-100">
+
+        <div class="fw-bold fs-5 mb-3">
+          🔄 تحويل من الخزنة → خامات إنتاج
+        </div>
+
+        <form method="post"
+              action="/materials/transfer-from-cash"
+              class="row g-3">
+
+          <div class="col-md-4">
+
+            <label class="form-label">
+              المبلغ
+            </label>
+
+            <input class="form-control"
+                   name="amount"
+                   type="number"
+                   step="0.01"
+                   required>
+
+          </div>
+
+          <div class="col-md-4">
+
+            <label class="form-label">
+              التاريخ
+            </label>
+
+            <input class="form-control"
+                   name="date"
+                   type="date">
+
+          </div>
+
+          <div class="col-md-4">
+
+            <label class="form-label">
+              ملاحظة
+            </label>
+
+            <input class="form-control"
+                   name="note"
+                   placeholder="مثال: شراء قماش">
+
+          </div>
+
+          <div class="col-12">
+
+            <button class="btn btn-success px-4">
+              ✓ تحويل
+            </button>
+
+          </div>
+
+        </form>
+
+      </div>
+
+    </div>
+
+    <div class="col-lg-6">
+
+      <div class="page-card h-100">
+
+        <div class="fw-bold fs-5 mb-3">
+          ⚙️ تسوية / حركة يدوي
+        </div>
+
+        <form method="post"
+              action="/materials/adjust"
+              class="row g-3">
+
+          <div class="col-md-3">
+
+            <label class="form-label">
+              النوع
+            </label>
+
+            <select class="form-select"
+                    name="type">
+
+              <option value="IN">IN</option>
+              <option value="OUT">OUT</option>
+
+            </select>
+
+          </div>
+
+          <div class="col-md-3">
+
+            <label class="form-label">
+              المبلغ
+            </label>
+
+            <input class="form-control"
+                   name="amount"
+                   type="number"
+                   step="0.01"
+                   required>
+
+          </div>
+
+          <div class="col-md-3">
+
+            <label class="form-label">
+              التاريخ
+            </label>
+
+            <input class="form-control"
+                   name="date"
+                   type="date">
+
+          </div>
+
+          <div class="col-md-3">
+
+            <label class="form-label">
+              ملاحظة
+            </label>
+
+            <input class="form-control"
+                   name="note">
+
+          </div>
+
+          <div class="col-12">
+
+            <button class="btn btn-outline-primary px-4">
+              ✓ تسجيل
+            </button>
+
+          </div>
+
+        </form>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Desktop Table -->
+  <div class="page-card desktop-table">
+
+    <div class="table-responsive">
+
+      <table class="table align-middle mb-0">
+
+        <thead>
+
+          <tr class="text-muted small">
+
+            <th style="width:120px">التاريخ</th>
+            <th style="width:100px">النوع</th>
+            <th class="text-end" style="width:160px">المبلغ</th>
+            <th>الملاحظة</th>
+            <th style="width:100px">حذف</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          {% for r in rows %}
+
+          <tr>
+
+            <td>
+              {{ r.date }}
+            </td>
+
+            <td>
+
+              {% if r.type == 'IN' %}
+                <span class="badge-in">IN</span>
+              {% else %}
+                <span class="badge-out">OUT</span>
+              {% endif %}
+
+            </td>
+
+            <td class="text-end
+              {% if r.type == 'IN' %}
+                amount-in
+              {% else %}
+                amount-out
+              {% endif %}
+            ">
+              {{ '%.0f'|format(r.amount or 0) }}
+            </td>
+
+            <td class="small text-muted">
+              {{ r.note or '' }}
+            </td>
+
+            <td>
+
+              <form method="post"
+                    action="/materials/delete"
+                    onsubmit="return confirm('حذف الحركة؟');">
+
+                <input type="hidden"
+                       name="eid"
+                       value="{{ r.id }}">
+
+                <button class="btn btn-sm btn-outline-danger">
+                  حذف
+                </button>
+
+              </form>
+
+            </td>
+
+          </tr>
+
+          {% endfor %}
+
+          {% if not rows or rows|length==0 %}
+
+          <tr>
+            <td colspan="5"
+                class="text-center text-muted py-5">
+
+              🧾 لا توجد حركات حتى الآن
+
+            </td>
+          </tr>
+
+          {% endif %}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+  <!-- Mobile Cards -->
+  <div class="mobile-cards">
+
+    {% for r in rows %}
+
+    <div class="mobile-card">
+
+      <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <div>
+
+          {% if r.type == 'IN' %}
+            <span class="badge-in">IN</span>
+          {% else %}
+            <span class="badge-out">OUT</span>
+          {% endif %}
+
+        </div>
+
+        <div class="small text-muted">
+          {{ r.date }}
+        </div>
+
+      </div>
+
+      <div class="
+        fs-3 fw-bold mb-2
+        {% if r.type == 'IN' %}
+          amount-in
+        {% else %}
+          amount-out
+        {% endif %}
+      ">
+        {{ '%.0f'|format(r.amount or 0) }}
+      </div>
+
+      <div class="text-muted small mb-3">
+        {{ r.note or 'بدون ملاحظة' }}
+      </div>
+
+      <form method="post"
+            action="/materials/delete"
+            onsubmit="return confirm('حذف الحركة؟');">
+
+        <input type="hidden"
+               name="eid"
+               value="{{ r.id }}">
+
+        <button class="btn btn-outline-danger w-100">
+          🗑️ حذف
+        </button>
+
+      </form>
+
+    </div>
+
+    {% endfor %}
+
+    {% if not rows or rows|length==0 %}
+
+    <div class="text-center text-muted py-5">
+      🧾 لا توجد حركات حتى الآن
+    </div>
+
+    {% endif %}
+
+  </div>
+
+  <!-- Pagination -->
+  {% if pages and pages > 1 %}
+
+  <nav class="mt-4">
+
+    <ul class="pagination justify-content-center mb-0">
+
+      <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+        <a class="page-link"
+           href="/materials?q={{q}}&date_from={{date_from}}&date_to={{date_to}}&page=1&per_page={{per_page}}">
+          الأولى
+        </a>
+      </li>
+
+      <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+        <a class="page-link"
+           href="/materials?q={{q}}&date_from={{date_from}}&date_to={{date_to}}&page={{page-1}}&per_page={{per_page}}">
+          السابق
+        </a>
+      </li>
+
+      {% set start = page - 1 if page - 1 > 1 else 1 %}
+      {% set end = page + 1 if page + 1 < pages else pages %}
+
+      {% for p in range(start, end + 1) %}
+
+      <li class="page-item {% if p==page %}active{% endif %}">
+
+        <a class="page-link"
+           href="/materials?q={{q}}&date_from={{date_from}}&date_to={{date_to}}&page={{p}}&per_page={{per_page}}">
+          {{p}}
+        </a>
+
+      </li>
+
+      {% endfor %}
+
+      <li class="page-item {% if page >= pages %}disabled{% endif %}">
+        <a class="page-link"
+           href="/materials?q={{q}}&date_from={{date_from}}&date_to={{date_to}}&page={{page+1}}&per_page={{per_page}}">
+          التالي
+        </a>
+      </li>
+
+      <li class="page-item {% if page >= pages %}disabled{% endif %}">
+        <a class="page-link"
+           href="/materials?q={{q}}&date_from={{date_from}}&date_to={{date_to}}&page={{pages}}&per_page={{per_page}}">
+          الأخيرة
+        </a>
+      </li>
+
+    </ul>
+
+  </nav>
+
+  <div class="text-center text-muted small mt-3">
+    صفحة {{ page }} من {{ pages }}
+  </div>
+
+  {% endif %}
+
+</div>
+
+
+<script>
+
+function toggleMaterialsFilters(){
+  const el = document.getElementById('materialsFilters');
+  if(el){
+    el.classList.toggle('open');
+  }
+}
+
+function toggleMaterialsForms(){
+  const el = document.getElementById('materialsForms');
+  if(el){
+    el.classList.toggle('open');
+  }
+}
+
+</script>
+
+
+{% endblock %}

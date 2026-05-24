@@ -1,0 +1,403 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.page-card{
+  background:#fff;
+  border-radius:18px;
+  padding:20px;
+  box-shadow:0 2px 12px rgba(0,0,0,.05);
+}
+
+.filter-card{
+  background:#fff;
+  border-radius:18px;
+  padding:20px;
+  box-shadow:0 2px 12px rgba(0,0,0,.05);
+}
+
+.customer-table{
+  border-radius:16px;
+  overflow:hidden;
+}
+
+.customer-table thead th{
+  background:#f8fafc;
+  font-weight:700;
+  border-bottom:1px solid #e9ecef;
+  white-space:nowrap;
+}
+
+.customer-table tbody tr td{
+  transition:all .18s ease;
+}
+
+.customer-table tbody tr:hover td{
+  background:#dfefff !important;
+  cursor:pointer;
+}
+
+.form-control{
+  border-radius:12px !important;
+  min-height:46px;
+}
+
+.total-sale{
+  color:#198754;
+  font-weight:700;
+}
+
+.total-return{
+  color:#dc3545;
+  font-weight:700;
+}
+
+.mobile-cards{
+  display:none;
+}
+
+.pagination{
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.pagination .page-link{
+  border-radius:10px !important;
+  min-width:42px;
+  text-align:center;
+}
+
+.mobile-customer-card{
+  transition:all .18s ease;
+}
+
+.mobile-customer-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 18px rgba(0,0,0,.08);
+}
+
+@media (max-width:768px){
+
+  .desktop-table{
+    display:none;
+  }
+
+  .mobile-cards{
+    display:block;
+  }
+
+  .top-actions{
+    flex-direction:column;
+  }
+
+  .top-actions .btn{
+    width:100%;
+  }
+
+  .mobile-customer-card{
+    background:#fff;
+    border:1px solid #e9ecef;
+    border-radius:16px;
+    padding:16px;
+    margin-bottom:14px;
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+
+  .mobile-customer-card .name{
+    font-size:22px;
+    font-weight:700;
+  }
+
+}
+</style>
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+
+  <div>
+    <h4 class="mb-1">👤 سجل العملاء</h4>
+    <div class="text-muted small">
+      عرض جميع العملاء وإحصائياتهم
+    </div>
+  </div>
+
+</div>
+
+<!-- البحث -->
+<div class="filter-card mb-3">
+
+  <form class="row g-3 align-items-end" method="get" action="/customers/ledger">
+
+    <div class="col-lg-6">
+
+      <label class="form-label fw-semibold small">
+        بحث بالاسم أو رقم الموبايل
+      </label>
+
+      <input
+        class="form-control"
+        name="q"
+        value="{{ q or '' }}"
+        placeholder="ابحث بالاسم أو رقم الموبايل..."
+        autocomplete="off"
+      >
+
+    </div>
+
+    <div class="col-lg-3">
+
+      <button class="btn btn-primary w-100">
+        🔍 بحث
+      </button>
+
+    </div>
+
+    <div class="col-lg-3">
+
+      <a
+        class="btn btn-outline-success w-100"
+        href="/customers/ledger/export?q={{ q | urlencode }}"
+      >
+        ⬇️ تصدير CSV
+      </a>
+
+    </div>
+
+  </form>
+
+</div>
+
+<!-- جدول الكمبيوتر -->
+<div class="page-card desktop-table">
+
+  <div class="table-responsive">
+
+    <table class="table align-middle customer-table mb-0">
+
+      <thead>
+
+        <tr class="text-center">
+
+          <th>#</th>
+          <th>اسم العميل</th>
+          <th>رقم الموبايل</th>
+          <th class="text-end">فواتير البيع</th>
+          <th class="text-end">إجمالي البيع</th>
+          <th class="text-end">المرتجعات</th>
+          <th class="text-end">إجمالي المرتجعات</th>
+          <th>عرض</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        {% for r in rows %}
+        <tr>
+
+          <td class="text-center fw-bold">
+            {{ r.idx }}
+          </td>
+
+          <td class="fw-semibold">
+            {{ r.name }}
+          </td>
+
+          <td dir="ltr">
+            {{ r.phone }}
+          </td>
+
+          <td class="text-end">
+            {{ r.sale_count }}
+          </td>
+
+          <td class="text-end total-sale">
+            {{ '%.0f'|format(r.sale_total) }}
+          </td>
+
+          <td class="text-end">
+            {{ r.ret_count }}
+          </td>
+
+          <td class="text-end total-return">
+            {{ '%.0f'|format(r.ret_total) }}
+          </td>
+
+          <td class="text-center">
+
+            <a
+              class="btn btn-outline-primary btn-sm"
+              href="/customers/ledger/detail?name={{ r.name | urlencode }}&phone={{ r.phone | urlencode }}"
+            >
+              👁️ عرض
+            </a>
+
+          </td>
+
+        </tr>
+
+        {% endfor %}
+
+        {% if not rows or rows|length == 0 %}
+
+        <tr>
+          <td colspan="8" class="text-center text-muted py-5">
+            👥 لا يوجد عملاء حتى الآن
+          </td>
+        </tr>
+
+        {% endif %}
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>
+
+<!-- كروت الموبايل -->
+<div class="mobile-cards">
+
+  {% for r in rows %}
+  <div class="mobile-customer-card">
+
+    <div class="d-flex justify-content-between align-items-start mb-3">
+
+      <div class="name">
+        {{ r.name }}
+      </div>
+
+      <div class="badge bg-light text-dark">
+        {{ r.idx }}
+      </div>
+
+    </div>
+
+    <div class="mb-3" dir="ltr">
+      {{ r.phone }}
+    </div>
+
+    <div class="row text-center mb-3">
+
+      <div class="col-6 mb-3">
+        <div class="small text-muted">فواتير البيع</div>
+        <div class="fw-bold text-primary">
+          {{ r.sale_count }}
+        </div>
+      </div>
+
+      <div class="col-6 mb-3">
+        <div class="small text-muted">إجمالي البيع</div>
+        <div class="fw-bold total-sale">
+          {{ '%.0f'|format(r.sale_total) }}
+        </div>
+      </div>
+
+      <div class="col-6">
+        <div class="small text-muted">المرتجعات</div>
+        <div class="fw-bold text-warning">
+          {{ r.ret_count }}
+        </div>
+      </div>
+
+      <div class="col-6">
+        <div class="small text-muted">إجمالي المرتجعات</div>
+        <div class="fw-bold total-return">
+          {{ '%.0f'|format(r.ret_total) }}
+        </div>
+      </div>
+
+    </div>
+
+    <a
+      class="btn btn-outline-primary w-100"
+      href="/customers/ledger/detail?name={{ r.name | urlencode }}&phone={{ r.phone | urlencode }}"
+    >
+      👁️ عرض التفاصيل
+    </a>
+
+  </div>
+
+  {% endfor %}
+
+  {% if not rows or rows|length == 0 %}
+
+  <div class="text-center text-muted py-5">
+    👥 لا يوجد عملاء حتى الآن
+  </div>
+
+  {% endif %}
+
+</div>
+
+<!-- Pagination -->
+{% if pages_count and pages_count > 1 %}
+
+<nav class="mt-4">
+
+  <ul class="pagination justify-content-center">
+
+    <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+      <a
+        class="page-link"
+        href="/customers/ledger?q={{ q | urlencode }}&page=1&per_page={{ per_page }}"
+      >
+        الأولى
+      </a>
+    </li>
+
+    <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+      <a
+        class="page-link"
+        href="/customers/ledger?q={{ q | urlencode }}&page={{ page-1 }}&per_page={{ per_page }}"
+      >
+        السابق
+      </a>
+    </li>
+
+    {% set start = page - 1 if page - 1 > 1 else 1 %}
+    {% set end = page + 1 if page + 1 < pages_count else pages_count %}
+
+    {% for p in range(start, end + 1) %}
+
+    <li class="page-item {% if p == page %}active{% endif %}">
+      <a
+        class="page-link"
+        href="/customers/ledger?q={{ q | urlencode }}&page={{ p }}&per_page={{ per_page }}"
+      >
+        {{ p }}
+      </a>
+    </li>
+
+    {% endfor %}
+
+    <li class="page-item {% if page >= pages_count %}disabled{% endif %}">
+      <a
+        class="page-link"
+        href="/customers/ledger?q={{ q | urlencode }}&page={{ page+1 }}&per_page={{ per_page }}"
+      >
+        التالي
+      </a>
+    </li>
+
+    <li class="page-item {% if page >= pages_count %}disabled{% endif %}">
+      <a
+        class="page-link"
+        href="/customers/ledger?q={{ q | urlencode }}&page={{ pages_count }}&per_page={{ per_page }}"
+      >
+        الأخيرة
+      </a>
+    </li>
+
+  </ul>
+
+</nav>
+
+<div class="text-center text-muted small mt-3">
+  صفحة {{ page }} من {{ pages_count }}
+</div>
+
+{% endif %}
+
+{% endblock %}

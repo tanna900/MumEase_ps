@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="m-0">🧾 تفاصيل فاتورة المشتريات</h4>
+  <a href="/purchases" class="btn btn-sm btn-outline-secondary">⬅️ رجوع لقائمة المشتريات</a>
+</div>
+
+{% if msg %}
+  <div class="alert {% if '✅' in msg %}alert-success{% elif '⚠️' in msg %}alert-warning{% elif '🗑️' in msg %}alert-info{% else %}alert-secondary{% endif %}">
+    {{ msg }}
+  </div>
+{% endif %}
+
+{% set totals = namespace(mfg=0, fabric=0, over=0, qty=0) %}
+{% for it in purchase.items %}
+  {% set q = (it.qty or 0) %}
+  {% set m = (it.unit_mfg_cost if it.unit_mfg_cost is defined else 0) %}
+  {% set f = (it.unit_fabric_cost if it.unit_fabric_cost is defined else 0) %}
+  {% set o = (it.unit_overhead_cost if it.unit_overhead_cost is defined else 0) %}
+  {% set totals.qty = totals.qty + q %}
+  {% set totals.mfg = totals.mfg + (q * (m or 0)) %}
+  {% set totals.fabric = totals.fabric + (q * (f or 0)) %}
+  {% set totals.over = totals.over + (q * (o or 0)) %}
+{% endfor %}
+
+<div class="row g-3">
+  <div class="col-md-8">
+    <div class="card mb-3">
+      <div class="card-header">
+        بيانات الفاتورة
+      </div>
+      <div class="card-body">
+        <div class="row g-2 text-end">
+          <div class="col-md-4">
+            <b>رقم الفاتورة:</b> {{ purchase.code or purchase.id }}
+          </div>
+          <div class="col-md-4">
+            <b>تاريخ الشراء:</b> {{ purchase.date or '-' }}
+          </div>
+          <div class="col-md-4">
+            <b>المصنع:</b> {{ factory_name or '-' }}
+          </div>
+
+          <div class="col-md-4">
+            <b>عدد القطع:</b> {{ '%.2f'|format(purchase.total_qty or 0) }}
+          </div>
+          <div class="col-md-4">
+            <b>إجمالي تكلفة المخزون:</b> {{ '%.2f'|format(purchase.total_cost or 0) }}
+          </div>
+          <div class="col-md-4">
+            <b>إجمالي التصنيع (للمصنع):</b> {{ '%.2f'|format(totals.mfg or 0) }}
+          </div>
+
+          <div class="col-md-4">
+            <b>إجمالي القماش (خصم خامات إنتاج):</b> {{ '%.2f'|format(totals.fabric or 0) }}
+          </div>
+          <div class="col-md-4">
+            <b>إجمالي النثريات:</b> {{ '%.2f'|format(totals.over or 0) }}
+          </div>
+          <div class="col-md-4">
+            <b>ملف الإكسيل:</b> {{ purchase.file_name or '-' }}
+          </div>
+        </div>
+
+        {% if purchase.note %}
+        <hr>
+        <div><b>ملاحظات:</b> {{ purchase.note }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        بنود الفاتورة
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive mb-0">
+          <table class="table table-bordered table-striped mb-0 align-middle">
+            <thead>
+              <tr>
+                <th>الاسم</th>
+                <th>اللون</th>
+                <th>المقاس</th>
+                <th>الباركود</th>
+                <th class="text-end">الكمية</th>
+                <th class="text-end">قماش/وحدة</th>
+                <th class="text-end">تصنيع/وحدة</th>
+                <th class="text-end">نثريات/وحدة</th>
+                <th class="text-end">إجمالي تكلفة/وحدة</th>
+                <th class="text-end">سعر البيع/وحدة</th>
+                <th class="text-end">إجمالي بند</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for it in purchase.items %}
+              {% set unit_fabric = (it.unit_fabric_cost if it.unit_fabric_cost is defined else 0) %}
+              {% set unit_mfg = (it.unit_mfg_cost if it.unit_mfg_cost is defined else 0) %}
+              {% set unit_over = (it.unit_overhead_cost if it.unit_overhead_cost is defined else 0) %}
+              {% set unit_total = (it.unit_total_cost if it.unit_total_cost is defined else (it.unit_cost or 0)) %}
+              <tr>
+                <td>{{ it.name or '-' }}</td>
+                <td>{{ it.color or '-' }}</td>
+                <td>{{ it.size or '-' }}</td>
+                <td>{{ it.barcode or '-' }}</td>
+                <td class="text-end">{{ it.qty or 0 }}</td>
+                <td class="text-end">{{ '%.2f'|format(unit_fabric or 0) }}</td>
+                <td class="text-end">{{ '%.2f'|format(unit_mfg or 0) }}</td>
+                <td class="text-end">{{ '%.2f'|format(unit_over or 0) }}</td>
+                <td class="text-end">{{ '%.2f'|format(unit_total or 0) }}</td>
+                <td class="text-end">{{ '%.2f'|format(it.unit_price or 0) }}</td>
+                <td class="text-end"><b>{{ '%.2f'|format((it.qty or 0) * (unit_total or 0)) }}</b></td>
+              </tr>
+            {% endfor %}
+            {% if not purchase.items or purchase.items|length == 0 %}
+              <tr>
+                <td colspan="11" class="text-center text-muted py-3">
+                  لا توجد بنود مسجلة في هذه الفاتورة.
+                </td>
+              </tr>
+            {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-header">
+        تعديل الفاتورة من شيت جديد
+      </div>
+      <div class="card-body">
+        <form method="post" action="/purchases/{{ purchase.id }}/edit" enctype="multipart/form-data" class="row g-2">
+          <div class="col-12">
+            <label class="form-label">ملف الإكسيل الجديد</label>
+            <input type="file" name="file" class="form-control" accept=".xlsx" required>
+            <div class="form-text small text-muted">
+              عند التعديل: هيتم إرجاع المخزون القديم الأول، وبعدين تطبيق الشيت الجديد.
+              حساب المصنع هيحسب (العدد × تكلفة التصنيع) فقط.
+              خامات إنتاج: هيعمل رجوع/خصم تلقائي حسب <b>fabric_cost</b> فقط.
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">تاريخ الشراء (اختياري)</label>
+            <input type="date" name="date" class="form-control" value="{{ purchase.date }}">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">المصنع (اختياري)</label>
+            <select name="factory_id" class="form-select">
+              <option value="">— (بدون تغيير) —</option>
+              {% for fid, fname in factories_map.items() %}
+                <option value="{{ fid }}" {% if purchase.factory_id == fid %}selected{% endif %}>
+                  {{ fname }}
+                </option>
+              {% endfor %}
+            </select>
+            <div class="form-text small text-muted">لو سيبتها فاضية مش هنغير المصنع الحالي.</div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">ملاحظات (اختياري)</label>
+            <input type="text" name="note" class="form-control" placeholder="استبدال الملاحظات الحالية لو محتاج">
+          </div>
+
+          <div class="col-12 mt-2 d-flex gap-2">
+            <button class="btn btn-primary btn-sm">💾 حفظ التعديل من شيت جديد</button>
+            <a href="/purchases/import/template.xlsx" class="btn btn-outline-secondary btn-sm" target="_blank">
+              📄 تحميل قالب الإكسيل
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <form method="post" action="/purchases/{{ purchase.id }}/delete"
+              onsubmit="return confirm('هتحذف الفاتورة وهيرجع المخزون زي ما كان قبلها + تصنيع عكسي + رجوع خامات (قماش فقط). متأكد؟');">
+          <button class="btn btn-outline-danger w-100">
+            🗑️ حذف هذه الفاتورة وإرجاع تأثيرها
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        سجل التعديلات (History)
+      </div>
+      <div class="card-body">
+        {% if purchase.history %}
+          <pre class="small" style="white-space: pre-wrap; direction:ltr;">{{ purchase.history }}</pre>
+        {% else %}
+          <div class="text-muted small">لا يوجد سجل تعديلات بعد.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

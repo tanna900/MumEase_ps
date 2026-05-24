@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.settlement-shell{max-width:1500px;margin:auto}
+.page-title{font-size:1.9rem;font-weight:900}
+.page-subtitle{color:#6c757d;margin-top:4px}
+.page-card,.card{background:#fff;border:1px solid #eee!important;border-radius:22px!important;box-shadow:0 2px 10px rgba(0,0,0,.04)!important}
+.card-header{background:#faf7ff!important;border-bottom:1px solid #eee!important}
+.form-control,.form-select{border-radius:14px!important;min-height:46px}
+.table{border-radius:18px;overflow:hidden}
+.table thead th{background:#faf7ff!important;border-bottom:1px solid #eee!important}
+.table tbody tr td{transition:.18s ease}
+.table tbody tr:hover td{background:#eef5ff!important}
+.pagination .page-link{border-radius:12px!important;margin-inline:2px}
+.alert{border-radius:18px}
+.btn{border-radius:14px}
+@media(max-width:768px){
+.settlement-shell{padding:0 8px}
+.page-title{font-size:1.45rem}
+.card,.page-card{border-radius:18px!important}
+.table{font-size:.9rem}
+}
+</style>
+
+<div class="settlement-shell">
+
+<div class="mb-4">
+<div class="page-title">📊 تسوية يوم جديد</div>
+<div class="page-subtitle">تسجيل المصروفات والتسويات اليومية</div>
+</div>
+
+<form method="post" action="/settlements/preview" id="settlementForm">
+  <div class="row g-3">
+    <div class="col-md-3">
+      <label class="form-label">تاريخ التسوية</label>
+      <input type="date" name="date_str" class="form-control" required value="{{ preset_date or '' }}">
+    </div>
+  </div>
+
+  <hr class="my-3">
+  <div class="d-flex justify-content-between align-items-center">
+    <h6 class="m-0">مصروفات أخرى</h6>
+    <button type="button" class="btn  btn-outline-primary" id="addRow">+ إضافة مصروف</button>
+  </div>
+
+  <div id="expContainer" class="mt-2">
+    <div class="row g-2 align-items-end exp-row">
+      <div class="col-md-3">
+        <label class="form-label">المبلغ</label>
+        <input type="number" step="0.01" name="exp_amount" class="form-control" placeholder="0.00">
+      </div>
+      <div class="col-md-8">
+        <label class="form-label">الشرح</label>
+        <input type="text" name="exp_desc" class="form-control" placeholder="مثال: مشاوير، مستهلكات...">
+      </div>
+      <div class="col-md-1 d-grid">
+        <button type="button" class="btn btn-outline-danger btn-remove">🗑️</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4 d-flex gap-2">
+    <button type="submit" class="btn btn-success">معاينة</button>
+    <a href="/settlements" class="btn btn-secondary">رجوع</a>
+  </div>
+</form>
+
+<script>
+const cont = document.getElementById('expContainer');
+document.getElementById('addRow').onclick = ()=>{
+  const row = document.createElement('div');
+  row.className = 'row g-2 align-items-end exp-row';
+  row.innerHTML = `
+    <div class="col-md-3">
+      <label class="form-label">المبلغ</label>
+      <input type="number" step="0.01" name="exp_amount" class="form-control" placeholder="0.00">
+    </div>
+    <div class="col-md-8">
+      <label class="form-label">الشرح</label>
+      <input type="text" name="exp_desc" class="form-control" placeholder="مثال: مشاوير، مستهلكات...">
+    </div>
+    <div class="col-md-1 d-grid">
+      <button type="button" class="btn btn-outline-danger btn-remove">🗑️</button>
+    </div>`;
+  cont.appendChild(row);
+  bindRemovers(row);
+};
+function bindRemovers(scope){
+  (scope||document).querySelectorAll('.btn-remove').forEach(btn=>{
+    btn.onclick = (e)=>{
+      const row = e.target.closest('.exp-row');
+      if(document.querySelectorAll('.exp-row').length>1) row.remove();
+      else row.querySelectorAll('input').forEach(i=>i.value='');
+    }
+  });
+}
+bindRemovers();
+</script>
+</div>
+{% endblock %}

@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>تفاصيل الفاتورة</title>
+
+  <!-- Bootstrap (لو مشروعك أصلاً بيحمل Bootstrap من base.html، iframe مش هيشوفه، فبنضيفه هنا) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body { background:#f6f7fb; }
+    .inv-wrap { max-width: 980px; margin: 12px auto; }
+    .card { border: 0; border-radius: 14px; box-shadow: 0 6px 18px rgba(0,0,0,.06); }
+    .muted { color:#6c757d; }
+    .kpi { font-weight: 800; font-size: 18px; }
+    .badge-soft { background:#eef2ff; color:#2f3a8f; }
+    .table thead th { background:#f8f9fa; font-weight:700; white-space:nowrap; }
+    .table td, .table th { vertical-align: middle; }
+    .money { font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+
+<body>
+  <div class="inv-wrap">
+
+    <!-- Header -->
+    <div class="card p-3 mb-3">
+      <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+        <div>
+          <div class="fw-bold fs-5">فاتورة رقم: <span class="text-primary">{{ inv.invoice_code or inv.id }}</span></div>
+          <div class="muted small">
+            التاريخ:
+            {% if inv.created_at %}
+              {{ inv.created_at.strftime("%Y-%m-%d %H:%M") }}
+            {% else %}
+              -
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="text-end">
+          <div class="badge rounded-pill badge-soft px-3 py-2">
+            {{ inv.type or "S" }}
+          </div>
+          <div class="muted small mt-1">طريقة الدفع: <span class="fw-semibold">{{ payment_method or "-" }}</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Customer + Shipping -->
+    <div class="row g-3 mb-3">
+      <div class="col-lg-7">
+        <div class="card p-3 h-100">
+          <div class="fw-bold mb-2">بيانات العميل</div>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <div class="muted small">الاسم</div>
+              <div class="fw-semibold">{{ customer_name or "-" }}</div>
+            </div>
+            <div class="col-md-6">
+              <div class="muted small">الموبايل</div>
+              <div class="fw-semibold">{{ customer_phone or "-" }}</div>
+            </div>
+            <div class="col-12">
+              <div class="muted small">العنوان</div>
+              <div class="fw-semibold">{{ address or "-" }}</div>
+            </div>
+            <div class="col-12">
+              <div class="muted small">المحافظة</div>
+              <div class="fw-semibold">{{ governorate or "-" }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="card p-3 h-100">
+          <div class="fw-bold mb-2">الشحن</div>
+
+          <div class="d-flex justify-content-between">
+            <span class="muted">شركة الشحن</span>
+            <span class="fw-semibold">{{ shipping_company or inv.shipping_company or "-" }}</span>
+          </div>
+          <hr class="my-2">
+
+          <div class="d-flex justify-content-between">
+            <span class="muted">مصاريف الشحن الفعلية</span>
+            <span class="fw-bold money">{{ (actual_shipping_cost or 0) | int }}</span>
+          </div>
+
+          <div class="d-flex justify-content-between mt-1">
+            <span class="muted">شحن على العميل</span>
+            <span class="fw-bold money">{{ (customer_shipping_fee or 0) | int }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items -->
+    <div class="card p-3 mb-3">
+      <div class="fw-bold mb-2">تفاصيل المنتجات</div>
+
+      {% if items_rows and items_rows|length > 0 %}
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered mb-0">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>الصنف</th>
+                <th class="text-center">الكمية</th>
+                <th class="text-end">السعر</th>
+                <th class="text-end">الإجمالي</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for it in items_rows %}
+                <tr>
+                  <td class="text-center">{{ loop.index }}</td>
+                  <td>
+                    <div class="fw-semibold">{{ it.name or it.title or it.product_name or "-" }}</div>
+                    {% if it.variant or it.color or it.size %}
+                      <div class="muted small">
+                        {% if it.color %}لون: {{ it.color }}{% endif %}
+                        {% if it.size %}{% if it.color %} | {% endif %}مقاس: {{ it.size }}{% endif %}
+                        {% if it.variant %}<span class="ms-1">({{ it.variant }})</span>{% endif %}
+                      </div>
+                    {% endif %}
+                  </td>
+                  <td class="text-center">{{ it.qty or it.quantity or 0 }}</td>
+                  <td class="text-end money">{{ (it.price or it.unit_price or 0) | int }}</td>
+                  <td class="text-end money">
+                    {{ ((it.total or it.line_total) if (it.total is not none or it.line_total is not none) else ((it.qty or it.quantity or 0) * (it.price or it.unit_price or 0))) | int }}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="muted small">لا توجد منتجات مسجلة لهذه الفاتورة.</div>
+      {% endif %}
+    </div>
+
+    <!-- Totals -->
+    <div class="row g-3">
+      <div class="col-lg-7"></div>
+      <div class="col-lg-5">
+        <div class="card p-3">
+          <div class="d-flex justify-content-between">
+            <span class="muted">إجمالي الفاتورة</span>
+            <span class="kpi money">{{ (total_invoice or inv.total or 0) | int }}</span>
+          </div>
+
+          <div class="d-flex justify-content-between mt-2">
+            <span class="muted">قيمة الخصم</span>
+            <span class="fw-bold money">{{ (discount_value or 0) | int }}</span>
+          </div>
+
+          <hr class="my-2">
+
+          <div class="d-flex justify-content-between">
+            <span class="fw-bold">الإجمالي بعد الخصم</span>
+            <span class="kpi text-success money">{{ (total_after_discount or total_invoice or inv.total or 0) | int }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
