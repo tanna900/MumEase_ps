@@ -163,6 +163,39 @@
   }
 }
 
+
+
+.mobile-collapse-toggle{
+  display:none;
+}
+
+@media(max-width:768px){
+
+  .mobile-collapse-toggle{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:100%;
+    border:none;
+    background:#fff;
+    border-radius:14px;
+    padding:14px;
+    font-weight:700;
+    box-shadow:0 2px 10px rgba(0,0,0,.05);
+    margin-bottom:12px;
+  }
+
+  .mobile-collapse-box{
+    display:none;
+  }
+
+  .mobile-collapse-box.open{
+    display:block !important;
+  }
+
+}
+
+
 </style>
 
 {% macro n(x) -%}
@@ -176,7 +209,17 @@
 {% endif %}
 
 <!-- ============ تنبيه أرصدة الخزن الفرعية + دفعات الشحن غير المربوطة ============ -->
-<div class="row g-3">
+<!-- Mobile Sub Wallets Toggle -->
+<button class="mobile-collapse-toggle d-md-none"
+        type="button"
+        onclick="toggleSubWallets()">
+
+  🏦 الخزن الفرعية
+
+</button>
+
+<div class="row g-3 mobile-collapse-box d-md-flex"
+     id="subWalletsSection">
   <div class="col-md-8">
     <div class="page-card h-100">
       <div class="d-flex align-items-center justify-content-between mb-2">
@@ -407,9 +450,19 @@
 
 </div>
 
+<!-- Mobile Filters Toggle -->
+<button class="mobile-collapse-toggle d-md-none"
+        type="button"
+        onclick="toggleCashFilters()">
+
+  🔍 البحث والفلاتر
+
+</button>
+
 <!-- فلاتر -->
 
-<div class="card p-2 mt-2">
+<div class="card p-2 mt-2 mobile-collapse-box d-md-block"
+     id="cashFilters">
   <form class="row g-2 align-items-end" method="get" action="/cash">
     <div class="col-md-2">
       <label class="form-label small">من</label>
@@ -854,5 +907,26 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 });
 </script>
+
+
+
+<script>
+
+function toggleSubWallets(){
+  const el = document.getElementById('subWalletsSection');
+  if(el){
+    el.classList.toggle('open');
+  }
+}
+
+function toggleCashFilters(){
+  const el = document.getElementById('cashFilters');
+  if(el){
+    el.classList.toggle('open');
+  }
+}
+
+</script>
+
 
 {% endblock %}

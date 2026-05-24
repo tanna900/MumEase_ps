@@ -156,6 +156,75 @@
   }
 
 }
+
+
+.mobile-filter-toggle{
+  display:none;
+}
+
+@media (max-width:768px){
+
+  .mobile-filter-toggle{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    width:100%;
+    border:none;
+    background:#fff;
+    border-radius:14px;
+    padding:14px;
+    font-weight:700;
+    box-shadow:0 2px 10px rgba(0,0,0,.05);
+    margin-bottom:12px;
+  }
+
+  .mobile-filter-box{
+    display:none;
+  }
+
+  .mobile-filter-box.open{
+    display:block;
+  }
+
+  .mobile-invoice-card{
+    padding:14px;
+  }
+
+  .mobile-invoice-card .code{
+    font-size:.9rem;
+    font-weight:600;
+  }
+
+  .mobile-invoice-card .customer-name{
+    font-size:1.15rem;
+    font-weight:800;
+    margin-bottom:6px;
+  }
+
+  .mobile-invoice-card .amount{
+    font-size:1.25rem;
+    font-weight:900;
+  }
+
+  .mobile-meta{
+    font-size:.82rem;
+    color:#6c757d;
+  }
+
+  .mobile-actions{
+    margin-top:10px;
+    display:flex;
+    gap:8px;
+  }
+
+  .mobile-actions .btn{
+    flex:1;
+    border-radius:12px;
+  }
+
+}
+
 </style>
 
 <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3">
@@ -171,8 +240,13 @@
 
 </div>
 
+<!-- Mobile Filter Toggle -->
+<button class="mobile-filter-toggle d-md-none" type="button" onclick="toggleInvoiceFilters()">
+  🔍 البحث والفلاتر
+</button>
+
 <!-- الفلاتر -->
-<div class="filter-card mb-3">
+<div class="filter-card mb-3 mobile-filter-box d-md-block" id="invoiceFilters">
 
   <form class="row g-3 align-items-end" method="get" action="/invoices/browse">
 
@@ -368,52 +442,47 @@
 <div class="mobile-cards">
 
   {% for inv in invoices %}
-  <div class="mobile-invoice-card">
+  
+<div class="mobile-invoice-card">
 
-    <div class="d-flex justify-content-between align-items-start mb-3">
+    <div class="d-flex justify-content-between align-items-start mb-2">
 
-      <div class="code">
-        {{ inv.invoice_code or inv.id }}
+      <div>
+
+        <div class="customer-name">
+          {{ inv.customer_name }}
+        </div>
+
+        <div class="code">
+          {{ inv.invoice_code or inv.id }}
+        </div>
+
       </div>
 
-      <div class="small text-muted text-end">
-        {{ inv.created_at.strftime("%Y-%m-%d") if inv.created_at else "" }}
-        <br>
-        {{ inv.created_at.strftime("%H:%M") if inv.created_at else "" }}
+      <div class="amount">
+        {{ '%.0f'|format(inv.total or 0) }} ج
       </div>
 
     </div>
 
-    <div class="mb-2">
-      <strong>{{ inv.customer_name }}</strong>
-    </div>
-
-    <div class="mb-2" dir="ltr">
-      {{ inv.customer_phone }}
-    </div>
-
-    <div class="mb-2">
-      {{ inv.shipping_company or '-' }}
-    </div>
-
-    <div class="mb-3">
+    <div class="mobile-meta mb-2">
 
       {% if inv.type == 'S' %}
-        <span class="badge-sale">بيع</span>
+        بيع
       {% else %}
-        <span class="badge-return">مرتجع</span>
+        مرتجع
       {% endif %}
 
+      •
+
+      {{ inv.created_at.strftime("%Y-%m-%d") if inv.created_at else "" }}
+
     </div>
 
-    <div class="amount mb-3">
-      {{ '%.0f'|format(inv.total or 0) }} جنيه
-    </div>
-
-    <div class="d-flex gap-2">
+    <div class="mobile-actions">
 
       <a
-        class="btn btn-outline-primary flex-fill"
+        class="btn btn-outline-primary"
         href="/invoices/{{ inv.id }}"
       >
         👁️ فتح
@@ -421,16 +490,17 @@
 
       {% if inv.type == 'S' %}
       <a
-        class="btn btn-outline-dark flex-fill"
+        class="btn btn-outline-dark"
         href="/invoices/{{ inv.id }}?print=46"
       >
-        🖨️ طباعة
+        🖨️
       </a>
       {% endif %}
 
     </div>
 
   </div>
+
 
   {% else %}
 
@@ -519,5 +589,15 @@
 </div>
 
 {% endif %}
+
+
+<script>
+function toggleInvoiceFilters(){
+  const box = document.getElementById('invoiceFilters');
+  if(box){
+    box.classList.toggle('open');
+  }
+}
+</script>
 
 {% endblock %}

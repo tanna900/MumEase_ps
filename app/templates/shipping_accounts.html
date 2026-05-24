@@ -294,6 +294,87 @@ tr.bg-light button.btn-outline-dark {
 }
 
 
+
+
+/* ===== Mobile Shipping Fix ===== */
+@media (max-width:768px){
+
+  .shipping-table-wrap{
+    overflow-x: visible !important;
+  }
+
+  #tbl_unpaid,
+  #tbl_paid{
+    table-layout:auto !important;
+    width:100% !important;
+  }
+
+  #tbl_unpaid th,
+  #tbl_unpaid td,
+  #tbl_paid th,
+  #tbl_paid td{
+    white-space:normal !important;
+    word-break:break-word;
+    vertical-align:top;
+  }
+
+  /* إلغاء sticky على الموبايل */
+  .table th:first-child,
+  .table td:first-child,
+  .table th:nth-child(2),
+  .table td:nth-child(2){
+    position:static !important;
+    left:auto !important;
+    z-index:auto !important;
+  }
+
+  /* اسم العميل */
+  #tbl_unpaid td:nth-child(2) a,
+  #tbl_paid td:nth-child(2) a{
+    display:block;
+    font-size:14px;
+    line-height:1.4;
+    white-space:normal !important;
+  }
+
+  /* الأرقام */
+  #tbl_unpaid td:nth-child(3),
+  #tbl_unpaid td:nth-child(4),
+  #tbl_unpaid td:nth-child(5),
+  #tbl_paid td:nth-child(4),
+  #tbl_paid td:nth-child(5){
+    min-width:70px;
+    font-size:13px;
+  }
+
+  /* صف الإجراءات */
+  .alloc-row{
+    flex-direction:column;
+    align-items:stretch;
+    gap:10px;
+  }
+
+  .alloc-form{
+    width:100%;
+    flex-wrap:wrap;
+    justify-content:flex-start;
+  }
+
+  .alloc-form select,
+  .alloc-form input{
+    width:100% !important;
+    max-width:100% !important;
+  }
+
+  .alloc-form button,
+  .btn-transfer{
+    min-width:48px !important;
+    height:42px !important;
+  }
+
+}
+
+
 </style>
 
 <h5 class="mb-3">🚚 حسابات شركات الشحن</h5>
@@ -412,7 +493,7 @@ tr.bg-light button.btn-outline-dark {
 
         {% if invoices_unpaid and invoices_unpaid|length > 0 %}
           <div class="table-responsive shipping-table-wrap">
-            <table class="table table-sm table-bordered align-middle mb-0" id="tbl_unpaid" style="table-layout:fixed; width:100%;">
+            <table class="table table-sm table-bordered align-middle mb-0" id="tbl_unpaid" style="width:100%;">
               <thead class="table-light">
                 <tr>
                   <th>كود</th>
