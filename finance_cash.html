@@ -153,35 +153,7 @@
 
 
 
-@media(max-width:768px){
 
-  /* hide first 3 cards on mobile */
-  .cash-summary-cards > div:nth-child(1),
-  .cash-summary-cards > div:nth-child(2),
-  .cash-summary-cards > div:nth-child(3){
-    display:none !important;
-  }
-
-  /* keep only net cash visible */
-  .cash-summary-cards > div:nth-child(4){
-    display:block !important;
-    width:100% !important;
-    max-width:100% !important;
-    flex:0 0 100% !important;
-  }
-
-  .cash-summary-cards > div:nth-child(4) .stat-card{
-    padding:16px !important;
-  }
-
-  .cash-summary-cards > div:nth-child(4) .stat-value{
-    font-size:2rem !important;
-    line-height:1.1 !important;
-    white-space:normal !important;
-    overflow-wrap:anywhere !important;
-  }
-
-}
 
 
 </style>
@@ -367,7 +339,7 @@
 
 <!-- أزرار/إحصائيات أعلى -->
 <div class="row g-2 mt-2 cash-summary-cards">
-  <div class="col-md-3">
+  <div class="col-md-3 d-none d-md-block">
     <div class="page-card">
       <div class="text-muted small">الرصيد الافتتاحي</div>
       <div class="fs-5 fw-bold">{{ n(opening) }}</div>
@@ -381,7 +353,7 @@
     </div>
   </div>
 
-  <div class="col-md-3">
+  <div class="col-md-3 d-none d-md-block">
     <a class="text-decoration-none" href="/cash?category=&q={{ q }}&date_from={{ date_from }}&date_to={{ date_to }}">
       <div class="page-card p-3 h-100 stat-card">
   <div class="stat-label">إجمالي الإيرادات</div>
@@ -390,7 +362,7 @@
     </a>
   </div>
 
-  <div class="col-md-3">
+  <div class="col-md-3 d-none d-md-block">
     <a class="text-decoration-none" href="/cash?category=&q={{ q }}&date_from={{ date_from }}&date_to={{ date_to }}">
       <div class="page-card p-3 h-100 stat-card">
   <div class="stat-label">إجمالي المصروفات</div>
@@ -474,7 +446,7 @@
       <label class="form-label small">التاريخ</label>
       <input name="date" type="date" class="form-control form-control-sm" value="">
     </div>
-    <div class="col-md-3">
+    <div class="col-12 col-md-3">
       <label class="form-label small">ملاحظة</label>
       <input name="note" class="form-control form-control-sm">
     </div>
