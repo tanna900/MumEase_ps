@@ -375,6 +375,86 @@ tr.bg-light button.btn-outline-dark {
 }
 
 
+
+
+/* ===== Real Mobile Layout ===== */
+@media(max-width:768px){
+
+  .desktop-shipping-table{
+    display:none !important;
+  }
+
+  .mobile-shipping-cards{
+    display:block !important;
+  }
+
+  .shipping-mobile-card{
+    background:#fff;
+    border:1px solid #ececec;
+    border-radius:18px;
+    padding:14px;
+    margin-bottom:14px;
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+
+  .shipping-mobile-top{
+    margin-bottom:10px;
+  }
+
+  .shipping-mobile-name{
+    font-size:1.05rem;
+    font-weight:800;
+    color:#0d6efd;
+    line-height:1.4;
+  }
+
+  .shipping-mobile-code{
+    font-size:.9rem;
+    color:#6c757d;
+    margin-top:4px;
+  }
+
+  .shipping-mobile-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:8px;
+    margin-bottom:12px;
+  }
+
+  .shipping-mobile-box{
+    background:#faf7ff;
+    border-radius:12px;
+    padding:8px;
+    text-align:center;
+  }
+
+  .shipping-mobile-box small{
+    display:block;
+    color:#6c757d;
+    margin-bottom:4px;
+  }
+
+  .shipping-mobile-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:12px;
+  }
+
+  .shipping-mobile-actions .btn{
+    border-radius:12px;
+    min-height:44px;
+  }
+
+}
+
+@media(min-width:769px){
+  .mobile-shipping-cards{
+    display:none !important;
+  }
+}
+
+
 </style>
 
 <h5 class="mb-3">🚚 حسابات شركات الشحن</h5>
@@ -432,7 +512,67 @@ tr.bg-light button.btn-outline-dark {
   </div>
 
   <div class="card p-0 mt-3">
-    <div class="table-responsive">
+    
+
+<!-- Mobile Shipping Cards -->
+<div class="mobile-shipping-cards">
+
+{% for row in unpaid_rows %}
+<div class="shipping-mobile-card">
+
+  <div class="shipping-mobile-top">
+
+    <div class="shipping-mobile-name">
+      {{ row.customer_name }}
+    </div>
+
+    <div class="shipping-mobile-code">
+      {{ row.invoice_code }}
+    </div>
+
+  </div>
+
+  <div class="shipping-mobile-grid">
+
+    <div class="shipping-mobile-box">
+      <small>المستحق</small>
+      {{ '%.0f'|format(row.amount_due or 0) }}
+    </div>
+
+    <div class="shipping-mobile-box">
+      <small>المدفوع</small>
+      {{ '%.0f'|format(row.amount_paid or 0) }}
+    </div>
+
+    <div class="shipping-mobile-box">
+      <small>المتبقي</small>
+      {{ '%.0f'|format(row.amount_left or 0) }}
+    </div>
+
+  </div>
+
+  <select class="form-select mb-2">
+    <option>اختر دفعة</option>
+  </select>
+
+  <input class="form-control mb-2" placeholder="المبلغ">
+
+  <div class="shipping-mobile-actions">
+
+    <button class="btn btn-success">💾</button>
+    <button class="btn btn-outline-warning">⚡</button>
+    <button class="btn btn-outline-danger">📦</button>
+    <button class="btn btn-outline-secondary">↩️</button>
+
+  </div>
+
+</div>
+{% endfor %}
+
+</div>
+
+
+<div class="table-responsive desktop-shipping-table">
       <table class="table table-sm table-bordered align-middle mb-0 overall-companies-table">
         <thead class="table-light">
           <tr>

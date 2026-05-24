@@ -116,16 +116,68 @@
 }
 
 
+
+
+/* ===== Mobile Header Fix ===== */
+@media(max-width:768px){
+
+  .settlement-shell{
+    width:100% !important;
+    max-width:100% !important;
+    overflow:hidden;
+  }
+
+  .settlement-header-mobile{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    align-items:stretch !important;
+  }
+
+  .settlement-header-mobile .header-info,
+  .settlement-header-mobile .header-actions{
+    width:100%;
+  }
+
+  .settlement-header-mobile .btn{
+    width:100%;
+  }
+
+  .mobile-collapse-toggle{
+    width:100% !important;
+  }
+
+  .mobile-settlement-card{
+    width:100%;
+    max-width:100%;
+  }
+
+}
+
+
 </style>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <div class="settlement-shell">
+
+<div class="settlement-shell">
+
+<div class="settlement-header-mobile d-flex justify-content-between align-items-center mb-3">
+
+<div class="header-info">
+
 
 <div class="mb-4">
 <div class="page-title">📒 اليوميات المقفولة</div>
 <div class="page-subtitle">متابعة وعرض كل اليوميات المقفولة</div>
 </div>
-  <a href="/settlements/close?date={{ today }}" class="btn btn-dark">+ تسوية يوم جديد</a>
+  </div>
+
+<div class="header-actions">
+  <a href="/settlements/close?date={{ today }}"
+     class="btn btn-dark">
+     + تسوية يوم جديد
+  </a>
+</div>
+
 </div>
 
 <!-- Mobile Filters Toggle -->
