@@ -196,6 +196,29 @@
 }
 
 
+
+/* ===== Cleaner Cash Summary ===== */
+
+.stat-card{
+  min-height:135px;
+}
+
+.stat-card .stat-label{
+  font-size:1rem;
+}
+
+.stat-card .stat-value{
+  font-size:2.1rem;
+}
+
+@media(max-width:768px){
+
+  .stat-card .stat-value{
+    font-size:1.55rem !important;
+  }
+
+}
+
 </style>
 
 {% macro n(x) -%}
@@ -390,41 +413,11 @@
 
 <!-- أزرار/إحصائيات أعلى -->
 
-<!-- Desktop Summary Cards -->
-<div class="row g-2 mt-2 d-none d-md-flex">
 
-  <div class="col-md-3">
-    <div class="page-card">
-      <div class="text-muted small">الرصيد الافتتاحي</div>
-      <div class="fs-5 fw-bold">{{ n(opening) }}</div>
+<!-- Desktop Net Cash Only -->
+<div class="row g-2 mt-2 d-none d-md-flex justify-content-center">
 
-      <form class="d-flex gap-1 mt-2" method="post" action="/cash/opening">
-        <input type="number" step="1" name="opening" class="form-control form-control-sm" placeholder="تعديل…">
-        <input type="password" name="password" class="form-control form-control-sm" placeholder="00000" style="max-width:110px">
-        <button class="btn btn-sm btn-outline-primary">حفظ</button>
-      </form>
-    </div>
-  </div>
-
-  <div class="col-md-3">
-    <a class="text-decoration-none" href="/cash?category=&q={{ q }}&date_from={{ date_from }}&date_to={{ date_to }}">
-      <div class="page-card p-3 h-100 stat-card">
-        <div class="stat-label">إجمالي الإيرادات</div>
-        <div class="stat-value text-success">{{ n(total_in) }}</div>
-      </div>
-    </a>
-  </div>
-
-  <div class="col-md-3">
-    <a class="text-decoration-none" href="/cash?category=&q={{ q }}&date_from={{ date_from }}&date_to={{ date_to }}">
-      <div class="page-card p-3 h-100 stat-card">
-        <div class="stat-label">إجمالي المصروفات</div>
-        <div class="stat-value text-danger">{{ n(total_out) }}</div>
-      </div>
-    </a>
-  </div>
-
-  <div class="col-md-3">
+  <div class="col-md-4">
     <div class="page-card p-3 h-100 stat-card">
       <div class="stat-label">صافي الخزنة</div>
       <div class="stat-value">{{ n(balance) }}</div>
@@ -434,6 +427,7 @@
 </div>
 
 <!-- Mobile Net Cash Only -->
+
 <div class="d-block d-md-none mt-2">
 
   <div class="page-card stat-card text-center">
@@ -606,6 +600,29 @@
   font-weight: 700;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
+}
+
+
+/* ===== Cleaner Cash Summary ===== */
+
+.stat-card{
+  min-height:135px;
+}
+
+.stat-card .stat-label{
+  font-size:1rem;
+}
+
+.stat-card .stat-value{
+  font-size:2.1rem;
+}
+
+@media(max-width:768px){
+
+  .stat-card .stat-value{
+    font-size:1.55rem !important;
+  }
+
 }
 
 </style>
