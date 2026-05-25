@@ -603,26 +603,40 @@ tr.bg-light button.btn-outline-dark {
 
 
 
-/* ===== Better Mobile Summary Cards ===== */
+
+
+
+/* ===== Balanced Mobile Cards ===== */
 @media(max-width:768px){
 
-  .row.g-2 .card{
-    min-height:150px;
-    border-radius:20px !important;
+  .row.g-2{
+    gap:10px !important;
   }
 
-  .row.g-2 .card .text-muted{
-    font-size:.82rem !important;
-    line-height:1.35;
+  .row.g-2 > div{
+    width:50%;
+  }
+
+  .row.g-2 .card{
+    min-height:120px;
+    border-radius:18px !important;
+    padding:10px !important;
+  }
+
+  .row.g-2 .card .text-muted,
+  .row.g-2 .card small{
+    font-size:.78rem !important;
+    line-height:1.3;
     font-weight:700;
   }
 
   .row.g-2 .card .fs-5,
   .row.g-2 .card .fw-bold{
-    font-size:2rem !important;
-    line-height:1.05;
-    font-weight:900 !important;
-    word-break:keep-all;
+    font-size:1.35rem !important;
+    line-height:1.15;
+    font-weight:800 !important;
+    margin-top:8px;
+    word-break:normal !important;
   }
 
 }
