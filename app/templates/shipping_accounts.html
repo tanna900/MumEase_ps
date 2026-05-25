@@ -606,37 +606,43 @@ tr.bg-light button.btn-outline-dark {
 
 
 
-/* ===== Balanced Mobile Cards ===== */
+
+
+
+/* ===== Mobile stacked summary cards ===== */
 @media(max-width:768px){
 
   .row.g-2{
-    gap:10px !important;
+    display:flex !important;
+    flex-direction:column;
+    gap:12px !important;
   }
 
   .row.g-2 > div{
-    width:50%;
+    width:100% !important;
+    max-width:100% !important;
+    flex:0 0 100% !important;
   }
 
   .row.g-2 .card{
-    min-height:120px;
+    min-height:auto;
     border-radius:18px !important;
-    padding:10px !important;
+    padding:16px !important;
   }
 
   .row.g-2 .card .text-muted,
   .row.g-2 .card small{
-    font-size:.78rem !important;
-    line-height:1.3;
+    font-size:.9rem !important;
+    line-height:1.4;
     font-weight:700;
   }
 
   .row.g-2 .card .fs-5,
   .row.g-2 .card .fw-bold{
-    font-size:1.35rem !important;
-    line-height:1.15;
-    font-weight:800 !important;
-    margin-top:8px;
-    word-break:normal !important;
+    font-size:1.7rem !important;
+    line-height:1.1;
+    font-weight:900 !important;
+    margin-top:10px;
   }
 
 }
