@@ -71,6 +71,176 @@
     font-size:.8rem;
     color:#6c757d;
   }
+
+/* ===== Modern UI ===== */
+.factory-summary-card{
+  border:none !important;
+  border-radius:20px;
+  box-shadow:0 2px 12px rgba(0,0,0,.05);
+}
+
+.factory-summary-card .fs-5{
+  font-weight:800;
+}
+
+.factory-tabs .nav-link{
+  border:none;
+  border-radius:14px 14px 0 0;
+  color:#555;
+  font-weight:700;
+}
+
+.factory-tabs .nav-link.active{
+  background:#0d6efd;
+  color:#fff;
+}
+
+.factory-table{
+  border-radius:0 0 18px 18px;
+  overflow:hidden;
+}
+
+@media(max-width:768px){
+
+  .factory-table{
+    font-size:13px;
+  }
+
+  .factory-table th,
+  .factory-table td{
+    white-space:nowrap;
+  }
+
+}
+
+
+/* ===== Premium Factory Tables ===== */
+
+.factory-tabs{
+  border:none;
+  gap:10px;
+}
+
+.factory-tabs .nav-link{
+  border:none !important;
+  border-radius:14px !important;
+  padding:10px 18px;
+  background:#f3f4f6;
+  color:#444;
+  font-weight:700;
+  transition:.18s ease;
+}
+
+.factory-tabs .nav-link.active{
+  background:#0d6efd !important;
+  color:#fff !important;
+  box-shadow:0 4px 14px rgba(13,110,253,.22);
+}
+
+.factory-table{
+  border:none !important;
+  border-radius:22px !important;
+  overflow:hidden;
+  background:#fff;
+  box-shadow:0 4px 18px rgba(0,0,0,.05);
+}
+
+.factory-table thead th{
+  background:#f8fafc !important;
+  color:#111 !important;
+  border-bottom:1px solid #ececec !important;
+  font-size:.84rem;
+  font-weight:800;
+  padding:14px 12px !important;
+}
+
+.factory-table tbody tr{
+  transition:.15s ease;
+}
+
+.factory-table tbody tr:hover{
+  background:#f8fbff !important;
+}
+
+.factory-table tbody td{
+  padding:13px 12px !important;
+  border-color:#f0f0f0 !important;
+}
+
+.factory-table tbody tr:last-child td{
+  border-bottom:none !important;
+}
+
+.note-clamp-2{
+  background:#f8f9fa;
+  padding:8px 10px;
+  border-radius:10px;
+  color:#666;
+  max-width:260px;
+}
+
+.btn-outline-secondary,
+.btn-outline-danger,
+.btn-outline-primary{
+  border-radius:12px !important;
+}
+
+.factory-summary-card{
+  background:#fff;
+  border:none !important;
+  box-shadow:0 3px 16px rgba(0,0,0,.05);
+}
+
+.mobile-collapse-toggle{
+  width:100%;
+  background:transparent;
+  border:none;
+  text-align:right;
+  font-weight:800;
+  color:#111;
+  padding:0;
+}
+
+@media(min-width:769px){
+
+  .mobile-collapse-body{
+    display:block !important;
+  }
+
+}
+
+@media(max-width:768px){
+
+  .factory-table{
+    font-size:13px;
+    border-radius:18px !important;
+  }
+
+  .factory-table th,
+  .factory-table td{
+    white-space:nowrap;
+    padding:10px 8px !important;
+  }
+
+  .mobile-collapse-body{
+    display:none;
+  }
+
+  .mobile-collapse-body.open{
+    display:block;
+  }
+
+  .factory-tabs{
+    gap:6px;
+  }
+
+  .factory-tabs .nav-link{
+    padding:8px 12px;
+    font-size:13px;
+  }
+
+}
+
 </style>
 
 {# ===== Defaults عشان لو الراوتر لسه ما بيبعتش pagination ما تبقاش فيه Errors ===== #}
@@ -179,23 +349,23 @@
 
 <div class="row my-3 g-3">
   <div class="col-md-4">
-    <div class="card"><div class="card-body">
+    <div class="card factory-summary-card"><div class="card-body">
       <div class="small text-muted">تكلفة التصنيع</div>
-      <div class="fs-5">{{ '%.2f'|format(total_cost) }} EGP</div>
+      <div class="fs-5">{{ '%.0f'|format(total_cost) }} EGP</div>
     </div></div>
   </div>
   <div class="col-md-4">
-    <div class="card"><div class="card-body">
+    <div class="card factory-summary-card"><div class="card-body">
       <div class="small text-muted">المدفوع</div>
-      <div class="fs-5">{{ '%.2f'|format(total_paid) }} EGP</div>
+      <div class="fs-5">{{ '%.0f'|format(total_paid) }} EGP</div>
     </div></div>
   </div>
   <div class="col-md-4">
-    <div class="card"><div class="card-body">
+    <div class="card factory-summary-card"><div class="card-body">
       <div class="small text-muted">الرصيد</div>
       {% set status = 'badge bg-danger' if balance>0 else 'badge bg-success' if balance<0 else 'badge bg-secondary' %}
       <div class="fs-5">
-        {{ '%.2f'|format(balance|abs) }} EGP
+        {{ '%.0f'|format(balance|abs) }} EGP
         <span class="{{status}}">
           {% if balance>0 %} مستحق للمصنع
           {% elif balance<0 %} دافع زيادة
@@ -206,15 +376,41 @@
   </div>
 </div>
 
-<div class="row g-4">
-  <!-- دفعات التصنيع -->
-  <div class="col-lg-6">
-    <div class="d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">دفعات التصنيع</h5>
-      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mdlBatch">➕ إضافة</button>
-    </div>
+<ul class="nav nav-tabs factory-tabs mt-4" id="factoryTabs" role="tablist">
 
-    <table class="table table-sm mt-2 factory-table batch-table align-middle">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#batchesTab" type="button">
+      🏭 دفعات التصنيع
+    </button>
+  </li>
+
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#paymentsTab" type="button">
+      💵 المدفوعات
+    </button>
+  </li>
+
+</ul>
+
+<div class="tab-content">
+
+
+<div class="tab-pane fade show active" id="batchesTab">
+
+<div class="d-md-none mb-2">
+  <button class="mobile-collapse-toggle btn btn-light border rounded-3 p-2"
+          onclick="toggleFactorySection('batchTableWrap')">
+    🏭 دفعات التصنيع
+  </button>
+</div>
+
+
+<div class="d-flex justify-content-between align-items-center mt-3">
+  <h5 class="mb-0">دفعات التصنيع</h5>
+  <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mdlBatch">➕ إضافة</button>
+</div>
+
+<div id="batchTableWrap" class="mobile-collapse-body"><table class="table table-sm mt-2 factory-table batch-table align-middle">
       <thead>
         <tr>
           <th class="col-fit">التاريخ</th>
@@ -230,8 +426,8 @@
         <tr>
           <td class="cell-strong col-fit">{{ b.date }}</td>
           <td class="col-fit">{{ b.qty }}</td>
-          <td class="col-fit">{{ '%.2f'|format(b.unit_cost) }}</td>
-          <td class="text-end col-fit">{{ '%.2f'|format((b.qty or 0) * (b.unit_cost or 0)) }}</td>
+          <td class="col-fit">{{ '%.0f'|format(b.unit_cost) }}</td>
+          <td class="text-end col-fit">{{ '%.0f'|format((b.qty or 0) * (b.unit_cost or 0)) }}</td>
           <td class="b-col-note">
             <div class="note-clamp-2" title="{{ b.note or '' }}">{{ b.note or '' }}</div>
           </td>
@@ -246,17 +442,27 @@
       </tbody>
     </table>
 
-    {{ render_pager(bp, bpages, 'bp') }}
-  </div>
+{{ render_pager(bp, bpages, 'bp') }}</div>
 
-  <!-- المدفوعات -->
-  <div class="col-lg-6">
-    <div class="d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">المدفوعات</h5>
-      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mdlPay">➕ إضافة</button>
-    </div>
+</div>
 
-    <table class="table table-sm mt-2 factory-table pay-table align-middle">
+
+<div class="tab-pane fade" id="paymentsTab">
+
+<div class="d-md-none mb-2">
+  <button class="mobile-collapse-toggle btn btn-light border rounded-3 p-2"
+          onclick="toggleFactorySection('paymentsTableWrap')">
+    💵 المدفوعات
+  </button>
+</div>
+
+
+<div class="d-flex justify-content-between align-items-center mt-3">
+  <h5 class="mb-0">المدفوعات</h5>
+  <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mdlPay">➕ إضافة</button>
+</div>
+
+<div id="paymentsTableWrap" class="mobile-collapse-body"><table class="table table-sm mt-2 factory-table pay-table align-middle">
       <thead>
         <tr>
           <th class="col-fit">التاريخ</th>
@@ -270,7 +476,7 @@
       {% for p in payments %}
         <tr>
           <td class="cell-strong col-fit">{{ p.date }}</td>
-          <td class="text-end cell-strong col-fit">{{ '%.2f'|format(p.amount) }}</td>
+          <td class="text-end cell-strong col-fit">{{ '%.0f'|format(p.amount) }}</td>
           <td class="col-fit">{{ p.method or '-' }}</td>
           <td class="pay-col-note">
             <div class="note-clamp-2" title="{{ p.note or '' }}">{{ p.note or '' }}</div>
@@ -286,8 +492,9 @@
       </tbody>
     </table>
 
-    {{ render_pager(pp, ppages, 'pp') }}
-  </div>
+    {{ render_pager(pp, ppages, 'pp') }}</div>
+</div>
+
 </div>
 
 <!-- Modal: إضافة دفعة تصنيع -->
@@ -356,5 +563,22 @@
   </div>
 </div>
 {% endfor %}
+
+
+<script>
+function toggleFactorySection(id){
+
+  if(window.innerWidth > 768){
+    return;
+  }
+
+  const el = document.getElementById(id);
+
+  if(el){
+    el.classList.toggle('open');
+  }
+}
+</script>
+
 
 {% endblock %}

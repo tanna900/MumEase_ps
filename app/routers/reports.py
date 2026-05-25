@@ -1129,6 +1129,13 @@ def performance_report(
         for word in ["%شحن%", "%shipping%", "%ship%"]:
             q = q.filter(or_(models.FinanceEntry.category == None, ~models.FinanceEntry.category.ilike(word)))
 
+        # منع تكرار عمولة التسويق لأنها محسوبة تلقائي 5%
+        q = q.filter(
+            ~models.FinanceEntry.category.ilike("%عمولة تسويق%"),
+            ~models.FinanceEntry.category.ilike("%تسويق%"),
+            ~models.FinanceEntry.category.ilike("%marketing commission%"),
+        )
+
         rows = (
             q.group_by(models.FinanceEntry.category)
             .order_by(func.coalesce(func.sum(models.FinanceEntry.amount), 0.0).desc())

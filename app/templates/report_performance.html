@@ -13,6 +13,7 @@
 .form-control,.form-select{border-radius:14px!important;min-height:46px}
 .card{border-radius:22px!important;border:1px solid #eee!important;box-shadow:0 2px 10px rgba(0,0,0,.04)!important}
 .card-header{background:#faf7ff!important;color:#111!important;border-bottom:1px solid #eee!important}
+.card-header *{color:inherit!important;}
 .progress{border-radius:999px;overflow:hidden}
 .badge{border-radius:999px}
 @media(max-width:768px){
@@ -21,17 +22,97 @@
 .table{font-size:.9rem}
 .card{border-radius:18px!important}
 }
+
+/* Mobile collapsible tables */
+.mobile-collapse-toggle{
+  width:100%;
+  border:none;
+  background:transparent;
+  text-align:right;
+  font-weight:700;
+  padding:0;
+  color:inherit;
+}
+
+@media(min-width:769px){
+  .mobile-collapse-body{
+    display:block !important;
+  }
+}
+
+@media(max-width:768px){
+
+  .mobile-collapse-body{
+    display:none;
+  }
+
+  .mobile-collapse-body.open{
+    display:block;
+  }
+
+  .mobile-collapse-toggle{
+    padding:4px 0;
+    font-size:15px;
+  }
+
+}
+
+
+.mobile-collapse-toggle{
+  color:#111 !important;
+}
+
+.bg-dark .mobile-collapse-toggle,
+.bg-success .mobile-collapse-toggle,
+.bg-danger .mobile-collapse-toggle{
+  color:#fff !important;
+}
+
+.table thead th{
+  color:#111 !important;
+}
+
+
+
+.card-header,
+.card-header *,
+.page-title,
+.page-subtitle,
+.table thead th,
+thead th,
+th{
+  color:#111 !important;
+}
+
+
+@media(max-width:768px){
+
+  .mobile-collapse-body{
+    display:none;
+  }
+
+  .mobile-collapse-body.open{
+    display:block;
+  }
+
+}
+
 </style>
 
 <div class="report-shell py-3">
 
-<div class="mb-4">
-<div class="page-title">🎯 تقرير الأداء</div>
-<div class="page-subtitle">تحليل الأداء والمبيعات والربحية</div>
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+
+  <div>
+    <div class="page-title">🎯 تقرير الأداء</div>
+    <div class="page-subtitle">تحليل الأداء والمبيعات والربحية</div>
+  </div>
+
+  <a href="/reports" class="btn btn-outline-secondary">
+    ← التقارير
+  </a>
+
 </div>
-
-
-  <div class="d-flex justify-content-end mb-3"><a href="/reports" class="btn btn-outline-secondary">← التقارير</a></div>
 
   <div class="page-card mb-4"><form method="get" class="row g-2 align-items-end mb-4">
     <div class="col-auto">
@@ -102,8 +183,12 @@
     {# ── تحليل الربحية ── #}
     <div class="col-md-6">
       <div class="card  h-100">
-        <div class="card-header fw-bold bg-dark text-white">📊 تحليل الربحية</div>
-        <div class="card-body p-0">
+        <div class="card-header fw-bold bg-light text-dark border-bottom">
+<button class="mobile-collapse-toggle text-dark" type="button" onclick="toggleMobileSection('profitTable')">
+📊 تحليل الربحية
+</button>
+</div>
+        <div id="profitTable" class="card-body p-0 mobile-collapse-body">
           <table class="table table-sm  mb-0">
             <tbody>
               <tr>
@@ -196,8 +281,12 @@
     {# ── أكتر محافظات ── #}
     <div class="col-md-6">
       <div class="card  h-100">
-        <div class="card-header fw-bold bg-dark text-white">📍 أكتر محافظات مبيعاً</div>
-        <div class="card-body p-0">
+        <div class="card-header fw-bold bg-light text-dark border-bottom">
+<button class="mobile-collapse-toggle text-dark" type="button" onclick="toggleMobileSection('govTable')">
+📍 أكتر محافظات مبيعاً
+</button>
+</div>
+        <div id="govTable" class="card-body p-0 mobile-collapse-body">
           <table class="table table-sm  mb-0">
             <thead style="position:sticky; top:0; background:#f8f9fa;">
               <tr>
@@ -246,22 +335,25 @@
 
   {# ── أفضل 10 منتجات ── #}
   <div class="card ">
-    <div class="card-header fw-bold bg-success text-white d-flex justify-content-between">
-      <span>🏆 أفضل 10 منتجات مبيعاً</span>
+    <div class="card-header fw-bold bg-light text-dark border-bottom d-flex justify-content-between">
+<button class="mobile-collapse-toggle text-dark" type="button" onclick="toggleMobileSection('topProductsTable')">
+🏆 أفضل 10 منتجات مبيعاً
+</button>
+      
       <span class="badge bg-light text-dark">{{ top10|length }} منتج</span>
     </div>
-    <div style="height:420px; overflow-y:auto;">
+    <div id="topProductsTable" class="mobile-collapse-body" style="height:420px; overflow-y:auto;">
       <table class="table table-sm   mb-0 align-middle">
         <thead style="position:sticky; top:0; z-index:2; background:#faf7ff; color:#111;">
           <tr>
             <th style="color:#111;">#</th>
-            <th style="min-width:150px; color:#fff;">المنتج</th>
-            <th class="text-center" style="min-width:80px; color:#fff;">اللون</th>
-            <th class="text-center" style="min-width:70px; color:#fff;">المقاس</th>
-            <th class="text-center" style="min-width:80px; color:#fff;">صافي قطع</th>
-            <th class="text-end" style="min-width:110px; color:#fff;">صافي مبيعات</th>
-            <th class="text-end" style="min-width:100px; color:#fff;">صافي ربح</th>
-            <th class="text-center" style="min-width:80px; color:#fff;">هامش%</th>
+            <th style="min-width:150px; color:#111;">المنتج</th>
+            <th class="text-center" style="min-width:80px; color:#111;">اللون</th>
+            <th class="text-center" style="min-width:70px; color:#111;">المقاس</th>
+            <th class="text-center" style="min-width:80px; color:#111;">صافي قطع</th>
+            <th class="text-end" style="min-width:110px; color:#111;">صافي مبيعات</th>
+            <th class="text-end" style="min-width:100px; color:#111;">صافي ربح</th>
+            <th class="text-center" style="min-width:80px; color:#111;">هامش%</th>
           </tr>
         </thead>
         <tbody>
@@ -288,11 +380,14 @@
 
   {# ── أسوأ 5 ── #}
   <div class="card  mt-4">
-    <div class="card-header fw-bold bg-danger text-white d-flex justify-content-between">
-      <span>⚠️ أسوأ 5 منتجات مبيعاً</span>
+    <div class="card-header fw-bold bg-light text-dark border-bottom d-flex justify-content-between">
+<button class="mobile-collapse-toggle text-dark" type="button" onclick="toggleMobileSection('worstProductsTable')">
+⚠️ أسوأ 5 منتجات مبيعاً
+</button>
+      
       <span class="badge bg-light text-dark">{{ worst5|length }} منتج</span>
     </div>
-    <div class="table-responsive">
+    <div id="worstProductsTable" class="table-responsive mobile-collapse-body">
       <table class="table table-sm   mb-0 align-middle">
         <thead class="table-light">
           <tr>
@@ -327,4 +422,20 @@
   </div>
 
 </div>
+
+<script>
+function toggleMobileSection(id){
+
+  if(window.innerWidth > 768){
+    return;
+  }
+
+  const el = document.getElementById(id);
+
+  if(el){
+    el.classList.toggle('open');
+  }
+}
+</script>
+
 {% endblock %}

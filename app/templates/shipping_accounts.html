@@ -602,11 +602,105 @@ tr.bg-light button.btn-outline-dark {
 }
 
 
+
+/* ===== Modern Shipping UI ===== */
+
+.shipping-summary-card{
+  border:none !important;
+  border-radius:20px;
+  padding:18px !important;
+  box-shadow:0 2px 12px rgba(0,0,0,.05);
+  background:#fff;
+}
+
+.shipping-summary-card .text-muted{
+  font-size:.9rem;
+}
+
+.shipping-summary-card .fs-5{
+  font-size:2rem !important;
+  font-weight:800;
+}
+
+.overall-companies-table{
+  border-collapse:separate !important;
+  border-spacing:0 10px !important;
+  background:transparent;
+}
+
+.overall-companies-table thead th{
+  background:#f8f5f5 !important;
+  border:none !important;
+  padding:14px 12px !important;
+  font-size:.9rem;
+}
+
+.overall-companies-table tbody tr{
+  background:#fff;
+  box-shadow:0 2px 10px rgba(0,0,0,.04);
+  transition:.15s ease;
+}
+
+.overall-companies-table tbody tr:hover{
+  transform:translateY(-1px);
+  box-shadow:0 4px 14px rgba(0,0,0,.08);
+}
+
+.overall-companies-table tbody td{
+  border-top:none !important;
+  border-bottom:none !important;
+  padding:16px 12px !important;
+  vertical-align:middle;
+}
+
+.overall-companies-table tbody td:first-child{
+  border-radius:16px 0 0 16px;
+}
+
+.overall-companies-table tbody td:last-child{
+  border-radius:0 16px 16px 0;
+}
+
+.overall-companies-table tbody td:last-child{
+  color:#dc3545;
+  font-weight:900;
+}
+
+.overall-companies-table a{
+  text-decoration:none;
+  font-weight:700;
+}
+
+.filter-card{
+  border:none !important;
+  border-radius:20px;
+  box-shadow:0 2px 12px rgba(0,0,0,.05);
+  background:#fff;
+}
+
+@media(max-width:768px){
+
+  .shipping-summary-card{
+    padding:14px !important;
+    border-radius:16px;
+  }
+
+  .shipping-summary-card .fs-5{
+    font-size:1.5rem !important;
+  }
+
+  .overall-companies-table tbody td{
+    padding:12px 10px !important;
+    font-size:13px !important;
+  }
+
+}
+
 </style>
 
 <h5 class="mb-3">🚚 حسابات شركات الشحن</h5>
 
-<div class="card p-2 mb-3">
+<div class="card p-3 mb-3 filter-card">
   <form class="row g-2 align-items-end" method="get" action="/shipping">
     <div class="col-md-3">
       <label class="form-label small">شركة الشحن</label>
@@ -640,19 +734,19 @@ tr.bg-light button.btn-outline-dark {
 
 {% if not has_selection %}
   <div class="row g-2">
-    <div class="col-md-3"><div class="card p-2">
+    <div class="col-md-3"><div class="card shipping-summary-card">
       <div class="text-muted small">إجمالي المبيعات (غير المباشرة)</div>
       <div class="fs-5 fw-bold">{{ (sales_sum or 0) | int }}</div>
     </div></div>
-    <div class="col-md-3"><div class="card p-2">
+    <div class="col-md-3"><div class="card shipping-summary-card">
       <div class="text-muted small">مصاريف الشحن الفعلية (الكل)</div>
       <div class="fs-5 fw-bold">{{ (actual_ship_sum or 0) | int }}</div>
     </div></div>
-    <div class="col-md-3"><div class="card p-2">
+    <div class="col-md-3"><div class="card shipping-summary-card">
       <div class="text-muted small">قيمة المرتجعات + رسومها</div>
       <div class="fs-5 fw-bold">{{ ((returns_sum or 0) + (returns_ship_fees or 0)) | int }}</div>
     </div></div>
-    <div class="col-md-3"><div class="card p-2">
+    <div class="col-md-3"><div class="card shipping-summary-card">
       <div class="text-muted small">صافي المستحق</div>
       <div class="fs-5 fw-bold">{{ (net_due or 0) | int }}</div>
     </div></div>
@@ -692,19 +786,19 @@ tr.bg-light button.btn-outline-dark {
 {% else %}
 
   <div class="row g-2">
-    <div class="col-md-3"><div class="card p-2">
+    <div class="col-md-3"><div class="card shipping-summary-card">
       <div class="text-muted small">مبيعات (غير مباشرة)</div>
       <div class="fs-5 fw-bold">{{ (sales_sum or 0) | int }}</div>
     </div></div>
-    <div class="col-md-3"><div class="card p-2">
+    <div class="col-md-3"><div class="card shipping-summary-card">
       <div class="text-muted small">مصاريف الشحن الفعلية (الكل)</div>
       <div class="fs-5 fw-bold">{{ (actual_ship_sum or 0) | int }}</div>
     </div></div>
-    <div class="col-md-3"><div class="card p-2">
+    <div class="col-md-3"><div class="card shipping-summary-card">
       <div class="text-muted small">قيمة المرتجعات + رسومها</div>
       <div class="fs-5 fw-bold">{{ ((returns_sum or 0) + (returns_ship_fees or 0)) | int }}</div>
     </div></div>
-    <div class="col-md-3"><div class="card p-2">
+    <div class="col-md-3"><div class="card shipping-summary-card">
       <div class="text-muted small">صافي المستحق</div>
       <div class="fs-5 fw-bold">{{ (net_due or 0) | int }}</div>
     </div></div>
@@ -1716,6 +1810,36 @@ function togglePaidInvoices(){
   }
 }
 
+</script>
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+
+  const fromInput = document.querySelector('input[name="dfrom"]');
+  const toInput   = document.querySelector('input[name="dto"]');
+
+  if(!fromInput || !toInput) return;
+
+  const today = new Date();
+
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const dd = String(today.getDate()).padStart(2,'0');
+
+  const firstDay = `${yyyy}-${mm}-01`;
+  const todayStr = `${yyyy}-${mm}-${dd}`;
+
+  if(!fromInput.value){
+    fromInput.value = firstDay;
+  }
+
+  if(!toInput.value){
+    toInput.value = todayStr;
+  }
+
+});
 </script>
 
 

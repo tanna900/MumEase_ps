@@ -21,20 +21,50 @@
 .table{font-size:.9rem}
 .card{border-radius:18px!important}
 }
+
+/* Mobile collapse */
+.mobile-collapse-toggle{
+  width:100%;
+  background:transparent;
+  border:none;
+  text-align:right;
+  font-weight:700;
+  color:#111;
+  padding:0;
+}
+
+@media(min-width:769px){
+  .mobile-collapse-body{
+    display:block !important;
+  }
+}
+
+@media(max-width:768px){
+
+  .mobile-collapse-body{
+    display:none;
+  }
+
+  .mobile-collapse-body.open{
+    display:block;
+  }
+
+}
+
 </style>
 
 <div class="report-shell py-3">
 
-<div class="mb-4">
-<div class="page-title">📊 تقرير مبيعات المنتجات</div>
-<div class="page-subtitle">تحليل صافي المبيعات والربحية</div>
-</div>
-
-
-  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-    <h4 class="mb-0 fw-bold">📊 تقرير مبيعات المنتجات (صافي بعد المرتجعات)</h4>
-    <a href="/reports" class="btn btn-outline-secondary ">← التقارير</a>
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+  <div>
+    <div class="page-title">📊 تقرير مبيعات المنتجات</div>
+    <div class="page-subtitle">تحليل صافي المبيعات والربحية</div>
   </div>
+
+  <a href="/reports" class="btn btn-outline-secondary">
+    ← التقارير
+  </a>
+</div>
 
   <div class="page-card mb-4"><form method="get" action="/reports/products-sales" class="row g-2 align-items-end mb-4">
     <div class="col-auto">
@@ -90,25 +120,28 @@
   </div>
 
   <div class="card ">
-    <div class="card-header fw-bold bg-dark text-white d-flex justify-content-between align-items-center">
-      <span>تفاصيل المنتجات</span>
+    <div class="card-header fw-bold bg-light text-dark d-flex justify-content-between align-items-center">
+      <button class="mobile-collapse-toggle" type="button" onclick="toggleProductsTable()">
+        📦 تفاصيل المنتجات
+      </button>
+
       <span class="badge bg-secondary">{{ rows|length }} صنف</span>
     </div>
-    <div style="height:520px; overflow-y:auto;" id="tableWrapper">
+    <div style="height:520px; overflow-y:auto;" id="tableWrapper" class="mobile-collapse-body">
       <table class="table   table-sm align-middle mb-0" id="salesTable">
-        <thead style="position:sticky; top:0; z-index:2; background:#212529;">
+        <thead style="position:sticky; top:0; z-index:2; background:#f8f9fa;">
           <tr>
-            <th style="min-width:160px; color:#fff; cursor:pointer;" data-col="0" data-type="str">المنتج ↕</th>
-            <th class="text-center" style="min-width:80px; color:#fff; cursor:pointer;" data-col="1" data-type="str">اللون ↕</th>
-            <th class="text-center" style="min-width:70px; color:#fff; cursor:pointer;" data-col="2" data-type="str">المقاس ↕</th>
-            <th class="text-center" style="min-width:60px; color:#fff; cursor:pointer;" data-col="3" data-type="num">مباع ↕</th>
-            <th class="text-center" style="min-width:70px; color:#fff; cursor:pointer;" data-col="4" data-type="num">مرتجع ↕</th>
-            <th class="text-center" style="min-width:80px; color:#fff; cursor:pointer;" data-col="5" data-type="num">صافي قطع ↕</th>
-            <th class="text-center" style="min-width:90px; color:#fff;">% من الإجمالي</th>
-            <th class="text-end" style="min-width:110px; color:#fff; cursor:pointer;" data-col="6" data-type="num">صافي مبيعات ↕</th>
-            <th class="text-end" style="min-width:110px; color:#fff; cursor:pointer;" data-col="7" data-type="num">إجمالي تكلفة ↕</th>
-            <th class="text-end" style="min-width:100px; color:#fff; cursor:pointer;" data-col="8" data-type="num">صافي ربح ↕</th>
-            <th class="text-center" style="min-width:70px; color:#fff; cursor:pointer;" data-col="9" data-type="num">ستوك ↕</th>
+            <th style="min-width:160px; color:#111; cursor:pointer;" data-col="0" data-type="str">المنتج ↕</th>
+            <th class="text-center" style="min-width:80px; color:#111; cursor:pointer;" data-col="1" data-type="str">اللون ↕</th>
+            <th class="text-center" style="min-width:70px; color:#111; cursor:pointer;" data-col="2" data-type="str">المقاس ↕</th>
+            <th class="text-center" style="min-width:60px; color:#111; cursor:pointer;" data-col="3" data-type="num">مباع ↕</th>
+            <th class="text-center" style="min-width:70px; color:#111; cursor:pointer;" data-col="4" data-type="num">مرتجع ↕</th>
+            <th class="text-center" style="min-width:80px; color:#111; cursor:pointer;" data-col="5" data-type="num">صافي قطع ↕</th>
+            <th class="text-center" style="min-width:90px; color:#111;">% من الإجمالي</th>
+            <th class="text-end" style="min-width:110px; color:#111; cursor:pointer;" data-col="6" data-type="num">صافي مبيعات ↕</th>
+            <th class="text-end" style="min-width:110px; color:#111; cursor:pointer;" data-col="7" data-type="num">إجمالي تكلفة ↕</th>
+            <th class="text-end" style="min-width:100px; color:#111; cursor:pointer;" data-col="8" data-type="num">صافي ربح ↕</th>
+            <th class="text-center" style="min-width:70px; color:#111; cursor:pointer;" data-col="9" data-type="num">ستوك ↕</th>
           </tr>
         </thead>
         <tbody id="salesBody">
@@ -221,5 +254,22 @@
   calcPcts();
 })();
 </script>
+
+
+<script>
+function toggleProductsTable(){
+
+  if(window.innerWidth > 768){
+    return;
+  }
+
+  const el = document.getElementById('tableWrapper');
+
+  if(el){
+    el.classList.toggle('open');
+  }
+}
+</script>
+
 
 {% endblock %}

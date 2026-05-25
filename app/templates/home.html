@@ -24,7 +24,7 @@
       🛒 بيع
     </a>
 
-    <a class="btn btn-sm btn-dark px-3" href="/daily-settlement">
+    <a class="btn btn-sm btn-dark px-3" href="/settlements/close?date={{ today_str }}">
       📋 تقفيل اليومية
     </a>
 
@@ -81,11 +81,22 @@
 <!-- KPIs ثانوية (خفيفة) -->
 <div class="row g-2 mt-2">
   <div class="col-6 col-md-3">
-    <div class="card p-2 text-center">
-      <div class="text-muted small">عدد فواتير</div>
-      <div class="fw-bold">{{ invoices_count_today or 0 }}</div>
+  <div class="card p-2 text-center">
+
+    <div class="text-muted small">
+      عدد فواتير
     </div>
+
+    <a href="/settlements/close?date={{ today_str }}"
+       class="fw-bold fs-5 text-primary text-decoration-none d-inline-block"
+       style="cursor:pointer;">
+
+      {{ invoices_count_today or 0 }}
+
+    </a>
+
   </div>
+</div>
   <div class="col-6 col-md-3">
     <div class="card p-2 text-center">
       <div class="text-muted small">متوسط سعر الأوردر</div>

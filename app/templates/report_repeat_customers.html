@@ -21,19 +21,52 @@
 .table{font-size:.9rem}
 .card{border-radius:18px!important}
 }
+
+/* Mobile collapse */
+.mobile-collapse-toggle{
+  width:100%;
+  background:transparent;
+  border:none;
+  text-align:right;
+  font-weight:700;
+  color:#111;
+  padding:0;
+}
+
+@media(min-width:769px){
+  .mobile-collapse-body{
+    display:block !important;
+  }
+}
+
+@media(max-width:768px){
+
+  .mobile-collapse-body{
+    display:none;
+  }
+
+  .mobile-collapse-body.open{
+    display:block;
+  }
+
+}
+
 </style>
 
 <div class="report-shell py-3">
 
-<div class="mb-4">
-<div class="page-title">👥 العملاء المكررون</div>
-<div class="page-subtitle">تحليل العملاء المتكررين وسلوك الشراء</div>
-</div>
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
 
-  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-    <h4 class="mb-0 fw-bold">👥 تقرير العملاء المكررين</h4>
-    <a href="/reports" class="btn btn-outline-secondary ">← التقارير</a>
+  <div>
+    <div class="page-title">👥 العملاء المكررون</div>
+    <div class="page-subtitle">تحليل العملاء المتكررين وسلوك الشراء</div>
   </div>
+
+  <a href="/reports" class="btn btn-outline-secondary">
+    ← التقارير
+  </a>
+
+</div>
 
   <div class="page-card mb-4"><form method="get" class="row g-2 align-items-end mb-4">
     <div class="col-auto">
@@ -102,7 +135,7 @@
   <div class="tab-content border border-top-0 rounded-bottom ">
 
     <div class="tab-pane fade show active" id="tabRepeat">
-      <div style="height:480px; overflow-y:auto;">
+      <div id="repeatCustomersTable" style="height:480px; overflow-y:auto;" class="mobile-collapse-body">
         <table class="table table-sm   mb-0 align-middle">
           <thead style="position:sticky; top:0; z-index:2; background:#d1e7dd;">
             <tr>
@@ -130,10 +163,12 @@
           </tbody>
         </table>
       </div>
+    
     </div>
 
     <div class="tab-pane fade" id="tabSingle">
-      <div style="height:480px; overflow-y:auto;">
+
+      <div id="singleCustomersTable" style="height:480px; overflow-y:auto;" class="mobile-collapse-body">
         <table class="table table-sm   mb-0 align-middle">
           <thead style="position:sticky; top:0; z-index:2; background:#f8f9fa;">
             <tr>
@@ -161,4 +196,21 @@
 
   </div>
 </div>
+
+
+<script>
+function toggleSection(id){
+
+  if(window.innerWidth > 768){
+    return;
+  }
+
+  const el = document.getElementById(id);
+
+  if(el){
+    el.classList.toggle('open');
+  }
+}
+</script>
+
 {% endblock %}

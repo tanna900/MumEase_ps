@@ -21,19 +21,52 @@
 .table{font-size:.9rem}
 .card{border-radius:18px!important}
 }
+
+/* Mobile collapse */
+.mobile-collapse-toggle{
+  width:100%;
+  background:transparent;
+  border:none;
+  text-align:right;
+  font-weight:700;
+  color:#111;
+  padding:0;
+}
+
+@media(min-width:769px){
+  .mobile-collapse-body{
+    display:block !important;
+  }
+}
+
+@media(max-width:768px){
+
+  .mobile-collapse-body{
+    display:none;
+  }
+
+  .mobile-collapse-body.open{
+    display:block;
+  }
+
+}
+
 </style>
 
 <div class="report-shell py-3">
 
-<div class="mb-4">
-<div class="page-title">🎨 تحليل المنتجات والألوان والمقاسات</div>
-<div class="page-subtitle">تحليل المنتجات الأكثر مبيعًا والألوان والمقاسات</div>
-</div>
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
 
-  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-    <h4 class="mb-0 fw-bold">🎨 الألوان والمقاسات والمنتجات الأكتر مبيعاً</h4>
-    <a href="/reports" class="btn btn-outline-secondary ">← التقارير</a>
+  <div>
+    <div class="page-title">🎨 تحليل المنتجات والألوان والمقاسات</div>
+    <div class="page-subtitle">تحليل المنتجات الأكثر مبيعًا والألوان والمقاسات</div>
   </div>
+
+  <a href="/reports" class="btn btn-outline-secondary">
+    ← التقارير
+  </a>
+
+</div>
 
   <div class="page-card mb-4"><form method="get" class="row g-2 align-items-end mb-4">
     <div class="col-auto">
@@ -56,17 +89,20 @@
     {# ── المنتجات ── #}
     <div class="col-12">
       <div class="card ">
-        <div class="card-header fw-bold bg-dark text-white d-flex justify-content-between">
-          <span>📦 المنتجات</span><span class="badge bg-secondary">{{ products|length }}</span>
+        <div class="card-header fw-bold bg-light text-dark d-flex justify-content-between">
+<button class="mobile-collapse-toggle" type="button" onclick="toggleSection('productsTable')">
+📦 المنتجات
+</button>
+          <span class="badge bg-secondary">{{ products|length }}</span>
         </div>
-        <div style="height:350px; overflow-y:auto;">
+        <div id="productsTable" class="mobile-collapse-body" style="height:350px; overflow-y:auto;">
           <table class="table table-sm   mb-0 align-middle">
-            <thead style="position:sticky; top:0; z-index:2; background:#212529;">
+            <thead style="position:sticky; top:0; z-index:2; background:#f8f9fa;">
               <tr>
-                <th style="min-width:200px; color:#fff;">المنتج</th>
-                <th class="text-center" style="min-width:100px; color:#fff;">صافي قطع</th>
-                <th class="text-end" style="min-width:130px; color:#fff;">صافي مبيعات</th>
-                <th class="text-center" style="min-width:90px; color:#fff;">%</th>
+                <th style="min-width:200px; color:#111;">المنتج</th>
+                <th class="text-center" style="min-width:100px; color:#111;">صافي قطع</th>
+                <th class="text-end" style="min-width:130px; color:#111;">صافي مبيعات</th>
+                <th class="text-center" style="min-width:90px; color:#111;">%</th>
               </tr>
             </thead>
             <tbody>
@@ -105,10 +141,13 @@
     {# ── الألوان ── #}
     <div class="col-md-6">
       <div class="card ">
-        <div class="card-header fw-bold bg-dark text-white d-flex justify-content-between">
-          <span>🎨 الألوان</span><span class="badge bg-secondary">{{ colors|length }}</span>
+        <div class="card-header fw-bold bg-light text-dark d-flex justify-content-between">
+<button class="mobile-collapse-toggle" type="button" onclick="toggleSection('colorsTable')">
+🎨 الألوان
+</button>
+          <span class="badge bg-secondary">{{ colors|length }}</span>
         </div>
-        <div style="height:380px; overflow-y:auto;">
+        <div id="colorsTable" class="mobile-collapse-body" style="height:380px; overflow-y:auto;">
           <table class="table table-sm   mb-0 align-middle">
             <thead style="position:sticky; top:0; z-index:2; background:#f8f9fa;">
               <tr>
@@ -144,10 +183,13 @@
     {# ── المقاسات ── #}
     <div class="col-md-6">
       <div class="card ">
-        <div class="card-header fw-bold bg-dark text-white d-flex justify-content-between">
-          <span>📏 المقاسات</span><span class="badge bg-secondary">{{ sizes|length }}</span>
+        <div class="card-header fw-bold bg-light text-dark d-flex justify-content-between">
+<button class="mobile-collapse-toggle" type="button" onclick="toggleSection('sizesTable')">
+📏 المقاسات
+</button>
+          <span class="badge bg-secondary">{{ sizes|length }}</span>
         </div>
-        <div style="height:380px; overflow-y:auto;">
+        <div id="sizesTable" class="mobile-collapse-body" style="height:380px; overflow-y:auto;">
           <table class="table table-sm   mb-0 align-middle">
             <thead style="position:sticky; top:0; z-index:2; background:#f8f9fa;">
               <tr>
@@ -182,4 +224,21 @@
 
   </div>
 </div>
+
+<script>
+function toggleSection(id){
+
+  if(window.innerWidth > 768){
+    return;
+  }
+
+  const el = document.getElementById(id);
+
+  if(el){
+    el.classList.toggle('open');
+  }
+}
+</script>
+
+
 {% endblock %}

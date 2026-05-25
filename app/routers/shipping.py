@@ -383,8 +383,18 @@ def shipping_accounts(
 ):
     companies = distinct_companies(db)
 
+    # Default period: from first day of current month until today
+    today = date.today()
+
+    if not dfrom:
+        dfrom = today.replace(day=1).strftime("%Y-%m-%d")
+
+    if not dto:
+        dto = today.strftime("%Y-%m-%d")
+
     df = parse_date(dfrom)
     dt = parse_date(dto)
+
     s_dt = start_of_day(df) if df else None
     e_dt = end_of_day(dt) if dt else None
 
