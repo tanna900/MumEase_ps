@@ -7,6 +7,7 @@ from app.database import SessionLocal
 from app import models
 from fastapi.templating import Jinja2Templates
 import csv, io
+import os
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
 
@@ -751,8 +752,17 @@ def stock_delta(
 # ============================================================
 @router.post("/regenerate-barcodes")
 def regenerate_barcodes(
+    admin_password: str = Form(""),
     db: Session = Depends(get_db),
 ):
+    MASTER_PASSWORD = os.getenv("MASTER_REGENERATE_PASSWORD", "123456")
+
+    if admin_password != MASTER_PASSWORD:
+        return RedirectResponse(
+            url="/products?msg=❌ كلمة المرور غير صحيحة",
+            status_code=303
+        )
+
     products = (
         db.query(models.Product)
         .order_by(models.Product.id.asc())
