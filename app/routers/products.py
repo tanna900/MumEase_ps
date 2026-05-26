@@ -15,6 +15,12 @@ templates = Jinja2Templates(directory="app/templates")
 
 LOW_STOCK_THRESHOLD = 4
 
+
+# ===== Barcode Generator =====
+def _generate_barcode(number: int):
+    year_prefix = str(datetime.now().year)[-2:]
+    return f"{year_prefix}{number:06d}"
+
 def get_db():
     db = SessionLocal()
     try:
@@ -392,15 +398,36 @@ def add_product(
         )
 
     bc = (barcode or "").strip()
-    bc_val = bc if bc else None  # لو فاضي نخليه NULL عشان unique
 
-    if bc_val:
-        exists = db.query(models.Product).filter(models.Product.barcode == bc_val).first()
+    # لو المستخدم كتب باركود يدوي
+    if bc:
+        exists = db.query(models.Product).filter(models.Product.barcode == bc).first()
+
         if exists:
             return RedirectResponse(
                 url=_back_url("⚠️ الباركود موجود بالفعل", q, color_filter, size_filter, low_only, in_stock, sort, dir, page, page_size),
                 status_code=303
             )
+
+        bc_val = bc
+
+    # لو الباركود فاضي → ولّد تلقائي
+    else:
+        last_product = (
+            db.query(models.Product)
+            .order_by(models.Product.id.desc())
+            .first()
+        )
+
+        next_number = 1
+
+        if last_product and last_product.barcode:
+            try:
+                next_number = int(str(last_product.barcode)[2:]) + 1
+            except:
+                next_number = last_product.id + 1
+
+        bc_val = _generate_barcode(next_number)
 
     p = models.Product(
         name=nm,
@@ -715,5 +742,114 @@ def stock_delta(
 
     return RedirectResponse(
         url=_back_url("✅ تم تحديث الستوك", q, color_filter, size_filter, low_only, in_stock, sort, dir, page, page_size),
+        status_code=303
+    )
+
+
+# ============================================================
+# ✅ إعادة توليد كل الباركودات
+# ============================================================
+@router.post("/regenerate-barcodes")
+def regenerate_barcodes(
+    db: Session = Depends(get_db),
+):
+    products = (
+        db.query(models.Product)
+        .order_by(models.Product.id.asc())
+        .all()
+    )
+
+    counter = 1
+
+    for product in products:
+        product.barcode = _generate_barcode(counter)
+        counter += 1
+
+    db.commit()
+
+    return RedirectResponse(
+        url="/products?msg=✅ تم إعادة توليد كل الباركودات",
+        status_code=303
+    )
+
+
+# ============================================================
+# Quick Add Stock
+# ============================================================
+@router.post("/quick-add-stock")
+def quick_add_stock(
+    pid: int = Form(...),
+    qty: int = Form(...),
+    unit_cost: float = Form(0),
+    ref: str = Form(""),
+    note: str = Form(""),
+    db: Session = Depends(get_db),
+):
+    p = db.query(models.Product).get(pid)
+
+    if not p:
+        return RedirectResponse("/products?msg=⚠️ المنتج غير موجود", status_code=303)
+
+    p.stock = int(p.stock or 0) + int(qty)
+
+    if hasattr(models.Product, "cost_price"):
+        p.cost_price = float(unit_cost or 0)
+
+    try:
+        if hasattr(models, "ManufacturingBatch"):
+            db.add(models.ManufacturingBatch(
+                date=datetime.now().strftime("%Y-%m-%d"),
+                product_id=p.id,
+                qty=int(qty),
+                unit_cost=float(unit_cost or 0),
+                note=f"[ADD] {ref} | {note}"
+            ))
+    except:
+        pass
+
+    db.commit()
+
+    return RedirectResponse(
+        url=f"/products/{pid}/card",
+        status_code=303
+    )
+
+
+# ============================================================
+# Wastage
+# ============================================================
+@router.post("/add-wastage")
+def add_wastage(
+    pid: int = Form(...),
+    qty: int = Form(...),
+    note: str = Form(""),
+    db: Session = Depends(get_db),
+):
+    p = db.query(models.Product).get(pid)
+
+    if not p:
+        return RedirectResponse("/products?msg=⚠️ المنتج غير موجود", status_code=303)
+
+    old_stock = int(p.stock or 0)
+    p.stock = max(0, old_stock - int(qty))
+
+    real_qty = old_stock - p.stock
+
+    try:
+        if hasattr(models, "ManufacturingBatch"):
+            db.add(models.ManufacturingBatch(
+                date=datetime.now().strftime("%Y-%m-%d"),
+                product_id=p.id,
+                qty=-abs(real_qty),
+                unit_cost=float(getattr(p, "cost_price", 0) or 0),
+                note=f"[WASTAGE] {note}"
+            ))
+    except:
+        pass
+
+    db.commit()
+
+    return RedirectResponse(
+        url=f"/products/{pid}/card",
         status_code=303
     )

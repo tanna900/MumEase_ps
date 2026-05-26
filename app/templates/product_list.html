@@ -288,6 +288,10 @@
     <button type="button" class="btn btn-outline-dark" id="btnFocusScan">🎯 وضع السكان</button>
     <a class="btn btn-outline-primary" href="/products/import">⬆️ استيراد أصناف</a>
     <a class="btn btn-outline-secondary" href="/products/import/template.xlsx" title="تحميل قالب Excel">قالب Excel</a>
+
+    <form method="post" action="/products/regenerate-barcodes" onsubmit="return confirm('سيتم إنشاء باركودات جديدة لكل المنتجات، هل أنت متأكد؟');">
+      <button type="submit" class="btn btn-outline-danger">🔄 Regenerate Barcodes</button>
+    </form>
   </div>
 </div>
 
@@ -676,6 +680,19 @@
                           data-price="{{ '%.0f'|format(_price) }}"
                           data-stock="{{ _stock }}">
                     ✏️ تعديل
+                  </button>
+                </li>
+
+
+                <li>
+                  <button type="button"
+                          class="dropdown-item btnPrintBarcode"
+                          data-name="{{ p.short_name or p.name }}"
+                          data-color="{{ p.color or '' }}"
+                          data-size="{{ p.size or '' }}"
+                          data-price="{{ '%.0f'|format(_price) }}"
+                          data-barcode="{{ p.barcode or '' }}">
+                    🖨️ طباعة باركود
                   </button>
                 </li>
 
@@ -1182,6 +1199,115 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
+  
+  // Barcode Printing
+  let currentBarcodeData = null;
+
+  document.querySelectorAll('.btnPrintBarcode').forEach(btn => {
+    btn.addEventListener('click', () => {
+
+      currentBarcodeData = {
+        name: btn.dataset.name || '',
+        color: btn.dataset.color || '',
+        size: btn.dataset.size || '',
+        price: btn.dataset.price || '',
+        barcode: btn.dataset.barcode || ''
+      };
+
+      document.getElementById('barcodePreviewName').textContent = currentBarcodeData.name;
+
+      let meta = [];
+      if(currentBarcodeData.color) meta.push(currentBarcodeData.color);
+      if(currentBarcodeData.size) meta.push('المقاس: ' + currentBarcodeData.size);
+
+      document.getElementById('barcodePreviewMeta').innerHTML =
+        (currentBarcodeData.color ? currentBarcodeData.color : '') +
+        (currentBarcodeData.color && currentBarcodeData.size ? ' • ' : '') +
+        (currentBarcodeData.size ? '<strong>' + currentBarcodeData.size + '</strong>' : '');
+
+      document.getElementById('barcodePreviewPrice').textContent =
+        document.getElementById('showBarcodePrice').checked
+        ? currentBarcodeData.price + ' EGP'
+        : '';
+
+      JsBarcode("#barcodeSvg", currentBarcodeData.barcode, {
+        format: "CODE128",
+        width: 2,
+        height: 50,
+        displayValue: true
+      });
+
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('barcodePrintModal')).show();
+    });
+  });
+
+  document.getElementById('showBarcodePrice')?.addEventListener('change', function(){
+    if(!currentBarcodeData) return;
+
+    document.getElementById('barcodePreviewPrice').textContent =
+      this.checked ? currentBarcodeData.price + ' EGP' : '';
+  });
+
+  document.getElementById('btnConfirmBarcodePrint')?.addEventListener('click', function(){
+
+    if(!currentBarcodeData) return;
+
+    const copies = parseInt(document.getElementById('barcodeCopies').value || '1');
+    const showPrice = document.getElementById('showBarcodePrice').checked;
+
+    let labels = '';
+
+    for(let i=0;i<copies;i++){
+
+      labels += `
+        <div style="width:220px;padding:8px;text-align:center;border:1px solid #ddd;margin-bottom:10px;page-break-inside:avoid;">
+          <div style="font-weight:bold;font-size:14px;">
+            ${currentBarcodeData.name}
+          </div>
+
+          <div style="font-size:12px;color:#666;margin-bottom:4px;">
+            ${currentBarcodeData.color || ''}
+            ${currentBarcodeData.color && currentBarcodeData.size ? ' • ' : ''}
+            ${currentBarcodeData.size ? '<strong>' + currentBarcodeData.size + '</strong>' : ''}
+          </div>
+
+          <svg class="print-barcode"
+               jsbarcode-format="CODE128"
+               jsbarcode-value="${currentBarcodeData.barcode}"
+               jsbarcode-width="2"
+               jsbarcode-height="50"
+               jsbarcode-displayValue="true"></svg>
+
+          ${showPrice ? `<div style="font-weight:bold;margin-top:4px;">${currentBarcodeData.price} EGP</div>` : ''}
+        </div>
+      `;
+    }
+
+    const w = window.open('', '_blank');
+
+    w.document.write(`
+      <html dir="rtl">
+      <head>
+        <title>Barcode Print</title>
+        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+      </head>
+      <body>
+        ${labels}
+
+        <script>
+          JsBarcode(".print-barcode").init();
+          window.onload = function(){
+            window.print();
+          }
+        <\/script>
+      </body>
+      </html>
+    `);
+
+    w.document.close();
+  });
+
+
   // وضع السكان
   const btnFocus = document.getElementById('btnFocusScan');
   const qInput = document.getElementById('qInput');
@@ -1250,5 +1376,52 @@ document.querySelectorAll('.btnWastage').forEach(btn => {
   });
 });
 </script>
+
+
+<!-- Barcode Print Modal -->
+<div class="modal fade" id="barcodePrintModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">🖨️ طباعة الباركود</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="mb-3">
+          <label class="form-label">عدد النسخ</label>
+          <input type="number" class="form-control" id="barcodeCopies" value="1" min="1">
+        </div>
+
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="showBarcodePrice" checked>
+          <label class="form-check-label" for="showBarcodePrice">
+            اظهار السعر
+          </label>
+        </div>
+
+        <div class="border rounded p-3 bg-light text-center">
+          <div id="barcodePreviewName" class="fw-bold mb-1"></div>
+          <div id="barcodePreviewMeta" class="small text-muted mb-2"></div>
+
+          <svg id="barcodeSvg"></svg>
+
+          <div id="barcodePreviewPrice" class="fw-bold mt-2"></div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="btnConfirmBarcodePrint">
+          🖨️ طباعة
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+
 
 {% endblock %}

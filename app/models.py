@@ -13,6 +13,7 @@ class Product(Base):
     __tablename__ = "products"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
+    short_name = Column(String)
     color = Column(String)
     size = Column(String)
     barcode = Column(String, unique=True, index=True)

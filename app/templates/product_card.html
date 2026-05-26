@@ -1,489 +1,748 @@
+
 {% extends "base.html" %}
 {% block content %}
 
 <style>
 
-.product-shell{
-  max-width:1500px;
-  margin:auto;
+body{
+  background:#f4f6fb;
 }
 
-.page-title{
-  font-size:1.9rem;
+.product-shell{
+  max-width:1450px;
+  margin:auto;
+  padding:12px;
+}
+
+.ledger-header{
+  background:#fff;
+  border:1px solid #e8edf5;
+  border-radius:18px;
+  padding:14px 18px;
+  margin-bottom:14px;
+}
+
+.ledger-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.product-info{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.product-name{
+  font-size:1.15rem;
   font-weight:900;
 }
 
-.page-subtitle{
-  color:#6c757d;
-  margin-top:4px;
+.meta-chip{
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:.78rem;
+  font-weight:700;
 }
 
-.page-card{
+.size-chip{
+  background:#111827;
+  color:#fff;
+}
+
+.color-chip{
+  background:#eef2ff;
+  color:#4338ca;
+}
+
+.stock-chip{
+  background:#ecfdf5;
+  color:#047857;
+}
+
+.barcode-chip{
+  font-family:monospace;
   background:#fff;
-  border:1px solid #eee;
-  border-radius:22px;
-  padding:18px;
-  box-shadow:0 2px 10px rgba(0,0,0,.04);
+  border:1px dashed #cbd5e1;
+  color:#111827;
+}
+
+.filter-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
 }
 
 .form-control{
-  border-radius:14px !important;
-  min-height:46px;
+  min-height:40px;
+  border-radius:12px !important;
 }
 
-.metric-card{
-  border-radius:20px;
-  padding:14px;
-  height:100%;
-  box-shadow:0 2px 8px rgba(0,0,0,.04);
-  border:1px solid #eee;
+.btn{
+  border-radius:12px !important;
+}
+
+.ledger-table-box{
   background:#fff;
-}
-
-.metric-title{
-  color:#6c757d;
-  font-size:.78rem;
-}
-
-.metric-value{
-  font-size:1.25rem;
-  font-weight:900;
-  margin-top:6px;
-}
-
-.metric-green{
-  background:#f0fdf4;
-  border-color:#86efac;
-}
-
-.metric-yellow{
-  background:#fffbeb;
-  border-color:#fcd34d;
-}
-
-.metric-blue{
-  background:#eff6ff;
-  border-color:#93c5fd;
-}
-
-.metric-gray{
-  background:#f8fafc;
-}
-
-.table{
   border-radius:18px;
+  border:1px solid #e8edf5;
   overflow:hidden;
-  margin-bottom:0;
 }
 
-.table thead th{
-  background:#faf7ff !important;
-  border-bottom:1px solid #eee !important;
+.table-wrap{
+  overflow:auto;
+  max-height:75vh;
+}
+
+.ledger-table{
+  margin:0;
+  min-width:1000px;
+}
+
+.ledger-table thead th{
+  position:sticky;
+  top:0;
+  background:#0f172a !important;
+  color:#fff !important;
+  border:none !important;
+  padding:12px 10px !important;
+  font-size:.76rem;
   white-space:nowrap;
 }
 
-.table tbody tr td{
-  transition:.18s ease;
+.ledger-table tbody td{
+  padding:11px 10px !important;
+  font-size:.84rem;
+  vertical-align:middle;
+  white-space:nowrap;
+  border-color:#edf2f7 !important;
 }
 
-.table tbody tr:hover td{
-  background:#eef5ff !important;
+.ledger-table tbody tr:hover td{
+  background:#f8fbff;
 }
 
-.scroll-area{
-  height:500px;
-  overflow-y:auto;
+.kind{
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:.72rem;
+  font-weight:800;
 }
 
-.badge-soft-success{
-  background:#dcfce7;
-  color:#166534;
-}
-
-.badge-soft-danger{
+.kind-sale{
   background:#fee2e2;
-  color:#991b1b;
+  color:#b91c1c;
 }
 
-.badge-soft-info{
+.kind-add{
+  background:#dcfce7;
+  color:#15803d;
+}
+
+.kind-return{
   background:#dbeafe;
   color:#1d4ed8;
 }
 
-.badge-soft-secondary{
+.kind-adjust{
   background:#e5e7eb;
   color:#374151;
 }
 
-.mobile-movements{
-  display:none;
+.qty-plus{
+  color:#16a34a;
+  font-weight:900;
 }
 
-.mobile-move-card{
-  background:#fff;
-  border:1px solid #eee;
-  border-radius:18px;
-  padding:16px;
-  margin-bottom:14px;
-  box-shadow:0 2px 8px rgba(0,0,0,.04);
+.qty-minus{
+  color:#dc2626;
+  font-weight:900;
 }
 
-.mobile-move-card:hover{
-  transform:translateY(-2px);
-  transition:.18s ease;
+.balance-flow{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  font-weight:900;
+}
+
+.arrow{
+  color:#94a3b8;
+}
+
+.table-title{
+  padding:14px 18px;
+  border-bottom:1px solid #eef2f7;
+  font-weight:800;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.mobile-actions{
+  position:sticky;
+  bottom:10px;
+  z-index:30;
+  margin-top:12px;
+}
+
+.mobile-actions-inner{
+  background:#0f172a;
+  border-radius:999px;
+  padding:8px;
+  display:flex;
+  gap:8px;
+  overflow:auto;
+}
+
+.mobile-actions-inner .btn{
+  border-radius:999px !important;
+  white-space:nowrap;
 }
 
 @media(max-width:768px){
 
   .product-shell{
-    padding:0 8px;
+    padding:8px;
   }
 
-  .page-title{
-    font-size:1.45rem;
+  .ledger-header{
+    padding:12px;
   }
 
-  .page-card{
-    padding:15px;
-    border-radius:18px;
+  .product-name{
+    font-size:1rem;
   }
 
-  .desktop-table{
-    display:none;
-  }
-
-  .mobile-movements{
-    display:block;
-  }
-
-  .filter-actions{
-    flex-direction:column;
-    gap:10px;
-  }
-
-  .filter-actions .btn{
+  .filter-row{
     width:100%;
   }
 
+  .filter-row .form-control{
+    flex:1;
+    min-width:120px;
+  }
+
+  .ledger-table{
+    min-width:920px;
+  }
+
 }
+
 </style>
 
+<div class="product-shell">
 
-<div class="product-shell py-3">
+<div class="ledger-header">
 
-<div class="mb-4">
+<div class="ledger-top">
 
-  <div class="page-title">
-    📦 كارت حركة المنتج
-  </div>
+<div class="product-info">
 
-  <div class="page-subtitle">
-    متابعة المخزون والأرباح وحركات المنتج
-  </div>
+<div class="product-name">
+{{ product.name }}
+</div>
+
+{% if product.size %}
+<span class="meta-chip size-chip">
+{{ product.size }}
+</span>
+{% endif %}
+
+{% if product.color %}
+<span class="meta-chip color-chip">
+{{ product.color }}
+</span>
+{% endif %}
+
+<span class="meta-chip stock-chip">
+{{ closing }} قطعة
+</span>
+
+{% if product.barcode %}
+<span class="meta-chip barcode-chip">
+{{ product.barcode }}
+</span>
+{% endif %}
 
 </div>
 
+<form class="filter-row" method="get">
 
-  {# ── هيدر المنتج ── #}
-  <div class="page-card mb-3">
-    
-      <div class="row g-3 align-items-center">
-        <div class="col-md-4">
-          <div class="fw-bold fs-5">
-            {{ product.name }}
-            {% if product.size %}<span class="badge bg-light text-dark border ms-1">{{ product.size }}</span>{% endif %}
-            {% if product.color %}<span class="badge badge-soft-secondary ms-1">{{ product.color }}</span>{% endif %}
-          </div>
-          {% if product.barcode %}
-          <div class="text-muted small">باركود: {{ product.barcode }}</div>
-          {% endif %}
-        </div>
-        <div class="col-md-8">
-          <form class="row g-2 align-items-end" method="get">
-            <div class="col-md-4">
-              <label class="form-label small mb-1">من</label>
-              <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm">
-            </div>
-            <div class="col-md-4">
-              <label class="form-label small mb-1">إلى</label>
-              <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm">
-            </div>
-            <div class="col-md-4 d-flex gap-2 filter-actions">
-              <button class="btn btn-primary btn-sm flex-fill">تطبيق</button>
-              <a class="btn btn-outline-secondary btn-sm" href="/products/{{ product.id }}/card">مسح</a>
-              <a class="btn btn-outline-success btn-sm"
-                 href="/products/{{ product.id }}/card/export?date_from={{ date_from }}&date_to={{ date_to }}">CSV</a>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
+<input type="date"
+       name="date_from"
+       value="{{ date_from }}"
+       class="form-control">
 
-  {# ── كروت معلومات المنتج ── #}
-  <div class="row g-3 mb-3">
-    <div class="col-6 col-md-2">
-      <div class="metric-card metric-gray text-center">
-        
-          <div class="text-muted" style="font-size:11px;">تكلفة القطعة</div>
-          <div class="metric-value ">{{ "{:,.0f}".format(cost_price) }} ج</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-2">
-      <div class="metric-card metric-blue text-center">
-        
-          <div class="text-muted" style="font-size:11px;">سعر البيع</div>
-          <div class="metric-value  text-primary">{{ "{:,.0f}".format(sale_price) }} ج</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-2">
-      <div class="metric-card metric-green text-center">
-        
-          <div class="text-muted" style="font-size:11px;">هامش الربح</div>
-          <div class="metric-value  text-success">{{ price_margin }}%</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-2">
-      <div class="card text-center metric-card metric-blue text-center">
-        
-          <div class="text-muted" style="font-size:11px;">الستوك الحالي</div>
-          <div class="metric-value  {{ 'text-danger' if closing < 4 else '' }}">{{ closing }} قطعة</div>
-          <div class="text-muted" style="font-size:10px;">قيمة {{ "{:,.0f}".format(stock_value) }} ج</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-2">
-      <div class="card text-center metric-card metric-yellow text-center">
-        
-          <div class="text-muted" style="font-size:11px;">مخزون الهالك</div>
-          <div class="metric-value  {{ 'text-warning' if wastage_stock > 0 else 'text-muted' }}">{{ wastage_stock }} قطعة</div>
-          {% if wastage_stock > 0 %}
-          <div class="text-muted" style="font-size:10px;">قيمة {{ "{:,.0f}".format(wastage_value) }} ج</div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-2">
-      <div class="metric-card metric-gray text-center">
-        
-          <div class="text-muted" style="font-size:11px;">رصيد أول المدة</div>
-          <div class="metric-value ">{{ opening }}</div>
-        </div>
-      </div>
-    </div>
-  </div>
+<input type="date"
+       name="date_to"
+       value="{{ date_to }}"
+       class="form-control">
 
-  {# ── كروت ملخص الفترة ── #}
-  <div class="row g-3 mb-3">
-    <div class="col-6 col-md-3">
-      <div class="metric-card metric-green text-center">
-        
-          <div class="text-muted" style="font-size:11px;">إجمالي إيراد المبيعات</div>
-          <div class="metric-value  text-success">{{ "{:,.0f}".format(net_sales_value) }} ج</div>
-          <div class="text-muted" style="font-size:10px;">مباع {{ total_out }} قطعة</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card text-center border-warning h-100 py-2">
-        
-          <div class="text-muted" style="font-size:11px;">تكلفة البضاعة المباعة</div>
-          <div class="metric-value  text-warning">{{ "{:,.0f}".format(total_cogs) }} ج</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card text-center {{ 'border-success' if net_profit >= 0 else 'border-danger' }} h-100 py-2">
-        
-          <div class="text-muted" style="font-size:11px;">صافي الربح من المنتج</div>
-          <div class="metric-value  {{ 'text-success' if net_profit >= 0 else 'text-danger' }}">{{ "{:,.0f}".format(net_profit) }} ج</div>
-          <div class="text-muted" style="font-size:10px;">هامش {{ profit_margin }}%</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="metric-card metric-gray text-center">
-        
-          <div class="text-muted" style="font-size:11px;">إجمالي الإضافات</div>
-          <div class="metric-value ">+{{ total_in }} قطعة</div>
-          {% if total_ret_value > 0 %}
-          <div class="text-muted" style="font-size:10px;">مرتجعات {{ "{:,.0f}".format(total_ret_value) }} ج</div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </div>
+<button class="btn btn-dark">
+تطبيق
+</button>
 
-  {# ── جدول الحركات ── #}
-  <div class="page-card">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-      <span>📋 حركات المخزون</span>
-      <span class="badge badge-soft-secondary-subtle text-dark border">{{ rows|length }} حركة</span>
-    </div>
-    <div class="scroll-area desktop-table">
-      <table class="table table-sm align-middle mb-0">
-        <thead style="position:sticky; top:0; z-index:2; background:#212529;">
-          <tr>
-            <th style="min-width:140px; color:#fff;">التاريخ</th>
-            <th style="min-width:80px; color:#fff;">النوع</th>
-            <th style="min-width:100px; color:#fff;">مرجع</th>
-            <th class="text-end" style="min-width:70px; color:#fff;">كمية</th>
-            <th class="text-end" style="min-width:100px; color:#fff;">سعر وحدة</th>
-            <th class="text-end" style="min-width:100px; color:#fff;">تكلفة وحدة</th>
-            <th class="text-end" style="min-width:110px; color:#fff;">إجمالي القيمة</th>
-            <th style="color:#fff;">ملاحظة</th>
-            <th class="text-end" style="min-width:90px; color:#fff;">رصيد جارٍ</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% if rows %}
-            {% for r in rows %}
-            <tr class="
-              {% if r.kind == 'بيع' %}table-danger
-              {% elif r.kind == 'إضافة' %}table-success
-              {% elif r.kind == 'مرتجع' %}table-info
-              {% elif r.kind == 'تسوية' %}table-secondary
-              {% endif %}" style="--bs-table-bg-opacity: 0.08;">
-              <td style="font-size:13px;">{{ r.dt }}</td>
-              <td>
-                <span class="badge
-                  {% if r.kind=='إضافة' %}badge-soft-success
-                  {% elif r.kind=='بيع' %}badge-soft-danger
-                  {% elif r.kind=='مرتجع' %}badge-soft-info
-                  {% elif r.kind=='تسوية' %}badge-soft-secondary
-                  {% else %}badge-soft-secondary{% endif %}">
-                  {{ r.kind }}
-                </span>
-              </td>
-              <td style="font-size:13px;">
-                {% if r.extra.invoice_id %}
-                  <a href="/invoices/{{ r.extra.invoice_id }}" target="_blank">{{ r.ref }}</a>
-                {% else %}
-                  {{ r.ref }}
-                {% endif %}
-              </td>
-              <td class="text-end fw-bold {{ 'text-success' if r.qty > 0 else 'text-danger' }}">
-                {% if r.qty > 0 %}+{% endif %}{{ r.qty }}
-              </td>
-              <td class="text-end">
-                {% if r.unit_price > 0 %}{{ "{:,.0f}".format(r.unit_price) }} ج{% else %}—{% endif %}
-              </td>
-              <td class="text-end">
-                {% if r.unit_cost > 0 %}{{ "{:,.0f}".format(r.unit_cost) }} ج{% else %}—{% endif %}
-              </td>
-              <td class="text-end fw-bold">
-                {% if r.line_value > 0 %}{{ "{:,.0f}".format(r.line_value) }} ج{% else %}—{% endif %}
-              </td>
-              <td style="font-size:12px;" class="text-muted">{{ r.note }}</td>
-              <td class="text-end fw-bold">{{ r.running }}</td>
-            </tr>
-            {% endfor %}
-          {% else %}
-            <tr><td colspan="9" class="text-center text-muted py-4">🧾 لا توجد حركات في الفترة المحددة</td></tr>
-          {% endif %}
-        </tbody>
-      </table>
-    </div>
-  </div>
+<a class="btn btn-outline-secondary"
+   href="/products/{{ product.id }}/card">
+مسح
+</a>
+
+<a class="btn btn-outline-success"
+   href="/products/{{ product.id }}/card/export?date_from={{ date_from }}&date_to={{ date_to }}">
+CSV
+</a>
+
+</form>
 
 </div>
 
-<!-- Mobile Movement Cards -->
-<div class="mobile-movements mt-3">
+</div>
+
+<div class="ledger-table-box">
+
+<div class="table-title">
+<span>📋 سجل حركة الصنف</span>
+<span>{{ rows|length }} حركة</span>
+</div>
+
+<div class="table-wrap">
+
+<table class="table ledger-table align-middle">
+
+<thead>
+<tr>
+<th>التاريخ</th>
+<th>نوع الحركة</th>
+<th>المرجع</th>
+<th>سعر الحركة</th>
+<th>الكمية</th>
+<th>الرصيد بعد الحركة</th>
+<th>ملاحظات</th>
+</tr>
+</thead>
+
+<tbody>
 
 {% if rows %}
 
 {% for r in rows %}
 
-<div class="mobile-move-card">
+<tr>
 
-  <div class="d-flex justify-content-between align-items-start mb-3">
+<td>
+{{ r.dt }}
+</td>
 
-    <div>
+<td>
 
-      <div class="fw-bold">
-        {{ r.kind }}
-      </div>
+<span class="kind
+{% if r.kind == 'بيع' %}kind-sale
+{% elif r.kind == 'إضافة' %}kind-add
+{% elif r.kind == 'مرتجع' %}kind-return
+{% else %}kind-adjust{% endif %}">
 
-      <div class="small text-muted">
-        {{ r.dt }}
-      </div>
+{{ r.kind }}
 
-    </div>
+</span>
 
-    <div class="fw-bold {{ 'text-success' if r.qty > 0 else 'text-danger' }}">
-      {% if r.qty > 0 %}+{% endif %}{{ r.qty }}
-    </div>
+</td>
 
-  </div>
+<td>
 
-  <div class="small mb-2">
-    المرجع:
-    {% if r.extra.invoice_id %}
-      <a href="/invoices/{{ r.extra.invoice_id }}" target="_blank">
-        {{ r.ref }}
-      </a>
-    {% else %}
-      {{ r.ref }}
-    {% endif %}
-  </div>
+{% if r.extra.invoice_id %}
 
-  <div class="row text-center mb-3">
+<a href="/invoices/{{ r.extra.invoice_id }}" target="_blank">
+{{ r.ref }}
+</a>
 
-    <div class="col-4">
-      <div class="small text-muted">السعر</div>
-      <div class="fw-bold">
-        {% if r.unit_price > 0 %}
-          {{ "{:,.0f}".format(r.unit_price) }}
-        {% else %}
-          —
-        {% endif %}
-      </div>
-    </div>
+{% else %}
 
-    <div class="col-4">
-      <div class="small text-muted">التكلفة</div>
-      <div class="fw-bold">
-        {% if r.unit_cost > 0 %}
-          {{ "{:,.0f}".format(r.unit_cost) }}
-        {% else %}
-          —
-        {% endif %}
-      </div>
-    </div>
+{{ r.ref }}
 
-    <div class="col-4">
-      <div class="small text-muted">الرصيد</div>
-      <div class="fw-bold">
-        {{ r.running }}
-      </div>
-    </div>
+{% endif %}
 
-  </div>
+</td>
 
-  {% if r.note %}
-  <div class="small text-muted">
-    {{ r.note }}
-  </div>
-  {% endif %}
+<td>
 
-</div>
+{% if r.unit_price > 0 %}
+{{ "{:,.0f}".format(r.unit_price) }} EGP
+{% elif r.unit_cost > 0 %}
+{{ "{:,.0f}".format(r.unit_cost) }} EGP
+{% else %}
+—
+{% endif %}
+
+</td>
+
+<td class="{{ 'qty-plus' if r.qty > 0 else 'qty-minus' }}">
+
+{% if r.qty > 0 %}+{% endif %}{{ r.qty }}
+
+</td>
+
+<td class="fw-bold">
+{{ r.running }}
+</td>
+
+<td class="text-muted">
+
+{{ r.note or '—' }}
+
+</td>
+
+</tr>
 
 {% endfor %}
 
 {% else %}
 
-<div class="text-center text-muted py-5">
-  🧾 لا توجد حركات في الفترة المحددة
-</div>
+<tr>
+<td colspan="7" class="text-center py-5 text-muted">
+لا توجد حركات
+</td>
+</tr>
 
 {% endif %}
 
+</tbody>
+
+</table>
+
+</div>
+
 </div>
 
 
+<div class="mobile-actions">
+
+<div class="mobile-actions-inner">
+
+
+<button type="button"
+        class="btn btn-light btn-sm btnPrintBarcode"
+        data-name="{{ product.short_name or product.name }}"
+        data-color="{{ product.color or '' }}"
+        data-size="{{ product.size or '' }}"
+        data-price="{{ '%.0f'|format(product.price or 0) }}"
+        data-barcode="{{ product.barcode or '' }}">
+🖨️ باركود
+</button>
+
+
+<button class="btn btn-success btn-sm"
+        data-bs-toggle="modal"
+        data-bs-target="#addStockModal">
+➕ إضافة
+</button>
+
+<button class="btn btn-warning btn-sm"
+        data-bs-toggle="modal"
+        data-bs-target="#wastageModal">
+🗑️ هالك
+</button>
+
+<a href="/products?edit={{ product.id }}"
+   class="btn btn-primary btn-sm">
+✏️ تعديل
+</a>
+
 </div>
+
+</div>
+
+<div class="modal fade" id="addStockModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="post" action="/products/quick-add-stock" class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">➕ إضافة مخزون</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <input type="hidden" name="pid" value="{{ product.id }}">
+
+        <div class="mb-3">
+          <label class="form-label">الكمية</label>
+          <input type="number" name="qty" class="form-control" required min="1">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">سعر الشراء</label>
+          <input type="number" name="unit_cost" class="form-control" step="0.01" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">رقم المرجع / الفاتورة</label>
+          <input type="text" name="ref" class="form-control">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">ملاحظات</label>
+          <textarea name="note" class="form-control"></textarea>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-success w-100">
+          حفظ الإضافة
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<div class="modal fade" id="wastageModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="post" action="/products/add-wastage" class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">🗑️ تسجيل هالك</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <input type="hidden" name="pid" value="{{ product.id }}">
+
+        <div class="mb-3">
+          <label class="form-label">الكمية</label>
+          <input type="number" name="qty" class="form-control" required min="1">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">السبب</label>
+          <input type="text" name="note" class="form-control">
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-warning w-100">
+          تسجيل الهالك
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+
+
+<!-- Barcode Print Modal -->
+<div class="modal fade" id="barcodePrintModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">🖨️ طباعة الباركود</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="mb-3">
+          <label class="form-label">عدد النسخ</label>
+          <input type="number"
+                 class="form-control"
+                 id="barcodeCopies"
+                 value="1"
+                 min="1">
+        </div>
+
+        <div class="form-check mb-3">
+          <input class="form-check-input"
+                 type="checkbox"
+                 id="showBarcodePrice"
+                 checked>
+
+          <label class="form-check-label" for="showBarcodePrice">
+            اظهار السعر
+          </label>
+        </div>
+
+        <div class="border rounded p-3 bg-light text-center">
+
+          <div id="barcodePreviewName"
+               class="fw-bold mb-1"></div>
+
+          <div id="barcodePreviewMeta"
+               class="small text-muted mb-2"></div>
+
+          <svg id="barcodeSvg"></svg>
+
+          <div id="barcodePreviewPrice"
+               class="fw-bold mt-2"></div>
+
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button"
+                class="btn btn-primary"
+                id="btnConfirmBarcodePrint">
+          🖨️ طباعة
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+
+<script>
+
+let currentBarcodeData = null;
+
+document.querySelectorAll('.btnPrintBarcode').forEach(btn => {
+
+  btn.addEventListener('click', () => {
+
+    currentBarcodeData = {
+      name: btn.dataset.name || '',
+      color: btn.dataset.color || '',
+      size: btn.dataset.size || '',
+      price: btn.dataset.price || '',
+      barcode: btn.dataset.barcode || ''
+    };
+
+    document.getElementById('barcodePreviewName').textContent =
+      currentBarcodeData.name;
+
+    document.getElementById('barcodePreviewMeta').innerHTML =
+      (currentBarcodeData.color || '') +
+      (currentBarcodeData.color && currentBarcodeData.size ? ' • ' : '') +
+      (currentBarcodeData.size
+        ? '<strong>' + currentBarcodeData.size + '</strong>'
+        : '');
+
+    document.getElementById('barcodePreviewPrice').textContent =
+      document.getElementById('showBarcodePrice').checked
+      ? currentBarcodeData.price + ' EGP'
+      : '';
+
+    JsBarcode("#barcodeSvg", currentBarcodeData.barcode, {
+      format: "CODE128",
+      width: 2,
+      height: 50,
+      displayValue: true
+    });
+
+    bootstrap.Modal
+      .getOrCreateInstance(document.getElementById('barcodePrintModal'))
+      .show();
+
+  });
+
+});
+
+document.getElementById('showBarcodePrice')
+?.addEventListener('change', function(){
+
+  if(!currentBarcodeData) return;
+
+  document.getElementById('barcodePreviewPrice').textContent =
+    this.checked
+    ? currentBarcodeData.price + ' EGP'
+    : '';
+
+});
+
+document.getElementById('btnConfirmBarcodePrint')
+?.addEventListener('click', function(){
+
+  if(!currentBarcodeData) return;
+
+  const copies = parseInt(
+    document.getElementById('barcodeCopies').value || '1'
+  );
+
+  const showPrice =
+    document.getElementById('showBarcodePrice').checked;
+
+  let labels = '';
+
+  for(let i=0;i<copies;i++){
+
+    labels += `
+      <div style="width:220px;padding:8px;text-align:center;border:1px solid #ddd;margin-bottom:10px;page-break-inside:avoid;">
+
+        <div style="font-weight:bold;font-size:14px;">
+          ${currentBarcodeData.name}
+        </div>
+
+        <div style="font-size:12px;color:#666;margin-bottom:4px;">
+          ${currentBarcodeData.color || ''}
+          ${currentBarcodeData.color && currentBarcodeData.size ? ' • ' : ''}
+          ${currentBarcodeData.size
+            ? '<strong>' + currentBarcodeData.size + '</strong>'
+            : ''}
+        </div>
+
+        <svg class="print-barcode"
+             jsbarcode-format="CODE128"
+             jsbarcode-value="${currentBarcodeData.barcode}"
+             jsbarcode-width="2"
+             jsbarcode-height="50"
+             jsbarcode-displayValue="true"></svg>
+
+        ${showPrice
+          ? `<div style="font-weight:bold;margin-top:4px;">${currentBarcodeData.price} EGP</div>`
+          : ''}
+
+      </div>
+    `;
+  }
+
+  const w = window.open('', '_blank');
+
+  w.document.write(`
+    <html dir="rtl">
+    <head>
+      <title>Barcode Print</title>
+
+      <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+
+    </head>
+
+    <body>
+
+      ${labels}
+
+      <script>
+
+        JsBarcode(".print-barcode").init();
+
+        window.onload = function(){
+          window.print();
+        }
+
+      <\/script>
+
+    </body>
+    </html>
+  `);
+
+  w.document.close();
+
+});
+
+</script>
+
+
+
 {% endblock %}
+
