@@ -134,7 +134,14 @@
   </div>
   {% endif %}
 
-  <div class="page-card desktop-table">
+  
+<div class="mb-3">
+  <input type="text" id="userSearch" class="form-control"
+         placeholder="🔍 بحث عن مستخدم..."
+         onkeyup="filterUsers()">
+</div>
+
+<div class="page-card desktop-table">
     <div style="overflow-x:auto;">
       <table class="table align-middle mb-0">
         <thead>
@@ -154,7 +161,9 @@
             <td class="fw-semibold">{{ u.username }}</td>
             <td>{{ u.display_name }}</td>
             <td class="text-center">
-              {% if u.is_admin %}
+              {% if u.username == "admin" %}
+                <span class="badge bg-dark text-white">Super Admin</span>
+              {% elif u.is_admin %}
                 <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Admin</span>
               {% else %}
                 <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">موظف</span>
@@ -179,7 +188,7 @@
             </td>
             <td class="text-center">
               <a href="/admin/users/{{ u.id }}/edit" class="btn btn-sm btn-outline-primary">تعديل</a>
-              {% if not u.is_admin %}
+              {% if u.username != "admin" and not u.is_admin %}
               <form method="post" action="/admin/users/{{ u.id }}/delete" class="d-inline"
                     onsubmit="return confirm('حذف المستخدم {{ u.username }}؟');">
                 <button class="btn btn-sm btn-outline-danger">حذف</button>
@@ -216,7 +225,9 @@
 
     <div>
 
-      {% if u.is_admin %}
+      {% if u.username == "admin" %}
+        <span class="badge bg-dark text-white">Super Admin</span>
+      {% elif u.is_admin %}
         <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Admin</span>
       {% else %}
         <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">موظف</span>
@@ -262,7 +273,7 @@
 
     </a>
 
-    {% if not u.is_admin %}
+    {% if u.username != "admin" and not u.is_admin %}
 
     <form method="post"
           action="/admin/users/{{ u.id }}/delete"
@@ -285,4 +296,19 @@
 </div>
 
 </div>
+
+<script>
+function filterUsers(){
+  const val = document.getElementById("userSearch").value.toLowerCase();
+
+  document.querySelectorAll("tbody tr").forEach(tr=>{
+    tr.style.display = tr.innerText.toLowerCase().includes(val) ? "" : "none";
+  });
+
+  document.querySelectorAll(".mobile-user-card").forEach(card=>{
+    card.style.display = card.innerText.toLowerCase().includes(val) ? "" : "none";
+  });
+}
+</script>
+
 {% endblock %}

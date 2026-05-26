@@ -8,6 +8,7 @@ from app.database import SessionLocal
 from app import models
 from app.utils import get_next_invoice_code
 from fastapi.templating import Jinja2Templates
+from app.auth import require_permission
 
 router = APIRouter(prefix="/sales", tags=["Sales"])
 templates = Jinja2Templates(directory="app/templates")
@@ -21,6 +22,7 @@ def get_db():
 
 @router.get("/new", response_class=HTMLResponse)
 def sales_new(request: Request, db: Session = Depends(get_db)):
+    require_permission(request, "view_sales")
     products = db.query(models.Product).order_by(models.Product.name.asc()).all()
     products_js = []
     for p in products:
@@ -163,6 +165,7 @@ def _create_invoice(db: Session, payload: dict, items):
 
 @router.post("/create")
 def sales_create(
+    request: Request,
     customer_name: str = Form(...),
     customer_phone: str = Form(...),
     customer_address: str = Form(""),
@@ -181,6 +184,8 @@ def sales_create(
     governorate: str = Form(""),
     db: Session = Depends(get_db)
 ):
+    require_permission(request, "create_invoice")
+
     items = collect_items(db, product_id, qty, unit_price)
     if not items:
         return RedirectResponse(url="/sales/new?msg=⚠️ أضِف بندًا واحدًا واختر الصنف", status_code=303)
@@ -204,6 +209,7 @@ def sales_create(
 
 @router.post("/create-print")
 def sales_create_and_print(
+    request: Request,
     customer_name: str = Form(...),
     customer_phone: str = Form(...),
     customer_address: str = Form(""),
@@ -222,6 +228,7 @@ def sales_create_and_print(
     governorate: str = Form(""),
     db: Session = Depends(get_db)
 ):
+    require_permission(request, "print_invoice")
     items = collect_items(db, product_id, qty, unit_price)
     if not items:
         return RedirectResponse(url="/sales/new?msg=⚠️ أضِف بندًا واحدًا واختر الصنف", status_code=303)
@@ -247,7 +254,8 @@ def sales_create_and_print(
 # 🆕 API: جلب بيانات عميل بالموبايل
 # ================================
 @router.get("/api/customer-by-phone")
-def customer_by_phone(phone: str, db: Session = Depends(get_db)):
+def customer_by_phone(request: Request, phone: str, db: Session = Depends(get_db)):
+    require_permission(request, "view_sales")
     """
     يرجّع أحدث بيانات عميل (الاسم/العنوان/المحافظة) بناءً على رقم الموبايل من جدول الفواتير.
     """

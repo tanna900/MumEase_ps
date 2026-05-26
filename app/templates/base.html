@@ -601,5 +601,49 @@ async function openInvoiceModal(id){
   })();
 </script>
 
+
+{% if request.query_params.get('error') %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+  const msg = `{{ request.query_params.get('error') }}`;
+
+  const toast = document.createElement("div");
+
+  toast.innerHTML = `
+    <div style="
+      position:fixed;
+      top:20px;
+      left:50%;
+      transform:translateX(-50%);
+      background:#fff;
+      color:#062b56;
+      border-radius:18px;
+      padding:16px 22px;
+      box-shadow:0 10px 35px rgba(0,0,0,.18);
+      z-index:999999;
+      min-width:320px;
+      text-align:center;
+      font-weight:700;
+      border:1px solid #eee;
+      animation:fadeIn .25s ease;
+    ">
+      <div style="font-size:34px;margin-bottom:8px">🔒</div>
+      <div>${msg}</div>
+    </div>
+  `;
+
+  document.body.appendChild(toast);
+
+  setTimeout(()=>{
+    toast.remove();
+  }, 2800);
+
+});
+</script>
+
+{% endif %}
+
 </body>
 </html>

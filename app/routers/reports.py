@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, date
 from app.database import SessionLocal
 from app import models
 from fastapi.templating import Jinja2Templates
+from app.auth import require_permission
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 templates = Jinja2Templates(directory="app/templates")
@@ -22,6 +23,7 @@ def get_db():
 
 @router.get("", response_class=HTMLResponse)
 def reports(request: Request, date_from: str = "", date_to: str = "", t: str = "all", export: str = "", db: Session = Depends(get_db)):
+    require_permission(request, "view_reports")
     q = db.query(models.Invoice)
     if date_from: q = q.filter(models.Invoice.created_at >= date_from)
     if date_to:   q = q.filter(models.Invoice.created_at <= date_to + " 23:59:59")
@@ -29,6 +31,7 @@ def reports(request: Request, date_from: str = "", date_to: str = "", t: str = "
     rows = q.order_by(models.Invoice.id.desc()).all()
 
     if export == "csv":
+        require_permission(request, "export_reports")
         buf = io.StringIO()
         w = csv.writer(buf)
         w.writerow(["Code","Type","Customer","Phone","Subtotal","Discount","Shipping","Total","Date"])
@@ -164,10 +167,12 @@ def _is_invoice_paid(db: Session, row, admin_cover_ids: set, tol: float = 0.01) 
 # ====== API: حالة الطلبات للدونات في الهوم ======
 @router.get("/api/order-stats")
 def order_stats(
+    request: Request,
     date_from: str = Query("", description="YYYY-MM-DD"),
     date_to: str = Query("", description="YYYY-MM-DD"),
     db: Session = Depends(get_db)
 ):
+    require_permission(request, "view_reports")
     # Returns count
     q_ret = db.query(func.count(models.Invoice.id)).filter(models.Invoice.type == "R")
     q_ret = _apply_range(q_ret, models.Invoice.created_at, date_from, date_to)
@@ -224,10 +229,12 @@ def order_stats(
 # ============================================================
 @router.get("/api/dashboard")
 def dashboard_api(
+    request: Request,
     date_from: str = Query("", description="YYYY-MM-DD"),
     date_to: str = Query("", description="YYYY-MM-DD"),
     db: Session = Depends(get_db)
 ):
+    require_permission(request, "view_reports")
     # =========================
     # Standard defaults:
     # - KPIs + tables default to TODAY if no range provided
@@ -418,10 +425,12 @@ def dashboard_api(
 # ============================================================
 @router.get("/api/profit")
 def profit_api(
+    request: Request,
     date_from: str = Query("", description="YYYY-MM-DD"),
     date_to: str = Query("", description="YYYY-MM-DD"),
     db: Session = Depends(get_db)
 ):
+    require_permission(request, "view_reports")
     # ---- Revenue pieces ----
     # Sales core = subtotal - discount (بدون شحن)
     q_sales_core = db.query(func.coalesce(func.sum(models.Invoice.subtotal - models.Invoice.discount), 0.0))\
@@ -542,10 +551,12 @@ def profit_api(
 # ============================================================
 @router.get("/api/by-governorate")
 def by_governorate(
+    request: Request,
     date_from: str = Query("", description="YYYY-MM-DD"),
     date_to: str = Query("", description="YYYY-MM-DD"),
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "view_reports")
     # ── مبيعات (S) ──
     q_sales = db.query(
         models.Invoice.governorate.label("gov"),
@@ -604,6 +615,7 @@ def by_governorate(
 
 @router.get("/governorates", response_class=HTMLResponse)
 def governorates_report_page(request: Request):
+    require_permission(request, "view_reports")
     return templates.TemplateResponse("reports_governorates.html", {"request": request})
 
 
@@ -620,6 +632,7 @@ def products_sales_report(
     export: str = Query(""),
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "view_reports")
     today = date_cls.today()
     if not date_from:
         date_from = today.replace(day=1).strftime("%Y-%m-%d")
@@ -703,6 +716,7 @@ def products_sales_report(
     total_net_profit = sum(r["net_profit"] for r in rows)
 
     if export == "csv":
+        require_permission(request, "export_reports")
         buf = io.StringIO()
         w = csv.writer(buf)
         w.writerow(["المنتج","اللون","المقاس","مباع","مرتجع","صافي قطع",
@@ -746,6 +760,7 @@ def colors_sizes_report(
     export: str = Query(""),
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "view_reports")
     today = date_cls.today()
     if not date_from:
         date_from = today.replace(day=1).strftime("%Y-%m-%d")
@@ -817,6 +832,7 @@ def colors_sizes_report(
     for r in products: r["net_sales"] = round(r["net_sales"], 2)
 
     if export == "csv":
+        require_permission(request, "export_reports")
         buf = io.StringIO()
         w = csv.writer(buf)
         w.writerow(["── المنتجات ──"])
@@ -859,6 +875,7 @@ def repeat_customers_report(
     export: str = Query(""),
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "view_reports")
     today = date_cls.today()
     if not date_from:
         date_from = today.replace(day=1).strftime("%Y-%m-%d")
@@ -903,6 +920,7 @@ def repeat_customers_report(
     repeat_pct      = round((repeat_count / max(total_customers, 1)) * 100, 1)
 
     if export == "csv":
+        require_permission(request, "export_reports")
         buf = io.StringIO()
         w = csv.writer(buf)
         w.writerow(["الاسم", "الهاتف", "عدد الطلبات", "إجمالي الإنفاق", "أول طلب", "آخر طلب"])
@@ -938,6 +956,7 @@ def wastage_report(
     export: str = Query(""),
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "view_reports")
     products = db.query(models.Product).all()
 
     rows = []
@@ -967,6 +986,7 @@ def wastage_report(
     total_lost_revenue = round(sum(r["lost_revenue"] for r in rows), 2)
 
     if export == "csv":
+        require_permission(request, "export_reports")
         buf = io.StringIO()
         w = csv.writer(buf)
         w.writerow(["المنتج","اللون","المقاس","كمية الهالك",
@@ -1005,6 +1025,7 @@ def performance_report(
     gov_sort: str = Query("orders"),
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "view_reports")
     from sqlalchemy import text
     today = date_cls.today()
     if not date_from:

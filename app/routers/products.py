@@ -10,6 +10,7 @@ import csv, io
 import os
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
+from app.auth import require_permission
 
 router = APIRouter(prefix="/products", tags=["Products"])
 templates = Jinja2Templates(directory="app/templates")
@@ -188,6 +189,8 @@ def list_products(
     page_size: int = Query(15),
     db: Session = Depends(get_db)
 ):
+    require_permission(request, "view_products")
+
     page = max(1, int(page or 1))
     page_size = max(1, int(page_size or 15))
 
@@ -370,6 +373,7 @@ def list_products(
 # ============================================================
 @router.post("/add")
 def add_product(
+    request: Request,
     name: str = Form(...),
     color: str = Form(""),
     size: str = Form(""),
@@ -391,6 +395,7 @@ def add_product(
 
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "add_product")
     nm = (name or "").strip()
     if not nm:
         return RedirectResponse(
@@ -453,6 +458,7 @@ def add_product(
 # ============================================================
 @router.post("/delete")
 def delete_product(
+    request: Request,
     pid: int = Form(...),
 
     q: str = Form(""),
@@ -467,6 +473,7 @@ def delete_product(
 
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "delete_product")
     p = db.query(models.Product).get(int(pid))
     if not p:
         return RedirectResponse(
@@ -493,6 +500,7 @@ def delete_product(
 # ============================================================
 @router.post("/bulk")
 def bulk_actions(
+    request: Request,
     action: str = Form(...),
     ids: str = Form(...),
 
@@ -513,6 +521,7 @@ def bulk_actions(
     page_size: int = Form(15),
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "edit_product")
     try:
         id_list = [int(x) for x in ids.split(",") if x.strip().isdigit()]
     except:
@@ -653,6 +662,7 @@ def bulk_actions(
 
 @router.post("/update")
 def update_product(
+    request: Request,
     pid: int = Form(...),
     name: str = Form(...),
     color: str = Form(""),
@@ -674,6 +684,7 @@ def update_product(
 
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "edit_product")
     p = db.query(models.Product).get(pid)
     if not p:
         return RedirectResponse(
@@ -701,6 +712,7 @@ def update_product(
 
 @router.post("/stock-delta")
 def stock_delta(
+    request: Request,
     pid: int = Form(...),
     delta: int = Form(...),
 
@@ -716,6 +728,7 @@ def stock_delta(
 
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "stock_adjustments")
     p = db.query(models.Product).get(pid)
     if not p:
         return RedirectResponse(
@@ -752,9 +765,11 @@ def stock_delta(
 # ============================================================
 @router.post("/regenerate-barcodes")
 def regenerate_barcodes(
+    request: Request,
     admin_password: str = Form(""),
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "regenerate_barcodes")
     MASTER_PASSWORD = os.getenv("MASTER_REGENERATE_PASSWORD", "123456")
 
     if admin_password != MASTER_PASSWORD:
@@ -788,6 +803,7 @@ def regenerate_barcodes(
 # ============================================================
 @router.post("/quick-add-stock")
 def quick_add_stock(
+    request: Request,
     pid: int = Form(...),
     qty: int = Form(...),
     unit_cost: float = Form(0),
@@ -795,6 +811,7 @@ def quick_add_stock(
     note: str = Form(""),
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "stock_adjustments")
     p = db.query(models.Product).get(pid)
 
     if not p:
@@ -830,11 +847,13 @@ def quick_add_stock(
 # ============================================================
 @router.post("/add-wastage")
 def add_wastage(
+    request: Request,
     pid: int = Form(...),
     qty: int = Form(...),
     note: str = Form(""),
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "manage_wastage")
     p = db.query(models.Product).get(pid)
 
     if not p:

@@ -8,6 +8,7 @@ from typing import Optional, List, Dict, Tuple
 from app.database import SessionLocal
 from app import models
 from fastapi.templating import Jinja2Templates
+from app.auth import require_permission
 
 router = APIRouter(prefix="/shipping", tags=["Shipping"])
 templates = Jinja2Templates(directory="app/templates")
@@ -381,6 +382,7 @@ def shipping_accounts(
 
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "view_shipping")
     companies = distinct_companies(db)
 
     # Default period: from first day of current month until today
@@ -705,6 +707,7 @@ def shipping_accounts(
 
 @router.post("/pay")
 def add_payment(
+    request: Request,
     company: str = Form(...),
     date_: str = Form(...),
     amount: float = Form(...),
@@ -716,6 +719,7 @@ def add_payment(
     page_size: int = Form(20),
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "manage_shipping_payments")
     p = models.ShippingPayment(
         company=company.strip(),
         date=date_.strip(),
@@ -732,6 +736,7 @@ def add_payment(
 
 @router.post("/allocate")
 def allocate_payment(
+    request: Request,
     company: str = Form(...),
     invoice_id: int = Form(...),
     payment_id: int = Form(...),
@@ -743,6 +748,7 @@ def allocate_payment(
     page_size: int = Form(20),
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "allocate_shipping_payments")
     inv = db.query(models.Invoice).get(invoice_id)
     pay = db.query(models.ShippingPayment).get(payment_id)
 
@@ -793,6 +799,7 @@ def allocate_payment(
 
 @router.post("/payments/{pid}/edit")
 def edit_payment(
+    request: Request,
     pid: int,
     company: str = Form(...),
     date_: str = Form(...),
@@ -806,6 +813,7 @@ def edit_payment(
     page_size: int = Form(20),
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "edit_shipping_payments")
     p = db.query(models.ShippingPayment).get(int(pid))
     if not p or p.company != company:
         url = f"/shipping?company={company}&unpaid_page={unpaid_page}&paid_page={paid_page}&page_size={page_size}"
@@ -854,6 +862,7 @@ def edit_payment(
 
 @router.post("/payments/{pid}/delete")
 def delete_payment(
+    request: Request,
     pid: int,
     company: str = Form(...),
     q_dfrom: str = Form("", alias="q_dfrom"),
@@ -863,6 +872,7 @@ def delete_payment(
     page_size: int = Form(20),
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "delete_shipping_payments")
     p = db.query(models.ShippingPayment).get(int(pid))
     if not p or p.company != company:
         url = f"/shipping?company={company}&unpaid_page={unpaid_page}&paid_page={paid_page}&page_size={page_size}"
@@ -888,6 +898,7 @@ def delete_payment(
 
 @router.post("/payments/{pid}/link-cash")
 def link_cash(
+    request: Request,
     pid: int,
     company: str = Form(...),
     q_dfrom: str = Form("", alias="q_dfrom"),
@@ -897,6 +908,7 @@ def link_cash(
     page_size: int = Form(20),
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "link_shipping_cash")
     p = db.query(models.ShippingPayment).get(int(pid))
     if not p or p.company != company:
         url = f"/shipping?company={company}&unpaid_page={unpaid_page}&paid_page={paid_page}&page_size={page_size}"
@@ -917,6 +929,7 @@ def link_cash(
 
 @router.post("/payments/{pid}/unlink-cash")
 def unlink_cash(
+    request: Request,
     pid: int,
     company: str = Form(...),
     q_dfrom: str = Form("", alias="q_dfrom"),
@@ -926,6 +939,7 @@ def unlink_cash(
     page_size: int = Form(20),
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "link_shipping_cash")
     p = db.query(models.ShippingPayment).get(int(pid))
     if not p or p.company != company:
         url = f"/shipping?company={company}&unpaid_page={unpaid_page}&paid_page={paid_page}&page_size={page_size}"
@@ -949,6 +963,7 @@ def unlink_cash(
 
 @router.post("/cover")
 def admin_cover_invoice(
+    request: Request,
     company: str = Form(...),
     invoice_id: int = Form(...),
     q_dfrom: str = Form(""),
@@ -958,6 +973,7 @@ def admin_cover_invoice(
     page_size: int = Form(20),
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "admin_cover_shipping")
     inv = db.query(models.Invoice).get(int(invoice_id))
     if not inv or inv.type != "S" or inv.shipping_company != company:
         url = f"/shipping?company={company}&unpaid_page={unpaid_page}&paid_page={paid_page}&page_size={page_size}"
@@ -994,6 +1010,7 @@ def admin_cover_invoice(
 
 @router.get("/invoice/{invoice_id}", response_class=HTMLResponse)
 def invoice_popup(request: Request, invoice_id: int, db: Session = Depends(get_db)):
+    require_permission(request, "view_shipping")
     inv = db.query(models.Invoice).get(int(invoice_id))
     if not inv:
         raise HTTPException(status_code=404, detail="Invoice not found")
@@ -1047,6 +1064,7 @@ def invoice_popup(request: Request, invoice_id: int, db: Session = Depends(get_d
 # ═══════════════════════════════════════════════
 @router.post("/transfer-company")
 def transfer_company(
+    request: Request,
     invoice_id: int = Form(...),
     from_company: str = Form(...),
     to_company: str = Form(...),
@@ -1057,6 +1075,7 @@ def transfer_company(
     page_size: int = Form(10),
     db: Session = Depends(get_db),
 ):
+    require_permission(request, "transfer_shipping_company")
     inv = db.query(models.Invoice).get(invoice_id)
     if not inv:
         return RedirectResponse(

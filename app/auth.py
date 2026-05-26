@@ -17,6 +17,43 @@ SESSION_TTL_HOURS = 12
 
 # ── الصلاحيات المتاحة ──
 ALL_PERMISSIONS = {
+
+    # aliases للتوافق مع الملفات الجديدة
+    "view_sales": "عرض صفحة البيع",
+    "create_invoice": "إنشاء فاتورة",
+    "print_invoice": "طباعة فاتورة",
+
+    "view_products": "عرض المنتجات",
+    "add_product": "إضافة منتج",
+    "edit_product": "تعديل منتج",
+    "delete_product": "حذف منتج",
+    "stock_adjustments": "تعديل المخزون",
+    "manage_wastage": "إدارة الهالك",
+    "regenerate_barcodes": "إعادة توليد الباركود",
+
+    "view_purchases": "عرض المشتريات",
+    "add_purchase": "إضافة مشتريات",
+    "edit_purchase": "تعديل مشتريات",
+    "delete_purchase": "حذف مشتريات",
+
+    "view_finance": "عرض الخزنة",
+    "add_finance_entry": "إضافة قيد مالي",
+    "edit_finance_entry": "تعديل قيد مالي",
+    "delete_finance_entry": "حذف قيد مالي",
+    "manage_opening_balance": "تعديل الرصيد الافتتاحي",
+    "transfer_between_wallets": "التحويل بين الخزن",
+
+    "view_reports": "عرض التقارير",
+    "export_reports": "تصدير التقارير",
+
+    "view_shipping": "عرض الشحن",
+    "manage_shipping_payments": "إدارة دفعات الشحن",
+    "allocate_shipping_payments": "تخصيص دفعات الشحن",
+    "edit_shipping_payments": "تعديل دفعات الشحن",
+    "delete_shipping_payments": "حذف دفعات الشحن",
+    "link_shipping_cash": "ربط دفعات الشحن بالخزنة",
+    "admin_cover_shipping": "التغطية الإدارية للشحن",
+    "transfer_shipping_company": "نقل شركة الشحن",
     # المبيعات
     "sales_view":        "عرض الفواتير",
     "sales_add":         "إضافة فاتورة بيع",
@@ -127,6 +164,10 @@ def get_session(token: str) -> Optional[dict]:
     if datetime.now() > s["expires"]:
         del _sessions[token]
         return None
+
+    # تمديد الجلسة تلقائيًا مع النشاط
+    s["expires"] = datetime.now() + timedelta(hours=SESSION_TTL_HOURS)
+
     return s
 
 def delete_session(token: str):
@@ -156,18 +197,61 @@ def require_login(request: Request) -> dict:
 
 def has_permission(request: Request, perm: str) -> bool:
     user = get_current_user(request)
+
     if not user:
         return False
+
     if user.get("is_admin"):
         return True
-    return perm in user.get("permissions", [])
+
+    perms = user.get("permissions", [])
+
+    # aliases للتوافق بين النظام القديم والجديد
+    aliases = {
+        "view_sales": ["sales_view"],
+        "create_invoice": ["sales_add"],
+        "print_invoice": ["sales_view"],
+
+        "view_products": ["stock_view"],
+        "add_product": ["stock_add"],
+        "edit_product": ["stock_edit"],
+        "delete_product": ["stock_delete"],
+        "manage_wastage": ["stock_wastage"],
+
+        "view_purchases": ["purchases_view"],
+        "add_purchase": ["purchases_add"],
+        "edit_purchase": ["purchases_edit"],
+        "delete_purchase": ["purchases_delete"],
+
+        "view_finance": ["cash_view"],
+        "add_finance_entry": ["cash_add"],
+        "delete_finance_entry": ["cash_delete"],
+        "transfer_between_wallets": ["cash_transfer"],
+
+        "view_shipping": ["shipping_view"],
+        "manage_shipping_payments": ["shipping_add"],
+        "allocate_shipping_payments": ["shipping_allocate"],
+    }
+
+    if perm in perms:
+        return True
+
+    for old_perm in aliases.get(perm, []):
+        if old_perm in perms:
+            return True
+
+    return False
 
 def require_permission(request: Request, perm: str):
-    user = require_login(request)
-    if not user.get("is_admin") and perm not in user.get("permissions", []):
-        from fastapi.responses import HTMLResponse
-        raise HTTPException(status_code=403, detail="ليس لديك صلاحية للوصول لهذه الصفحة")
-    return user
+
+    if not has_permission(request, perm):
+
+        raise HTTPException(
+            status_code=403,
+            detail="ليس لديك صلاحية للوصول لهذه الصفحة 🔒"
+        )
+
+    return require_login(request)
 
 
 def ensure_admin_user(db: Session):

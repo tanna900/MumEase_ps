@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -59,6 +59,16 @@ except Exception:
 # =========================
 
 app = FastAPI(title="MumEase POS")
+
+@app.exception_handler(403)
+async def forbidden_handler(request: Request, exc: HTTPException):
+
+    return RedirectResponse(
+        url="/?error=ليس لديك صلاحية للوصول لهذه الصفحة 🔒",
+        status_code=303
+    )
+
+
 
 # ── Middleware للتحقق من الـ Login ──
 from fastapi import HTTPException

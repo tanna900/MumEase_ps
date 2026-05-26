@@ -10,6 +10,7 @@ import csv, io
 
 from app.database import SessionLocal
 from app import models
+from app.auth import require_permission
 
 router = APIRouter(prefix="/cash", tags=["Cash"])
 templates = Jinja2Templates(directory="app/templates")
@@ -201,6 +202,8 @@ def cash_home(
     per_page: int = Query(15, ge=1, le=200, description="عدد السجلات في الصفحة"),
     db: Session = Depends(get_db)
 ):
+    require_permission(request, "view_finance")
+
     # categories distinct
     cats = [c[0] for c in db.query(models.FinanceEntry.category)
                          .filter(models.FinanceEntry.category.isnot(None))
@@ -329,6 +332,7 @@ def cash_home(
 
 @router.post("/add")
 def cash_add(
+    request: Request,
     type: str = Form(...),            # IN / OUT
     category: str = Form(...),
     amount: float = Form(...),
@@ -345,6 +349,7 @@ def cash_add(
 
     db: Session = Depends(get_db)
 ):
+    require_permission(request, "add_finance_entry")
     if type not in ("IN", "OUT"):
         return RedirectResponse(url="/cash?msg=⚠️ نوع الحركة غير صحيح", status_code=303)
 
@@ -394,6 +399,7 @@ def cash_add(
 
 @router.post("/delete")
 def cash_delete(
+    request: Request,
     eid: int = Form(...),
 
     # حفظ الفلاتر بعد الحذف
@@ -406,6 +412,7 @@ def cash_delete(
 
     db: Session = Depends(get_db)
 ):
+    require_permission(request, "delete_finance_entry")
     row = db.query(models.FinanceEntry).get(int(eid))
     if row:
         db.delete(row)
@@ -417,10 +424,12 @@ def cash_delete(
 # ✅ الرصيد الافتتاحي محمي بباسورد
 @router.post("/opening")
 def cash_set_opening(
+    request: Request,
     opening: float = Form(0),
     password: str = Form(""),
     db: Session = Depends(get_db)
 ):
+    require_permission(request, "manage_opening_balance")
     if (password or "").strip() != "00000":
         return RedirectResponse(url="/cash?msg=⚠️ باسورد الرصيد الافتتاحي غير صحيح", status_code=303)
 
@@ -435,6 +444,7 @@ def cash_set_opening(
 # ✅ NEW: تعديل حركة
 @router.post("/update")
 def cash_update(
+    request: Request,
     eid: int = Form(...),
     type: str = Form(...),
     amount: float = Form(...),
@@ -451,6 +461,7 @@ def cash_update(
 
     db: Session = Depends(get_db)
 ):
+    require_permission(request, "edit_finance_entry")
     row = db.query(models.FinanceEntry).get(int(eid))
     if not row:
         url = f"/cash?msg=⚠️ الحركة غير موجودة&category={category}&q={q}&date_from={date_from}&date_to={date_to}&page={page}&per_page={per_page}"
@@ -481,12 +492,14 @@ def cash_update(
 # تحويل من خزنة فرعية إلى الرئيسية
 @router.post("/transfer-sub")
 def transfer_sub_to_main(
+    request: Request,
     source_key: str = Form(...),
     amount: float = Form(...),
     date: str = Form(""),
     note: str = Form(""),
     db: Session = Depends(get_db)
 ):
+    require_permission(request, "transfer_between_wallets")
     w = _sub_wallet_by_key(source_key)
     if not w:
         return RedirectResponse(url="/cash?msg=⚠️ خزنة فرعية غير معروفة", status_code=303)
@@ -525,12 +538,14 @@ def transfer_sub_to_main(
 
 @router.get("/export")
 def cash_export(
+    request: Request,
     category: str = "",
     date_from: str = "",
     date_to: str = "",
     q: str = "",
     db: Session = Depends(get_db)
 ):
+    require_permission(request, "export_reports")
     qry = db.query(models.FinanceEntry).order_by(
         models.FinanceEntry.date.asc(),
         models.FinanceEntry.id.asc()
