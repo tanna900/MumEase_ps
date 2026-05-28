@@ -9,6 +9,7 @@ from app.database import SessionLocal
 from app import models
 from fastapi.templating import Jinja2Templates
 from app.auth import require_permission
+from app.shopify_api import sync_paid_for_invoice
 
 router = APIRouter(prefix="/shipping", tags=["Shipping"])
 templates = Jinja2Templates(directory="app/templates")
@@ -74,6 +75,22 @@ def linked_returns_totals(db: Session, sale_id: int) -> Tuple[float, float]:
     total_ret = sum(float(r.total or 0) for r in rets)
     total_ret_ship = sum(float(r.return_shipping_fee or 0) for r in rets)
     return total_ret, total_ret_ship
+
+def sync_shopify_paid_if_settled(db: Session, inv: models.Invoice) -> bool:
+    if not getattr(inv, "shopify_order_id", None):
+        return False
+    method = (inv.payment_method or "").strip()
+    if method in DIRECT_METHODS:
+        return False
+
+    base_due = float(inv.total or 0) - float(inv.actual_shipping_cost or 0)
+    ret_total, ret_ship = linked_returns_totals(db, inv.id)
+    due_after_returns = base_due - ret_total - ret_ship
+    paid_on_inv = allocations_sum_for_invoice(db, inv.id)
+    if round(due_after_returns - paid_on_inv, 2) > 0:
+        return False
+
+    return sync_paid_for_invoice(inv)
 
 def _cash_link_for_payment(db: Session, pay_id: int) -> Optional[models.ShippingPaymentCashMap]:
     return db.query(models.ShippingPaymentCashMap)\
@@ -789,6 +806,12 @@ def allocate_payment(
 
     db.add(models.ShippingAllocation(payment_id=pay.id, invoice_id=inv.id, amount=amount))
     db.commit()
+    try:
+        sync_shopify_paid_if_settled(db, inv)
+        db.commit()
+    except Exception as exc:
+        inv.shopify_sync_note = str(exc)
+        db.commit()
 
     url = f"/shipping?company={company}&unpaid_page={unpaid_page}&paid_page={paid_page}&page_size={page_size}"
     if q_dfrom: url += f"&dfrom={q_dfrom}"

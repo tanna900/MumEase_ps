@@ -64,6 +64,11 @@ class Invoice(Base):
 
     # 🆕 جديد: المحافظة
     governorate = Column(String, nullable=True)  # مثال: "القاهرة"
+    shopify_order_id = Column(String, nullable=True, index=True)
+    shopify_order_name = Column(String, nullable=True)
+    shopify_fulfilled_at = Column(DateTime, nullable=True)
+    shopify_paid_at = Column(DateTime, nullable=True)
+    shopify_sync_note = Column(Text, nullable=True)
 
 class InvoiceItem(Base):
     __tablename__ = "invoice_items"

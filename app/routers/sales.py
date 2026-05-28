@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app import models
 from app.utils import get_next_invoice_code
+from app.shopify_api import sync_fulfilled_for_invoice
 from fastapi.templating import Jinja2Templates
 from app.auth import require_permission
 
@@ -139,6 +140,8 @@ def _create_invoice(db: Session, payload: dict, items):
         marketer_id=int(payload["marketer_id"]),
         # 🆕 حفظ المحافظة
         governorate=(payload.get("governorate") or "").strip() or None,
+        shopify_order_id=(payload.get("shopify_order_id") or "").strip() or None,
+        shopify_order_name=(payload.get("shopify_order_name") or "").strip() or None,
     )
     db.add(inv)
     db.commit()
@@ -161,6 +164,14 @@ def _create_invoice(db: Session, payload: dict, items):
     except Exception:
         pass
 
+    if inv.shopify_order_id:
+        try:
+            sync_fulfilled_for_invoice(inv)
+            db.commit()
+        except Exception as exc:
+            inv.shopify_sync_note = str(exc)
+            db.commit()
+
     return inv
 
 @router.post("/create")
@@ -182,6 +193,8 @@ def sales_create(
     unit_price: List[float] = Form([]),
     # 🆕 استلام المحافظة من النموذج
     governorate: str = Form(""),
+    shopify_order_id: str = Form(""),
+    shopify_order_name: str = Form(""),
     db: Session = Depends(get_db)
 ):
     require_permission(request, "create_invoice")
@@ -226,6 +239,8 @@ def sales_create_and_print(
     unit_price: List[float] = Form([]),
     # 🆕 استلام المحافظة من النموذج
     governorate: str = Form(""),
+    shopify_order_id: str = Form(""),
+    shopify_order_name: str = Form(""),
     db: Session = Depends(get_db)
 ):
     require_permission(request, "print_invoice")

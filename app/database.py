@@ -22,3 +22,16 @@ with engine.connect() as conn:
         conn.commit()
     except:
         pass
+
+    for sql in (
+        "ALTER TABLE invoices ADD COLUMN shopify_order_id TEXT",
+        "ALTER TABLE invoices ADD COLUMN shopify_order_name TEXT",
+        "ALTER TABLE invoices ADD COLUMN shopify_fulfilled_at DATETIME",
+        "ALTER TABLE invoices ADD COLUMN shopify_paid_at DATETIME",
+        "ALTER TABLE invoices ADD COLUMN shopify_sync_note TEXT",
+    ):
+        try:
+            conn.execute(text(sql))
+            conn.commit()
+        except:
+            pass

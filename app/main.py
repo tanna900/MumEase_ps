@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -8,6 +8,7 @@ from datetime import datetime, date, time, timedelta
 import asyncio
 
 from app.database import Base, engine, SessionLocal
+from app.shopify_api import get_orders
 from app import models
 
 # إنشاء الجداول (إن لم تكن موجودة)
@@ -38,7 +39,6 @@ from app.routers import (
 )
 
 from app.auth import User, ensure_admin_user, get_current_user, has_permission, get_session
-from app.database import Base
 
 # =========================
 # [NEW] اختياري: استيراد روترات الخزنة وP&L والمسوّقين إن وُجدت
@@ -632,3 +632,10 @@ def logout():
 @app.on_event("startup")
 async def _start_auto_close_task():
     asyncio.create_task(auto_close_daemon())
+
+@app.get("/api/shopify/orders")
+async def shopify_orders():
+
+    data = get_orders()
+
+    return JSONResponse(content=data)

@@ -105,6 +105,304 @@ html,body{
 
   }
 
+
+.btn-shopify{
+  background:#95BF47;
+  color:#fff;
+  border:none;
+  border-radius:14px;
+  min-height:46px;
+  padding:10px 16px;
+  font-weight:700;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  transition:.2s ease;
+}
+
+.btn-shopify:hover{
+  background:#7da53b;
+  color:#fff;
+  transform:translateY(-1px);
+}
+
+.shopify-icon{
+  font-size:1.1rem;
+}
+
+.mobile-collapse-toggle{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  cursor:pointer;
+  user-select:none;
+}
+
+.collapse-icon{
+  font-size:1.2rem;
+  transition:.25s ease;
+}
+
+.mobile-collapse-card.closed .collapse-icon{
+  transform:rotate(-90deg);
+}
+
+@media(max-width:992px){
+
+  .mobile-header-actions{
+    width:100%;
+  }
+
+  .mobile-header-actions .btn{
+    flex:1;
+  }
+
+  .mobile-collapse-content{
+    overflow:hidden;
+    transition:max-height .25s ease, opacity .25s ease, margin .25s ease;
+    max-height:2000px;
+    opacity:1;
+    margin-top:16px;
+  }
+
+  .mobile-collapse-card.closed .mobile-collapse-content{
+    max-height:0;
+    opacity:0;
+    margin-top:0;
+  }
+
+  .mobile-collapse-toggle{
+    padding:2px 0;
+  }
+
+  #shopifyModal .modal-dialog{
+    margin:0;
+    max-width:100%;
+    height:100%;
+  }
+
+  #shopifyModal .modal-content{
+    border-radius:22px 22px 0 0;
+    position:fixed;
+    bottom:0;
+    width:100%;
+    max-height:88vh;
+    overflow:hidden;
+  }
+
+  #shopifyOrdersList{
+    max-height:65vh;
+    overflow:auto;
+    padding-bottom:20px;
+  }
+
+  .shopify-order-card{
+    border:none;
+    border-radius:22px;
+    overflow:hidden;
+    background:#fff;
+    box-shadow:0 4px 18px rgba(0,0,0,.08);
+  }
+
+  .shopify-order-head{
+    background:#f6fff0;
+    padding:14px 16px;
+    border-bottom:1px solid #eef5e8;
+  }
+
+  .shopify-order-body{
+    padding:16px;
+  }
+
+  .shopify-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:10px;
+  }
+
+  .shopify-badge{
+    background:#f4f4f4;
+    border-radius:999px;
+    padding:6px 10px;
+    font-size:.82rem;
+    font-weight:600;
+  }
+
+  .shopify-products{
+    background:#fafafa;
+    border-radius:16px;
+    padding:12px;
+    margin-top:14px;
+  }
+
+  .shopify-products ul{
+    margin:0;
+    padding-right:18px;
+  }
+
+  .shopify-products li{
+    margin-bottom:6px;
+    font-size:.92rem;
+  }
+
+  
+  .shopify-import-btn{
+    width:100%;
+    margin-top:16px;
+    min-height:52px;
+    border:none;
+    border-radius:18px;
+    background:linear-gradient(135deg,#95BF47,#5E8E3E);
+    color:#fff;
+    font-weight:800;
+    font-size:1rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    box-shadow:0 8px 20px rgba(149,191,71,.28);
+    transition:.22s ease;
+  }
+
+  .shopify-import-btn:hover{
+    transform:translateY(-1px);
+    box-shadow:0 10px 24px rgba(149,191,71,.34);
+    opacity:.96;
+  }
+
+
+  #shopifyModal .modal-header{
+    border-bottom:none;
+    padding-bottom:0;
+  }
+
+  #shopifyModal .modal-content{
+    border-radius:28px;
+  }
+}
+
+
+
+.shopify-order-modern{
+  display:grid;
+  grid-template-columns:220px 1fr 170px;
+  gap:18px;
+  align-items:flex-start;
+  padding:18px;
+}
+
+.shopify-order-number{
+  font-size:1.6rem;
+  font-weight:900;
+  color:#0f2d5c;
+  margin-bottom:10px;
+}
+
+.shopify-customer-name{
+  font-size:1rem;
+  font-weight:700;
+  margin-bottom:8px;
+}
+
+.shopify-governorate,
+.shopify-status{
+  color:#666;
+  margin-bottom:6px;
+  font-size:.93rem;
+}
+
+.shopify-products-title{
+  font-size:1rem;
+  font-weight:800;
+  margin-bottom:14px;
+  color:#0f2d5c;
+}
+
+.shopify-products-list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.shopify-product-item{
+  background:#fafafa;
+  border-radius:14px;
+  padding:12px;
+}
+
+.shopify-product-name{
+  font-weight:800;
+  color:#0f2d5c;
+  margin-bottom:4px;
+}
+
+.shopify-product-variant{
+  color:#777;
+  font-size:.9rem;
+  margin-bottom:6px;
+}
+
+.shopify-product-qty{
+  color:#198754;
+  font-size:.9rem;
+  font-weight:700;
+}
+
+.shopify-order-left{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  justify-content:space-between;
+  height:100%;
+}
+
+.shopify-price{
+  font-size:2rem;
+  font-weight:900;
+  color:#198754;
+  margin-bottom:18px;
+}
+
+.shopify-import-btn{
+  width:100%;
+  min-height:52px;
+  border:none;
+  border-radius:18px;
+  background:linear-gradient(135deg,#95BF47,#5E8E3E);
+  color:#fff;
+  font-weight:800;
+  font-size:1rem;
+  padding:0 18px;
+  box-shadow:0 8px 20px rgba(149,191,71,.28);
+  transition:.22s ease;
+}
+
+.shopify-import-btn:hover{
+  transform:translateY(-1px);
+  opacity:.96;
+}
+
+@media(max-width:992px){
+
+  .shopify-order-modern{
+    grid-template-columns:1fr;
+  }
+
+  .shopify-order-left{
+    align-items:stretch;
+  }
+
+  .shopify-price{
+    text-align:center;
+    margin-bottom:14px;
+  }
+
+  .shopify-order-number{
+    font-size:1.35rem;
+  }
+}
+
 </style>
 
 {% extends "base.html" %}
@@ -390,9 +688,16 @@ table th,
       <div class="text-muted small">إنشاء أوردر جديد وإدارة المنتجات بسهولة</div>
     </div>
 
-    <button type="button" class="btn btn-outline-secondary" id="btnClearDraft">
-      🧹 مسح البيانات
-    </button>
+    <div class="d-flex gap-2 align-items-center mobile-header-actions">
+      <button type="button" class="btn btn-outline-secondary" id="btnClearDraft">
+        🧹 مسح البيانات
+      </button>
+
+      <button type="button" class="btn btn-shopify" id="btnShopifyImport">
+        <span class="shopify-icon">🛍️</span>
+        <span class="shopify-text">Shopify</span>
+      </button>
+    </div>
   </div>
 
   {% if request.query_params.get("msg") %}
@@ -400,6 +705,8 @@ table th,
   {% endif %}
 
 <form method="post" action="/sales/create" id="sale-form">
+<input type="hidden" name="shopify_order_id" id="shopify_order_id">
+<input type="hidden" name="shopify_order_name" id="shopify_order_name">
 
 <div class="sale-grid">
 
@@ -479,9 +786,14 @@ table th,
   </div>
   <div>
 
-    <div class="sale-card mb-3">
+    <div class="sale-card mb-3 mobile-collapse-card">
 
-      <div class="section-title">بيانات العميل</div>
+      <div class="mobile-collapse-toggle" onclick="toggleMobileSection(this)">
+        <div class="section-title mb-0">👤 بيانات العميل</div>
+        <span class="collapse-icon">⌄</span>
+      </div>
+
+      <div class="mobile-collapse-content">
 
       <div class="row g-3">
 
@@ -519,11 +831,18 @@ table th,
 
       </div>
 
+      </div>
+
     </div>
 
-    <div class="sale-card mb-3">
+    <div class="sale-card mb-3 mobile-collapse-card">
 
-      <div class="section-title">تفاصيل الطلب</div>
+      <div class="mobile-collapse-toggle" onclick="toggleMobileSection(this)">
+        <div class="section-title mb-0">🚚 تفاصيل الطلب</div>
+        <span class="collapse-icon">⌄</span>
+      </div>
+
+      <div class="mobile-collapse-content">
 
       <div class="row g-3">
 
@@ -559,6 +878,8 @@ table th,
           <label class="form-label">تكلفة الشحن الفعلية</label>
           <input name="actual_shipping_cost" type="number" step="0.01" class="form-control">
         </div>
+
+      </div>
 
       </div>
 
@@ -633,7 +954,7 @@ function addRow(){
   var arr=window.productsData||[];
   for(var i=0;i<arr.length;i++){
     var p=arr[i]||{}; var n=p.name?String(p.name):''; var pr=Math.round(Number(p.price||0));
-    opts+='<option value="'+p.id+'" data-price="'+pr+'">'+escapeHtml(n)+'</option>';
+    opts+='<option value="'+p.id+'" data-price="'+pr+'" data-barcode="'+escapeHtml(p.barcode||'')+'">'+escapeHtml(n)+'</option>';
   }
   var tr=document.createElement('tr');
   tr.innerHTML=
@@ -1179,4 +1500,400 @@ window.addEventListener('beforeunload', function (e) {
   });
 })();
 </script>
+
+<!-- Shopify Modal -->
+<div class="modal fade" id="shopifyModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow-lg">
+
+      <div class="modal-header">
+        <h5 class="modal-title">🛍️ استيراد أوردر من Shopify</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <input
+          type="text"
+          class="form-control mb-3"
+          id="shopifySearch"
+          placeholder="ابحث برقم الأوردر أو اسم العميل"
+        >
+
+        <div id="shopifyOrdersList">
+
+          <div class="text-center py-4 text-muted">
+            جاري تحميل الأوردرات...
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleMobileSection(el){
+
+  if(window.innerWidth > 992){
+    return;
+  }
+
+  const card = el.closest('.mobile-collapse-card');
+
+  card.classList.toggle('closed');
+}
+
+async function loadShopifyOrders(){
+
+  const list = document.getElementById('shopifyOrdersList');
+
+  list.innerHTML = `
+    <div class="text-center py-4 text-muted">
+      جاري تحميل الأوردرات...
+    </div>
+  `;
+
+  try{
+
+    const res = await fetch('/api/shopify/orders');
+
+    const data = await res.json();
+
+    const orders = data.orders || [];
+
+    if(!orders.length){
+
+      list.innerHTML = `
+        <div class="alert alert-warning">
+          لا توجد أوردرات غير مشحونة حالياً
+        </div>
+      `;
+
+      return;
+    }
+
+    list.innerHTML = orders.map(order => {
+
+      const items = order.items || [];
+
+      const customerName =
+        String(order.customer_name || '').trim()
+        || String(order.phone || '').trim()
+        || `عميل Shopify #${order.order_number || ''}`;
+
+      const governorate =
+        order.address
+        || order.province
+        || 'غير محددة';
+
+      return `
+        <div class="shopify-order-card mb-3">
+
+          <div class="shopify-order-modern">
+
+            <div class="shopify-order-right">
+
+              <div class="shopify-order-number">
+                #${order.order_number || order.id}
+              </div>
+
+              <div class="shopify-customer-name">
+                👤 ${customerName}
+              </div>
+
+              <div class="shopify-governorate">
+                📍 ${governorate || 'غير محددة'}
+              </div>
+
+              <div class="shopify-status">
+                📞 ${order.phone || 'لا يوجد رقم'}
+              </div>
+
+              <div class="shopify-status">
+                💳 ${order.financial_status || 'pending'}
+              </div>
+
+            </div>
+
+            <div class="shopify-order-center">
+
+              <div class="shopify-products-title">
+                المنتجات
+              </div>
+
+              <div class="shopify-products-list">
+
+                ${items.map(item => `
+
+                  <div class="shopify-product-item">
+
+                    <div class="shopify-product-name">
+                      ${item.product_name || ''}
+                    </div>
+
+                    ${
+                      item.variant_title
+                      && item.variant_title !== 'Default Title'
+                      ?
+                      `<div class="shopify-product-variant">
+                        ${item.variant_title}
+                      </div>`
+                      :
+                      ''
+                    }
+
+                    <div class="shopify-product-qty">
+                      الكمية: ${item.quantity || 1}
+                    </div>
+
+                  </div>
+
+                `).join('')}
+
+              </div>
+
+            </div>
+
+            <div class="shopify-order-left">
+
+              <div class="shopify-price">
+                ${Math.round(order.total_price || 0)} ج
+              </div>
+
+              <button
+                class="shopify-import-btn"
+                onclick="importShopifyOrder(${order.id})"
+              >
+                🛍️ استيراد
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+      `;
+
+    }).join('');
+
+  }catch(err){
+
+    console.error(err);
+
+    list.innerHTML = `
+      <div class="alert alert-danger">
+        حدث خطأ أثناء تحميل الأوردرات
+      </div>
+    `;
+  }
+}
+
+async function importShopifyOrder(orderId){
+
+  const res = await fetch('/api/shopify/orders');
+
+  const data = await res.json();
+
+  const orders = data.orders || [];
+
+  const order = orders.find(o => String(o.id) === String(orderId));
+
+  if(!order){
+    console.error('ORDER NOT FOUND', orderId, orders);
+    return;
+  }
+
+  const shopifyId = document.getElementById('shopify_order_id');
+  const shopifyName = document.getElementById('shopify_order_name');
+  if(shopifyId) shopifyId.value = order.id || '';
+  if(shopifyName) shopifyName.value = order.name || (`#${order.order_number || ''}`);
+
+  document.getElementById('customer_name').value =
+    (
+      order.customer_name &&
+      order.customer_name !== 'عميل بدون اسم'
+    )
+    ? order.customer_name
+    : `عميل Shopify #${order.order_number || ''}`;
+
+  document.getElementById('customer_phone').value =
+    order.phone || '';
+
+  document.getElementById('customer_address').value =
+    order.address || '';
+
+  const gov = document.getElementById('governorate');
+
+  if(gov && order.province){
+
+    for(let i=0;i<gov.options.length;i++){
+
+      if(gov.options[i].value === order.province){
+
+        gov.selectedIndex = i;
+
+        break;
+      }
+    }
+  }
+
+  const orderInput = document.querySelector('input[name="order_number"]');
+
+  if(orderInput){
+    orderInput.value = order.name || order.order_number || order.id;
+  }
+
+  const discountInput = document.getElementById('discount');
+  if(discountInput){
+    discountInput.value = Math.round(Number(order.total_discounts || 0));
+  }
+
+  const shippingInput = document.getElementById('shipping_cost');
+  if(shippingInput){
+    shippingInput.value = Math.round(Number(order.shipping_cost || 0));
+  }
+
+  document.getElementById('items-body').innerHTML = '';
+
+  const unmatched = [];
+
+  (order.items || []).forEach(item => {
+
+    if(typeof addRow === 'function'){
+      addRow();
+    }
+
+    const row = document.querySelector('#items-body tr:last-child');
+
+    if(!row){
+      return;
+    }
+
+    const select = row.querySelector('select.product');
+
+    if(select){
+
+      const itemBarcode =
+        String(
+          item.barcode
+          || item.sku
+          || ''
+        ).trim();
+      const normalizeCode = (v) => String(v || '').trim().replace(/\s+/g, '').toLowerCase();
+
+      let matched = false;
+
+      for(let i=0;i<select.options.length;i++){
+
+        const option = select.options[i];
+
+        const localBarcode =
+          String(
+            option.getAttribute('data-barcode')
+            || ''
+          ).trim();
+
+        if(
+          itemBarcode
+          && localBarcode
+          && normalizeCode(itemBarcode) === normalizeCode(localBarcode)
+        ){
+
+          select.selectedIndex = i;
+
+          onProductChange(select);
+
+          matched = true;
+
+          break;
+        }
+      }
+
+      if(!matched){
+        unmatched.push(`${item.product_name || ''} ${item.variant_title || ''}`.trim() || itemBarcode || 'Unmatched item');
+
+        const warn = document.createElement('div');
+        warn.className = 'row-warn small text-danger mt-1';
+        warn.textContent = item.barcode_error
+          ? `Shopify barcode/SKU cannot be read: ${item.barcode_error}`
+          : `Shopify barcode/SKU not found locally: ${itemBarcode || 'empty'}`;
+        (row.querySelector('.cell-product') || row.cells[0])?.appendChild(warn);
+      }
+
+      const info = document.createElement('div');
+      info.className = matched ? 'small text-muted mt-1' : 'small text-danger mt-1';
+      info.textContent = [
+        `Shopify: ${item.product_name || ''}`,
+        item.variant_title && item.variant_title !== 'Default Title' ? item.variant_title : '',
+        itemBarcode ? `Barcode/SKU: ${itemBarcode}` : (item.barcode_error ? `Barcode error: ${item.barcode_error}` : 'Barcode/SKU: empty')
+      ].filter(Boolean).join(' - ');
+      (row.querySelector('.cell-product') || row.cells[0])?.appendChild(info);
+    }
+
+    const qty = row.querySelector('.qty');
+
+    if(qty){
+
+      qty.value = item.quantity || 1;
+
+      onQtyChange(qty);
+    }
+
+    const price = row.querySelector('.price');
+    const total = row.querySelector('.total');
+    const shopifyPrice = Number(item.price || 0);
+    const shopifyQty = Number(item.quantity || 1);
+    if(price && shopifyPrice > 0){
+      price.value = Math.round(shopifyPrice);
+    }
+    if(total && shopifyPrice > 0){
+      total.value = Math.round(shopifyPrice * shopifyQty);
+    }
+  });
+
+  if(typeof recalc === 'function'){
+    recalc();
+  }
+
+  if(unmatched.length){
+    alert('فيه منتجات من Shopify مالهاش باركود مطابق في السيستم. راجع البنود قبل الحفظ:\n\n' + unmatched.join('\n'));
+  }
+
+  const modal = bootstrap.Modal.getInstance(document.getElementById('shopifyModal'));
+
+  if(modal){
+    modal.hide();
+  }
+}
+
+document.getElementById('btnShopifyImport')?.addEventListener('click', function(){
+
+  const modal = new bootstrap.Modal(document.getElementById('shopifyModal'));
+
+  modal.show();
+
+  loadShopifyOrders();
+});
+
+document.getElementById('sale-form')?.addEventListener('submit', function(e){
+  if(!document.getElementById('shopify_order_id')?.value){
+    return;
+  }
+  let missing = false;
+  document.querySelectorAll('#items-body tr').forEach(function(row){
+    const sel = row.querySelector('.product');
+    if(sel && !sel.value){
+      missing = true;
+    }
+  });
+  if(missing){
+    e.preventDefault();
+    alert('فيه بنود Shopify لسه مش متطابقة مع منتج محلي. طابقها بالباركود أو احذفها قبل الحفظ.');
+  }
+}, {capture:true});
+</script>
+
 {% endblock %}
