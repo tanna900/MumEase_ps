@@ -11,9 +11,34 @@ VARIANT_CACHE = {}
 
 
 def _load_dotenv():
-    env_path = os.path.join(os.getcwd(), ".env")
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    env_path = os.path.join(BASE_DIR, ".env")
+
     if not os.path.exists(env_path):
         return
+
+    try:
+        with open(env_path, "r", encoding="utf-8") as f:
+            for raw in f:
+                line = raw.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                os.environ.setdefault(
+                    key.strip(),
+                    value.strip().strip('"').strip("'")
+                )
+    except Exception:
+        pass
+
+
+_load_dotenv():
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    env_path = os.path.join(BASE_DIR, ".env")
+
+    if not os.path.exists(env_path):
+        return
+
     try:
         with open(env_path, "r", encoding="utf-8") as f:
             for raw in f:
