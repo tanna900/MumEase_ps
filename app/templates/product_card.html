@@ -680,7 +680,7 @@ document.getElementById('btnConfirmBarcodePrint')
     labels += `
       <div style="
         width:40mm;
-        height:20mm;
+        height:18mm;
         padding:1mm;
         text-align:center;
         margin:0;
@@ -693,7 +693,7 @@ document.getElementById('btnConfirmBarcodePrint')
         font-family:Arial;
       ">
 
-        <div style="font-weight:bold;font-size:8px;line-height:1;">
+        <div style="font-weight:bold;font-size:6px;line-height:1;">
           ${currentBarcodeData.name}
         </div>
 
@@ -709,11 +709,11 @@ document.getElementById('btnConfirmBarcodePrint')
              jsbarcode-format="CODE128"
              jsbarcode-value="${currentBarcodeData.barcode}"
              jsbarcode-width="1"
-             jsbarcode-height="20"
+             jsbarcode-height="12"
              jsbarcode-displayValue="true"></svg>
 
         ${showPrice
-          ? `<div style="font-weight:bold;font-size:8px;margin-top:1px;">${currentBarcodeData.price} EGP</div>`
+          ? `<div style="font-weight:bold;font-size:6px;margin-top:1px;">${currentBarcodeData.price} EGP</div>`
           : ''}
 
       </div>
