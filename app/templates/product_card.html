@@ -673,88 +673,141 @@ document.getElementById('btnConfirmBarcodePrint')
   const showPrice =
     document.getElementById('showBarcodePrice').checked;
 
+  // ── بناء الليبلات ──────────────────────────────
   let labels = '';
 
-  for(let i=0;i<copies;i++){
+  for(let i = 0; i < copies; i++){
+
+    // page-break-after على كل ليبل ما عدا الأخير
+    const pageBreak = (i < copies - 1)
+      ? 'page-break-after:always;'
+      : '';
 
     labels += `
       <div style="
         width:40mm;
-        height:18mm;
-        padding:1mm;
-        text-align:center;
-        margin:0;
+        height:20mm;
+        box-sizing:border-box;
+        padding:1.2mm 1.5mm;
         overflow:hidden;
-        page-break-inside:avoid;
         display:flex;
         flex-direction:column;
-        justify-content:center;
         align-items:center;
-        font-family:Arial;
+        justify-content:center;
+        font-family:Arial,sans-serif;
+        ${pageBreak}
       ">
 
-        <div style="font-weight:bold;font-size:6px;line-height:1;">
+        <div style="
+          font-weight:700;
+          font-size:6.5px;
+          line-height:1.2;
+          text-align:center;
+          max-width:100%;
+          overflow:hidden;
+          white-space:nowrap;
+        ">
           ${currentBarcodeData.name}
         </div>
 
-        <div style="font-size:6px;color:#666;margin-bottom:1px;">
+        ${(currentBarcodeData.color || currentBarcodeData.size) ? `
+        <div style="font-size:6px;color:#444;line-height:1.2;">
           ${currentBarcodeData.color || ''}
           ${currentBarcodeData.color && currentBarcodeData.size ? ' • ' : ''}
           ${currentBarcodeData.size
             ? '<strong>' + currentBarcodeData.size + '</strong>'
             : ''}
-        </div>
+        </div>` : ''}
 
         <svg class="print-barcode"
-             jsbarcode-format="CODE128"
-             jsbarcode-value="${currentBarcodeData.barcode}"
-             jsbarcode-width="1"
-             jsbarcode-height="12"
-             jsbarcode-displayValue="true"></svg>
+          jsbarcode-format="CODE128"
+          jsbarcode-value="${currentBarcodeData.barcode}"
+          jsbarcode-width="1.2"
+          jsbarcode-height="22"
+          jsbarcode-fontSize="7"
+          jsbarcode-textMargin="1"
+          jsbarcode-margin="0"
+          jsbarcode-displayValue="true">
+        </svg>
 
-        ${showPrice
-          ? `<div style="font-weight:bold;font-size:6px;margin-top:1px;">${currentBarcodeData.price} EGP</div>`
-          : ''}
+        ${showPrice ? `
+        <div style="
+          font-weight:700;
+          font-size:7px;
+          line-height:1.2;
+          margin-top:1px;
+        ">
+          ${currentBarcodeData.price} EGP
+        </div>` : ''}
 
       </div>
     `;
   }
 
-  const w = window.open('', '_blank');
+  // ── فتح نافذة الطباعة بمقاس محسوب ──────────────
+  // 40mm × 20mm عند 96dpi = 152 × 76 pixel
+  const PX_W = 152;
+  const PX_H = 76 * copies;
+
+  const w = window.open(
+    '',
+    '_blank',
+    `width=${PX_W},height=${PX_H},toolbar=0,scrollbars=0,status=0,menubar=0`
+  );
 
   w.document.write(`
+    <!DOCTYPE html>
     <html dir="rtl">
     <head>
-
+      <meta charset="UTF-8">
       <style>
-      @page{
-        size:40mm 20mm;
-        margin:0;
-      }
 
-      body{
-        margin:0;
-        padding:0;
-      }
+        /* ── Page Setup ── */
+        @page {
+          size: 40mm 20mm;
+          margin: 0 !important;
+        }
+
+        /* ── Force exact dimensions ── */
+        html, body {
+          width: 40mm !important;
+          height: 20mm !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: hidden;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        /* ── منع أي page break داخل الليبل ── */
+        div {
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+
       </style>
-      <title>Barcode Print</title>
-
-      <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
-
+      <title>Barcode</title>
     </head>
-
     <body>
 
       ${labels}
 
+      <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
       <script>
-
-        JsBarcode(".print-barcode").init();
-
-        window.onload = function(){
-          window.print();
+        // انتظر تحميل الـ script الأول
+        function waitAndPrint() {
+          if(typeof JsBarcode === 'undefined') {
+            setTimeout(waitAndPrint, 50);
+            return;
+          }
+          JsBarcode(".print-barcode").init();
+          // انتظر رسم الـ SVG بعدين اطبع
+          setTimeout(function(){
+            window.print();
+            window.close();
+          }, 300);
         }
-
+        waitAndPrint();
       <\/script>
 
     </body>
