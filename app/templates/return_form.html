@@ -133,6 +133,22 @@
   }
 }
 
+
+@media (max-width:768px){
+  .mobile-stat-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:6px 12px;
+    font-size:14px;
+    margin:6px 0;
+  }
+  .mobile-stat-grid span{
+    background:#f8fafc;
+    padding:4px 8px;
+    border-radius:8px;
+  }
+}
+
 </style>
 
 <h4 class="mb-3">↩️ إنشاء مرتجع</h4>
@@ -235,23 +251,30 @@
           <td data-label="الصنف" class="product-col mobile-hide-label">
             <div class="fw-semibold mb-1">{{ r.product_name }}</div>
 
+            <div class="mobile-stat-grid d-md-none">
+              <span>📦 مباع {{ r.sold_qty }}</span>
+              <span>↩️ {{ r.returned_qty }}</span>
+              <span>✅ {{ r.remaining_qty }}</span>
+              <span>💰 {{ '%.0f'|format(r.unit_price) }}</span>
+            </div>
+
             <input type="hidden" name="product_id" value="{{ r.product_id }}">
             <input type="hidden" name="unit_price" value="{{ '%.0f'|format(r.unit_price) }}">
           </td>
 
-          <td data-label="المباع" class="text-end">
+          <td data-label="المباع" class="text-end d-none d-md-table-cell">
             {{ r.sold_qty }}
           </td>
 
-          <td data-label="مرتجع سابق" class="text-end">
+          <td data-label="مرتجع سابق" class="text-end d-none d-md-table-cell">
             {{ r.returned_qty }}
           </td>
 
-          <td data-label="المتاح" class="text-end fw-bold text-primary">
+          <td data-label="المتاح" class="text-end fw-bold text-primary d-none d-md-table-cell">
             {{ r.remaining_qty }}
           </td>
 
-          <td data-label="السعر" class="text-end">
+          <td data-label="السعر" class="text-end d-none d-md-table-cell">
             {{ '%.0f'|format(r.unit_price) }}
           </td>
 
