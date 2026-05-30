@@ -255,6 +255,32 @@
   }
 
   .mobile-mini-grid{
+    display:none;
+}
+.mobile-summary{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#f8f9fa;
+    border-radius:12px;
+    padding:10px 12px;
+    margin:10px 0;
+}
+.mobile-details{
+    display:none;
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px dashed #ddd;
+}
+.mobile-details.show{
+    display:block;
+}
+.mobile-action-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+}
+.mobile-mini-grid{
     display:grid;
     grid-template-columns:repeat(2,1fr);
     gap:10px;
@@ -802,9 +828,13 @@
 
   </div>
 
-  <div class="small text-muted mb-3">
-    {{ p.barcode or '-' }}
+  <div class="mobile-summary">
+    <div><strong>📦 {{ _stock }}</strong> قطعة</div>
+    <div><strong>💰 {{ '%.0f'|format(_price or 0) }}</strong></div>
   </div>
+
+  <div class="mobile-details">
+    <div class="small mb-2"><strong>الباركود:</strong> {{ p.barcode or '-' }}</div>
 
   <div class="mobile-mini-grid">
 
@@ -846,7 +876,12 @@
 
   </div>
 
-  <div class="d-grid gap-2 mt-3">
+  </div>
+
+  <div class="mobile-action-row mt-3">
+    <button type="button" class="btn btn-outline-info btnToggleDetails">ℹ️ تفاصيل</button>
+
+
 
     <button type="button"
             class="btn btn-outline-primary btnEdit"
@@ -1308,7 +1343,16 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
 
-  // وضع السكان
+  document.querySelectorAll(".btnToggleDetails").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const card=btn.closest(".mobile-product-card");
+    const details=card.querySelector(".mobile-details");
+    details.classList.toggle("show");
+    btn.innerHTML=details.classList.contains("show") ? "🔼 إخفاء" : "ℹ️ تفاصيل";
+  });
+});
+
+// وضع السكان
   const btnFocus = document.getElementById('btnFocusScan');
   const qInput = document.getElementById('qInput');
   if (btnFocus && qInput) {

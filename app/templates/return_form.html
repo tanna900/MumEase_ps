@@ -112,6 +112,27 @@
     padding-top:10px;
   }
 }
+
+@media (max-width:768px){
+  .mobile-extra-section{display:none;}
+  .mobile-extra-section.show{display:block;}
+  .mobile-options-btn{display:block;margin-bottom:10px;}
+  .mobile-save-bar{
+    position:sticky;
+    bottom:0;
+    background:#fff;
+    border-top:1px solid #dee2e6;
+    padding:10px;
+    z-index:200;
+    box-shadow:0 -2px 8px rgba(0,0,0,.08);
+  }
+  .qty-input{
+    min-height:52px !important;
+    font-size:22px !important;
+    font-weight:700;
+  }
+}
+
 </style>
 
 <h4 class="mb-3">↩️ إنشاء مرتجع</h4>
@@ -270,6 +291,11 @@
   </div>
 
   <div class="sticky-total">
+    <div class="mobile-options-btn d-md-none">
+      <button type="button" class="btn btn-outline-secondary w-100" onclick="toggleExtraOptions()">
+        ⚙️ خيارات إضافية
+      </button>
+    </div>
     <div class="row g-3 align-items-stretch">
 
       <div class="col-md-3">
@@ -280,7 +306,7 @@
         </div>
       </div>
 
-      <div class="col-md-3">
+      <div class="col-md-3 mobile-extra-section">
         <div class="return-summary-box h-100">
           <label class="form-label fw-semibold">رسوم شحن المرتجع</label>
           <input
@@ -294,7 +320,7 @@
         </div>
       </div>
 
-      <div class="col-md-3">
+      <div class="col-md-3 mobile-extra-section">
         <div class="return-summary-box h-100">
           <label class="form-label fw-semibold">خصم المرتجع</label>
           <input
@@ -307,7 +333,7 @@
         </div>
       </div>
 
-      <div class="col-md-3">
+      <div class="col-md-3 mobile-extra-section">
         <div class="return-summary-box h-100">
           <label class="form-label fw-semibold">سبب المرتجع</label>
           <textarea
@@ -322,12 +348,12 @@
     </div>
   </div>
 
-  <div class="mt-3">
+  <div class="mt-3 mobile-extra-section">
     <label class="form-label fw-semibold">ملاحظات (اختياري)</label>
     <textarea name="note" class="form-control" rows="3"></textarea>
   </div>
 
-  <div class="mt-4 d-flex flex-column flex-md-row gap-2 mobile-stack">
+  <div class="mobile-save-bar mt-4 d-flex flex-column flex-md-row gap-2 mobile-stack">
     <button class="btn btn-success px-4">
       <i class="bi bi-save2"></i>
       حفظ المرتجع
@@ -553,7 +579,15 @@ document.addEventListener('input', function(e){
 
 document.addEventListener('DOMContentLoaded', recalc);
 
+
+function toggleExtraOptions(){
+  document.querySelectorAll('.mobile-extra-section').forEach(function(el){
+    el.classList.toggle('show');
+  });
+}
+
 var form = document.getElementById('ret-form');
+
 
 if(form){
 
