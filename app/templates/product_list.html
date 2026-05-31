@@ -306,6 +306,32 @@
 
 }
 
+
+@media(max-width:768px){
+.table-wrap{display:none!important;}
+.products-cards{display:none!important;}
+#searchForm{display:none!important;}
+
+.mobile-accordion{display:block!important;margin-bottom:12px}
+.mobile-inventory-list{display:block!important}
+
+.mobile-product-card{
+ border:0!important;
+ border-bottom:1px solid #e9ecef!important;
+ border-radius:0!important;
+ box-shadow:none!important;
+ padding:8px!important;
+ margin:0!important;
+}
+
+.mobile-product-title{font-size:.95rem!important;font-weight:700!important;text-align:center}
+.mobile-product-meta{font-size:.8rem!important;text-align:center;margin:2px 0!important}
+.mobile-summary,.mobile-details,.mobile-mini-grid{display:none!important}
+
+#bulkActionsBar{display:none}
+.top-products-actions .btn{width:100%}
+}
+
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-3 top-products-actions flex-wrap">
@@ -1162,8 +1188,8 @@ document.addEventListener('DOMContentLoaded', function () {
   function updateSelectedCount() {
     const count = document.querySelectorAll('.row-check:checked').length;
     if (selectedCountSpan) selectedCountSpan.textContent = count;
-    const bulkBar = document.getElementById('bulkActionsBar');
-    if (bulkBar){ bulkBar.style.display = count > 0 ? '' : 'none'; }
+    const bulkBar=document.getElementById('bulkActionsBar');
+    if(bulkBar){bulkBar.style.display=count>0?'':'none';}
     const total = rowChecks.length;
     const allChecked = total > 0 && count === total;
     if (checkAllToolbar) checkAllToolbar.checked = allChecked;
