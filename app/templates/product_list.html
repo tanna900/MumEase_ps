@@ -192,14 +192,6 @@
 
 @media(max-width:768px){
 
-  .mobile-product-card{border:1px solid rgba(0,0,0,.08);border-radius:10px;padding:8px 10px;margin-bottom:6px;box-shadow:none}
-  .mobile-product-title{font-size:.92rem;font-weight:700;text-align:center;margin:0 0 2px}
-  .mobile-product-line{font-size:.78rem;color:#666;text-align:center}
-  .mobile-product-row{display:grid;grid-template-columns:28px 1fr 42px;align-items:center;gap:6px}
-  .mobile-gear-btn{padding:4px 8px}
-  .mobile-accordion{margin-bottom:12px}
-
-
   .table-wrap{
     display:none;
   }
@@ -329,11 +321,7 @@
   </div>
 </div>
 
-<div class="d-md-none mobile-accordion accordion mb-3" id="mobileSummaryAcc">
-<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#sumAcc">📊 ملخص المخزون</button></h2>
-<div id="sumAcc" class="accordion-collapse collapse"><div class="accordion-body p-2">
-<div class="row g-3 products-cards">
-
+<div class="row g-3 mb-3 products-cards">
 
   <div class="col-md-3">
     <div class="summary-card">
@@ -371,9 +359,10 @@
     </div>
   </div>
 
-</div></div></div></div></div>
+</div>
 
-<div class="d-none d-md-block"><div class="row g-3 mb-3 products-cards">
+
+{% if msg %}
   <div class="alert {% if '✅' in msg %}alert-success{% elif '⚠️' in msg %}alert-warning{% elif '🗑️' in msg %}alert-info{% else %}alert-secondary{% endif %}">
     {{ msg }}
   </div>
@@ -443,7 +432,6 @@
   </div>
 </div>
 
-<div class="accordion d-md-none mb-3"><div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#filterAcc">⚙️ الفلاتر</button></h2><div id="filterAcc" class="accordion-collapse collapse"><div class="accordion-body">
 <form class="row g-2 mb-3" method="get" action="/products" id="searchForm">
   <div class="col-md-4">
     <input class="form-control" id="qInput" name="q" value="{{ q or '' }}" placeholder="بحث بالاسم أو الباركود" autofocus>
@@ -517,9 +505,7 @@
   </div>
 
   <input type="hidden" name="page" value="1">
-</form></div></div></div></div><div class="d-none d-md-block">
-<form class="row g-2 mb-3" method="get" action="/products">
-</form></div>
+</form>
 
 <!-- شريط Bulk Action -->
 <div class="card p-2 mb-2 soft-card" id="bulkActionsBar" style="display:none;">
@@ -813,27 +799,154 @@
 
 
 <!-- Mobile Products -->
-<div class="mobile-products mt-2">
+<div class="mobile-products mt-3">
+
 {% for p in products %}
 {% set _stock = (p.stock or 0) %}
+{% set _cost = (p.cost_price or 0) %}
 {% set _price = (p.price or 0) %}
+{% set _margin_u = (_price - _cost) %}
+{% set _margin_pct = (_margin_u / _price * 100) if _price and _price > 0 else 0 %}
+
 <div class="mobile-product-card">
-<div class="mobile-product-row">
-<input class="form-check-input row-check" type="checkbox" value="{{ p.id }}">
-<div>
-<div class="mobile-product-title">{{ p.name }}</div>
-<div class="mobile-product-line">{{ p.color or '-' }} | {{ p.size or '-' }} | {{ _stock }} | {{ '%.0f'|format(_price) }}</div>
+
+  <div class="d-flex justify-content-between align-items-start mb-2">
+
+    <div>
+
+      <div class="mobile-product-title">
+        {{ p.name }}
+      </div>
+
+      <div class="mobile-product-meta">
+        {{ p.color or '-' }} • {{ p.size or '-' }}
+      </div>
+
+    </div>
+
+    <input class="form-check-input row-check" type="checkbox" value="{{ p.id }}">
+
+  </div>
+
+  <div class="mobile-summary">
+    <div><strong>📦 {{ _stock }}</strong> قطعة</div>
+    <div><strong>💰 {{ '%.0f'|format(_price or 0) }}</strong></div>
+  </div>
+
+  <div class="mobile-details">
+    <div class="small mb-2"><strong>الباركود:</strong> {{ p.barcode or '-' }}</div>
+
+  <div class="mobile-mini-grid">
+
+    <div class="mobile-mini-box">
+      <div class="label">السعر</div>
+      <div class="value text-primary">
+        {{ '%.0f'|format(_price or 0) }}
+      </div>
+    </div>
+
+    <div class="mobile-mini-box">
+      <div class="label">الستوك</div>
+      <div class="value
+      {% if _stock == 0 %}
+        text-danger
+      {% elif _stock < LOW_STOCK_THRESHOLD %}
+        text-warning
+      {% else %}
+        text-success
+      {% endif %}
+      ">
+        {{ _stock }}
+      </div>
+    </div>
+
+    <div class="mobile-mini-box">
+      <div class="label">هامش الربح</div>
+      <div class="value">
+        {{ '%.0f'|format(_margin_pct or 0) }}%
+      </div>
+    </div>
+
+    <div class="mobile-mini-box">
+      <div class="label">التكلفة</div>
+      <div class="value">
+        {{ '%.0f'|format(_cost or 0) }}
+      </div>
+    </div>
+
+  </div>
+
+  </div>
+
+  <div class="mobile-action-row mt-3">
+    <button type="button" class="btn btn-outline-info btnToggleDetails">ℹ️ تفاصيل</button>
+
+
+
+    <button type="button"
+            class="btn btn-outline-primary btnEdit"
+            data-bs-toggle="modal"
+            data-bs-target="#editModal"
+            data-id="{{ p.id }}"
+            data-name="{{ p.name }}"
+            data-color="{{ p.color or '' }}"
+            data-size="{{ p.size or '' }}"
+            data-barcode="{{ p.barcode or '' }}"
+            data-cost="{{ '%.2f'|format(_cost) }}"
+            data-price="{{ '%.2f'|format(_price) }}"
+            data-stock="{{ _stock }}">
+
+      ✏️ تعديل
+
+    </button>
+
+    <div class="dropdown">
+
+      <button class="btn btn-outline-secondary dropdown-toggle w-100"
+              data-bs-toggle="dropdown">
+
+        المزيد
+
+      </button>
+
+      <ul class="dropdown-menu dropdown-menu-end">
+
+        <li>
+          <button type="button"
+                  class="dropdown-item open-card"
+                  data-bs-toggle="modal"
+                  data-bs-target="#productCardModal"
+                  data-pid="{{ p.id }}"
+                  data-title="{{ p.name }}">
+            📄 كارت الصنف
+          </button>
+        </li>
+
+        <li>
+          <button type="button"
+                  class="dropdown-item text-danger btnWastage"
+                  data-bs-toggle="modal"
+                  data-bs-target="#wastageModal"
+                  data-pid="{{ p.id }}"
+                  data-name="{{ p.name }}"
+                  data-stock="{{ _stock }}">
+            🗑️ للهالك
+          </button>
+        </li>
+
+      </ul>
+
+    </div>
+
+  </div>
+
 </div>
-<div class="dropdown">
-<button class="btn btn-sm btn-outline-secondary mobile-gear-btn" data-bs-toggle="dropdown">⚙️</button>
-<ul class="dropdown-menu dropdown-menu-end">
-<li><button type="button" class="dropdown-item btnEdit" data-bs-toggle="modal" data-bs-target="#editModal" data-id="{{ p.id }}" data-name="{{ p.name }}" data-color="{{ p.color or '' }}" data-size="{{ p.size or '' }}" data-barcode="{{ p.barcode or '' }}" data-cost="{{ p.cost_price or 0 }}" data-price="{{ p.price or 0 }}" data-stock="{{ _stock }}">✏️ تعديل</button></li>
-<li><button type="button" class="dropdown-item open-card" data-bs-toggle="modal" data-bs-target="#productCardModal" data-pid="{{ p.id }}" data-title="{{ p.name }}">📄 كارت الصنف</button></li>
-<li><button type="button" class="dropdown-item btnPrintBarcode" data-name="{{ p.short_name or p.name }}" data-color="{{ p.color or '' }}" data-size="{{ p.size or '' }}" data-price="{{ '%.0f'|format(_price) }}" data-barcode="{{ p.barcode or '' }}">🖨️ طباعة باركود</button></li>
-<li><button type="button" class="dropdown-item text-danger btnWastage" data-bs-toggle="modal" data-bs-target="#wastageModal" data-pid="{{ p.id }}" data-name="{{ p.name }}" data-stock="{{ _stock }}">🗑️ للهالك</button></li>
-</ul></div></div></div>
+
 {% endfor %}
+
 </div>
+
+
 {% if (not has_search) and (total_pages and total_pages > 1) %}
 <nav class="mt-3">
   <ul class="pagination justify-content-center mb-0">
@@ -1048,7 +1161,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function updateSelectedCount() {
     const count = document.querySelectorAll('.row-check:checked').length;
-    if (selectedCountSpan) selectedCountSpan.textContent = count; const bar=document.getElementById("bulkActionsBar"); if(bar) bar.style.display=count>0?"block":"none";
+    if (selectedCountSpan) selectedCountSpan.textContent = count;
+    const bulkBar = document.getElementById('bulkActionsBar');
+    if (bulkBar){ bulkBar.style.display = count > 0 ? '' : 'none'; }
     const total = rowChecks.length;
     const allChecked = total > 0 && count === total;
     if (checkAllToolbar) checkAllToolbar.checked = allChecked;
