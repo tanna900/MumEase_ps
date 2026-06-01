@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 
+{% set _low_page_count = (low_stock_page|length if low_stock_page is defined else 0) %}
+
 <style>
   /* =======================
      Table + UI (Professional / Calm)
@@ -212,11 +214,22 @@
     font-size:.8rem;
   }
 
-  .top-products-actions{
-    flex-direction:column;
-    align-items:stretch !important;
-    gap:10px;
-  }
+.top-products-actions{
+  flex-direction:column;
+  align-items:stretch !important;
+  gap:10px;
+}
+
+.top-products-actions .d-flex.gap-2{
+  display:grid !important;
+  grid-template-columns:1fr 1fr;
+  gap:8px !important;
+  width:100%;
+}
+
+.top-products-actions .d-flex.gap-2 > *{
+  width:100%;
+}
 
   .top-products-actions .btn{
     width:100%;
@@ -228,126 +241,174 @@
     width:100%;
   }
 
-  .mobile-product-card{
-    background:#fff;
-    border:1px solid rgba(0,0,0,.08);
-    border-radius:18px;
-    padding:14px;
-    margin-bottom:14px;
-    box-shadow:0 2px 10px rgba(0,0,0,.05);
-  }
-
-  .mobile-product-card:hover{
-    transform:translateY(-2px);
-    transition:.18s ease;
-  }
-
-  .mobile-product-title{
-    font-size:1.08rem;
-    font-weight:700;
-    margin-bottom:4px;
-  }
-
-  .mobile-product-meta{
-    color:#6c757d;
-    font-size:.88rem;
-    margin-bottom:10px;
-  }
-
-  .mobile-mini-grid{
-    display:none;
-}
-.mobile-summary{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    background:#f8f9fa;
-    border-radius:12px;
-    padding:10px 12px;
-    margin:10px 0;
-}
-.mobile-details{
-    display:none;
-    margin-top:10px;
-    padding-top:10px;
-    border-top:1px dashed #ddd;
-}
-.mobile-details.show{
-    display:block;
-}
-.mobile-action-row{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8px;
-}
-.mobile-mini-grid{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:10px;
-    margin:12px 0;
-  }
-
-  .mobile-mini-box{
-    background:#f8f9fa;
-    border-radius:12px;
-    padding:10px;
-    text-align:center;
-  }
-
-  .mobile-mini-box .label{
-    font-size:.75rem;
-    color:#6c757d;
-  }
-
-  .mobile-mini-box .value{
-    font-weight:700;
-    margin-top:4px;
-  }
-
-}
-
-
-@media(max-width:768px){
-.table-wrap{display:none!important;}
-.products-cards{display:none!important;}
-#searchForm{display:none!important;}
-
-.mobile-accordion{display:block!important;margin-bottom:12px}
-.mobile-inventory-list{display:block!important}
-
 .mobile-product-card{
- border:0!important;
- border-bottom:1px solid #e9ecef!important;
- border-radius:0!important;
- box-shadow:none!important;
- padding:8px!important;
- margin:0!important;
+  background:#fff;
+  border-bottom:1px solid #e9ecef;
+  border-radius:0;
+  box-shadow:none;
+  padding:8px 4px;
+  margin:0;
 }
 
-.mobile-product-title{font-size:.95rem!important;font-weight:700!important;text-align:center}
-.mobile-product-meta{font-size:.8rem!important;text-align:center;margin:2px 0!important}
-.mobile-summary,.mobile-details,.mobile-mini-grid{display:none!important}
+.mobile-row-top{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
 
-#bulkActionsBar{display:none}
-.top-products-actions .btn{width:100%}
+.mobile-product-info{
+  flex:1;
+  text-align:center;
+}
+
+.mobile-product-title{
+  font-size:.92rem;
+  font-weight:800;
+  line-height:1.2;
+  margin-bottom:3px;
+  color:#212529;
+}
+
+.mobile-product-line{
+  font-size:.78rem;
+  color:#6c757d;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.mobile-product-card .dropdown .btn{
+  padding:2px 8px;
+}
+
+.mobile-summary,
+.mobile-details,
+.mobile-mini-grid,
+.mobile-action-row,
+.btnToggleDetails{
+  display:none !important;
+}
+
 }
 
 </style>
 
-<div class="d-flex justify-content-between align-items-center mb-3 top-products-actions flex-wrap">
-  <h4 class="m-0">📦 إدارة الأصناف</h4>
-  <div class="d-flex gap-2">
-    <button type="button" class="btn btn-outline-dark" id="btnFocusScan">🎯 وضع السكان</button>
-    <a class="btn btn-outline-primary" href="/products/import">⬆️ استيراد أصناف</a>
-    <a class="btn btn-outline-secondary" href="/products/import/template.xlsx" title="تحميل قالب Excel">قالب Excel</a>
+<div class="d-flex justify-content-between align-items-center mb-3">
 
-    <form method="post" action="/products/regenerate-barcodes" onsubmit="return confirm('سيتم إنشاء باركودات جديدة لكل المنتجات، هل أنت متأكد؟');">
-      <button type="submit" class="btn btn-outline-danger">🔄 Regenerate Barcodes</button>
-    </form>
+  <!-- Desktop -->
+  <div class="d-none d-md-flex justify-content-between align-items-center w-100 top-products-actions flex-wrap">
+
+    <h4 class="m-0">📦 إدارة الأصناف</h4>
+
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-outline-dark" id="btnFocusScan">
+        🎯 وضع السكان
+      </button>
+
+      <a class="btn btn-outline-primary" href="/products/import">
+        ⬆️ استيراد أصناف
+      </a>
+
+      <a class="btn btn-outline-secondary"
+         href="/products/import/template.xlsx">
+        قالب Excel
+      </a>
+
+      <form method="post"
+            action="/products/regenerate-barcodes"
+            onsubmit="return confirm('سيتم إنشاء باركودات جديدة لكل المنتجات، هل أنت متأكد؟');">
+
+        <button type="submit" class="btn btn-outline-danger">
+          🔄 Regenerate Barcodes
+        </button>
+
+      </form>
+    </div>
+
   </div>
+
+<!-- Mobile -->
+<div class="d-flex d-md-none justify-content-between align-items-center w-100">
+
+  <h4 class="m-0">📦 إدارة الأصناف</h4>
+
+  <div class="d-flex align-items-center gap-2">
+
+  {% if _low_page_count > 0 %}
+  <button class="btn btn-sm btn-outline-danger position-relative"
+          type="button"
+          style="width:42px;height:42px;padding:0;">
+    ⚠️
+    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+      {{ _low_page_count }}
+    </span>
+  </button>
+  {% endif %}
+
+  <button class="btn btn-sm btn-outline-success"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#addProductCollapse"
+          style="width:42px;height:42px;padding:0;font-size:24px;font-weight:700;">
+    +
+  </button>
+
+  <div class="dropdown">
+
+      <button class="btn btn-outline-secondary"
+              data-bs-toggle="dropdown">
+        ⚙️
+      </button>
+
+      <ul class="dropdown-menu">
+
+        <li>
+          <button type="button"
+                  class="dropdown-item"
+                  id="btnFocusScanMobile">
+            🎯 وضع السكان
+          </button>
+        </li>
+
+        <li>
+          <a class="dropdown-item"
+             href="/products/import">
+            ⬆️ استيراد أصناف
+          </a>
+        </li>
+
+        <li>
+          <a class="dropdown-item"
+             href="/products/import/template.xlsx">
+            📄 قالب Excel
+          </a>
+        </li>
+
+        <li>
+          <form method="post"
+                action="/products/regenerate-barcodes"
+                onsubmit="return confirm('سيتم إنشاء باركودات جديدة لكل المنتجات، هل أنت متأكد؟');">
+
+            <button type="submit"
+                    class="dropdown-item text-danger">
+              🔄 Regenerate Barcodes
+            </button>
+
+          </form>
+        </li>
+
+      </ul>
+
+    </div>
+
+  </div>
+
 </div>
 
-<div class="row g-3 mb-3 products-cards">
+</div>
+
+<!-- Desktop Summary -->
+<div class="row g-3 mb-3 products-cards d-none d-md-flex">
 
   <div class="col-md-3">
     <div class="summary-card">
@@ -387,25 +448,87 @@
 
 </div>
 
+<!-- Mobile Summary Accordion -->
+<div class="accordion d-md-none mb-3">
 
-{% if msg %}
-  <div class="alert {% if '✅' in msg %}alert-success{% elif '⚠️' in msg %}alert-warning{% elif '🗑️' in msg %}alert-info{% else %}alert-secondary{% endif %}">
-    {{ msg }}
-  </div>
-{% endif %}
+  <div class="accordion-item">
 
-{% set _low_page_count = (low_stock_page|length if low_stock_page is defined else 0) %}
-{% if _low_page_count > 0 %}
-  <div class="alert alert-danger">
-    يوجد {{ _low_page_count }} صنف تحت حد المخزون ({{ LOW_STOCK_THRESHOLD }}) <span class="text-muted">(داخل الصفحة الحالية)</span>.
+    <h2 class="accordion-header">
+
+      <button class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#mobileInventorySummary">
+
+        📊 ملخص المخزون
+
+      </button>
+
+    </h2>
+
+    <div id="mobileInventorySummary"
+         class="accordion-collapse collapse">
+
+      <div class="accordion-body">
+
+        <div class="row g-2">
+
+          <div class="col-6">
+            <div class="summary-card">
+              <div class="summary-title">إجمالي القطع</div>
+              <div class="summary-value">
+                {{ '%.0f'|format(all_qty or 0) }}
+              </div>
+            </div>
+          </div>
+
+          <div class="col-6">
+            <div class="summary-card">
+              <div class="summary-title">قيمة التكلفة</div>
+              <div class="summary-value">
+                {{ '%.0f'|format(all_cost or 0) }}
+              </div>
+            </div>
+          </div>
+
+          <div class="col-6">
+            <div class="summary-card">
+              <div class="summary-title">قيمة البيع</div>
+              <div class="summary-value">
+                {{ '%.0f'|format(all_price or 0) }}
+              </div>
+            </div>
+          </div>
+
+          <div class="col-6">
+            <div class="summary-card warning">
+              <div class="summary-title">Low Stock</div>
+              <div class="summary-value">
+                {{ low_stock_global_count or 0 }}
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
   </div>
-{% endif %}
+
+</div>
+
+
 
 <!-- ✅ إضافة صنف يدوي (باركود اختياري) -->
 <div class="mb-3">
-  <button class="btn btn-sm btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#addProductCollapse">
-    ➕ إضافة صنف يدوي
-  </button>
+  <button class="btn btn-sm btn-outline-success d-none d-md-inline-block"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#addProductCollapse">
+  ➕ إضافة صنف يدوي
+</button>
   <div class="collapse mt-2" id="addProductCollapse">
     <div class="card p-2 soft-card">
       <form method="post" action="/products/add" class="row g-2">
@@ -458,6 +581,9 @@
   </div>
 </div>
 
+<!-- Desktop Filters -->
+<div class="d-none d-md-block">
+
 <form class="row g-2 mb-3" method="get" action="/products" id="searchForm">
   <div class="col-md-4">
     <input class="form-control" id="qInput" name="q" value="{{ q or '' }}" placeholder="بحث بالاسم أو الباركود" autofocus>
@@ -498,22 +624,24 @@
       <div class="col-6">
         {% set _sort = sort or 'name' %}
         <select class="form-select" name="sort">
-          <option value="name"    {% if _sort=='name' %}selected{% endif %}>الاسم</option>
+          <option value="name" {% if _sort=='name' %}selected{% endif %}>الاسم</option>
           <option value="barcode" {% if _sort=='barcode' %}selected{% endif %}>الباركود</option>
-          <option value="color"   {% if _sort=='color' %}selected{% endif %}>اللون</option>
-          <option value="size"    {% if _sort=='size' %}selected{% endif %}>المقاس</option>
-          <option value="cost"    {% if _sort=='cost' %}selected{% endif %}>التكلفة</option>
-          <option value="price"   {% if _sort=='price' %}selected{% endif %}>السعر</option>
-          <option value="stock"   {% if _sort=='stock' %}selected{% endif %}>الستوك</option>
+          <option value="color" {% if _sort=='color' %}selected{% endif %}>اللون</option>
+          <option value="size" {% if _sort=='size' %}selected{% endif %}>المقاس</option>
+          <option value="cost" {% if _sort=='cost' %}selected{% endif %}>التكلفة</option>
+          <option value="price" {% if _sort=='price' %}selected{% endif %}>السعر</option>
+          <option value="stock" {% if _sort=='stock' %}selected{% endif %}>الستوك</option>
         </select>
       </div>
+
       <div class="col-3">
         {% set _dir = dir or 'asc' %}
         <select class="form-select" name="dir">
-          <option value="asc"  {% if _dir=='asc' %}selected{% endif %}>↑</option>
+          <option value="asc" {% if _dir=='asc' %}selected{% endif %}>↑</option>
           <option value="desc" {% if _dir=='desc' %}selected{% endif %}>↓</option>
         </select>
       </div>
+
       <div class="col-3">
         <input class="form-control" name="page_size" type="number" min="1" value="{{ page_size or 15 }}">
       </div>
@@ -533,8 +661,75 @@
   <input type="hidden" name="page" value="1">
 </form>
 
+</div>
+
+<!-- Mobile Filters -->
+<div class="accordion d-md-none mb-3">
+
+  <div class="accordion-item">
+
+    <h2 class="accordion-header">
+
+      <button class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#mobileFilters">
+
+        ⚙️ الفلاتر
+
+      </button>
+
+    </h2>
+
+    <div id="mobileFilters" class="accordion-collapse collapse">
+
+      <div class="accordion-body">
+
+<form class="row g-2" method="get" action="/products">
+
+  <div class="col-12">
+    <input class="form-control" id="qInputMobile" name="q" value="{{ q or '' }}" placeholder="بحث بالاسم أو الباركود">
+  </div>
+
+  <div class="col-12">
+    <select class="form-select" name="color">
+      <option value="">كل الألوان</option>
+      {% for c in color_options %}
+        <option value="{{ c }}" {% if (color or '') == c %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="col-12">
+    <select class="form-select" name="size">
+      <option value="">كل المقاسات</option>
+      {% for s in size_options %}
+        <option value="{{ s }}" {% if (size or '') == s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="col-12">
+    <button type="submit" class="btn btn-primary w-100">تطبيق</button>
+  </div>
+
+  <div class="col-12">
+    <a class="btn btn-outline-secondary w-100" href="/products">مسح الفلاتر</a>
+  </div>
+
+</form>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
 <!-- شريط Bulk Action -->
-<div class="card p-2 mb-2 soft-card" id="bulkActionsBar" style="display:none;">
+<div class="card p-2 mb-2 soft-card">
   <div class="d-flex align-items-center gap-3">
     <div class="form-check mb-0">
       <input class="form-check-input" type="checkbox" id="check_all_toolbar">
@@ -825,117 +1020,64 @@
 
 
 <!-- Mobile Products -->
-<div class="mobile-products mt-3">
+<div class="mobile-products mt-2">
 
 {% for p in products %}
 {% set _stock = (p.stock or 0) %}
 {% set _cost = (p.cost_price or 0) %}
 {% set _price = (p.price or 0) %}
-{% set _margin_u = (_price - _cost) %}
-{% set _margin_pct = (_margin_u / _price * 100) if _price and _price > 0 else 0 %}
 
 <div class="mobile-product-card">
 
-  <div class="d-flex justify-content-between align-items-start mb-2">
+  <div class="mobile-row-top">
 
-    <div>
+    <input class="form-check-input row-check"
+           type="checkbox"
+           value="{{ p.id }}">
+
+    <div class="mobile-product-info">
 
       <div class="mobile-product-title">
         {{ p.name }}
       </div>
 
-      <div class="mobile-product-meta">
-        {{ p.color or '-' }} • {{ p.size or '-' }}
-      </div>
-
-    </div>
-
-    <input class="form-check-input row-check" type="checkbox" value="{{ p.id }}">
-
-  </div>
-
-  <div class="mobile-summary">
-    <div><strong>📦 {{ _stock }}</strong> قطعة</div>
-    <div><strong>💰 {{ '%.0f'|format(_price or 0) }}</strong></div>
-  </div>
-
-  <div class="mobile-details">
-    <div class="small mb-2"><strong>الباركود:</strong> {{ p.barcode or '-' }}</div>
-
-  <div class="mobile-mini-grid">
-
-    <div class="mobile-mini-box">
-      <div class="label">السعر</div>
-      <div class="value text-primary">
+      <div class="mobile-product-line">
+        {{ p.color or '-' }}
+        |
+        {{ p.size or '-' }}
+        |
+        {{ _stock }}
+        |
         {{ '%.0f'|format(_price or 0) }}
       </div>
+
     </div>
-
-    <div class="mobile-mini-box">
-      <div class="label">الستوك</div>
-      <div class="value
-      {% if _stock == 0 %}
-        text-danger
-      {% elif _stock < LOW_STOCK_THRESHOLD %}
-        text-warning
-      {% else %}
-        text-success
-      {% endif %}
-      ">
-        {{ _stock }}
-      </div>
-    </div>
-
-    <div class="mobile-mini-box">
-      <div class="label">هامش الربح</div>
-      <div class="value">
-        {{ '%.0f'|format(_margin_pct or 0) }}%
-      </div>
-    </div>
-
-    <div class="mobile-mini-box">
-      <div class="label">التكلفة</div>
-      <div class="value">
-        {{ '%.0f'|format(_cost or 0) }}
-      </div>
-    </div>
-
-  </div>
-
-  </div>
-
-  <div class="mobile-action-row mt-3">
-    <button type="button" class="btn btn-outline-info btnToggleDetails">ℹ️ تفاصيل</button>
-
-
-
-    <button type="button"
-            class="btn btn-outline-primary btnEdit"
-            data-bs-toggle="modal"
-            data-bs-target="#editModal"
-            data-id="{{ p.id }}"
-            data-name="{{ p.name }}"
-            data-color="{{ p.color or '' }}"
-            data-size="{{ p.size or '' }}"
-            data-barcode="{{ p.barcode or '' }}"
-            data-cost="{{ '%.2f'|format(_cost) }}"
-            data-price="{{ '%.2f'|format(_price) }}"
-            data-stock="{{ _stock }}">
-
-      ✏️ تعديل
-
-    </button>
 
     <div class="dropdown">
 
-      <button class="btn btn-outline-secondary dropdown-toggle w-100"
+      <button class="btn btn-sm btn-outline-secondary"
               data-bs-toggle="dropdown">
-
-        المزيد
-
+        ⚙️
       </button>
 
       <ul class="dropdown-menu dropdown-menu-end">
+
+        <li>
+          <button type="button"
+                  class="dropdown-item btnEdit"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editModal"
+                  data-id="{{ p.id }}"
+                  data-name="{{ p.name }}"
+                  data-color="{{ p.color or '' }}"
+                  data-size="{{ p.size or '' }}"
+                  data-barcode="{{ p.barcode or '' }}"
+                  data-cost="{{ '%.0f'|format(_cost) }}"
+                  data-price="{{ '%.0f'|format(_price) }}"
+                  data-stock="{{ _stock }}">
+            ✏️ تعديل
+          </button>
+        </li>
 
         <li>
           <button type="button"
@@ -950,6 +1092,18 @@
 
         <li>
           <button type="button"
+                  class="dropdown-item btnPrintBarcode"
+                  data-name="{{ p.short_name or p.name }}"
+                  data-color="{{ p.color or '' }}"
+                  data-size="{{ p.size or '' }}"
+                  data-price="{{ '%.0f'|format(_price) }}"
+                  data-barcode="{{ p.barcode or '' }}">
+            🖨️ طباعة باركود
+          </button>
+        </li>
+
+        <li>
+          <button type="button"
                   class="dropdown-item text-danger btnWastage"
                   data-bs-toggle="modal"
                   data-bs-target="#wastageModal"
@@ -958,6 +1112,24 @@
                   data-stock="{{ _stock }}">
             🗑️ للهالك
           </button>
+        </li>
+
+        <li><hr class="dropdown-divider"></li>
+
+        <li>
+          <form method="post"
+                action="/products/delete"
+                class="m-0">
+
+            <input type="hidden"
+                   name="pid"
+                   value="{{ p.id }}">
+
+            <button class="dropdown-item text-danger">
+              🗑️ حذف
+            </button>
+
+          </form>
         </li>
 
       </ul>
@@ -1188,8 +1360,6 @@ document.addEventListener('DOMContentLoaded', function () {
   function updateSelectedCount() {
     const count = document.querySelectorAll('.row-check:checked').length;
     if (selectedCountSpan) selectedCountSpan.textContent = count;
-    const bulkBar=document.getElementById('bulkActionsBar');
-    if(bulkBar){bulkBar.style.display=count>0?'':'none';}
     const total = rowChecks.length;
     const allChecked = total > 0 && count === total;
     if (checkAllToolbar) checkAllToolbar.checked = allChecked;
