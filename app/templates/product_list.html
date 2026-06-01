@@ -246,7 +246,7 @@
   border-bottom:1px solid #e9ecef;
   border-radius:0;
   box-shadow:none;
-  padding:8px 4px;
+  padding:6px 4px;
   margin:0;
 }
 
@@ -269,16 +269,33 @@
   color:#212529;
 }
 
-.mobile-product-line{
-  font-size:.78rem;
+.mobile-product-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:4px;
+  margin-top:4px;
+  text-align:center;
+}
+
+.mobile-label{
+  font-size:.65rem;
   color:#6c757d;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+}
+
+.mobile-value{
+  font-size:.82rem;
+  font-weight:700;
+  color:#212529;
 }
 
 .mobile-product-card .dropdown .btn{
-  padding:2px 8px;
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
 .mobile-summary,
@@ -729,7 +746,7 @@
 
 
 <!-- شريط Bulk Action -->
-<div class="card p-2 mb-2 soft-card">
+<div class="card p-2 mb-2 soft-card d-none" id="bulkToolbar">
   <div class="d-flex align-items-center gap-3">
     <div class="form-check mb-0">
       <input class="form-check-input" type="checkbox" id="check_all_toolbar">
@@ -1041,15 +1058,29 @@
         {{ p.name }}
       </div>
 
-      <div class="mobile-product-line">
-        {{ p.color or '-' }}
-        |
-        {{ p.size or '-' }}
-        |
-        {{ _stock }}
-        |
-        {{ '%.0f'|format(_price or 0) }}
-      </div>
+      <div class="mobile-product-grid">
+
+  <div>
+    <div class="mobile-label">اللون</div>
+    <div class="mobile-value">{{ p.color or '-' }}</div>
+  </div>
+
+  <div>
+    <div class="mobile-label">المقاس</div>
+    <div class="mobile-value">{{ p.size or '-' }}</div>
+  </div>
+
+  <div>
+    <div class="mobile-label">المخزون</div>
+    <div class="mobile-value">{{ _stock }}</div>
+  </div>
+
+  <div>
+    <div class="mobile-label">السعر</div>
+    <div class="mobile-value">{{ '%.0f'|format(_price or 0) }}</div>
+  </div>
+
+</div>
 
     </div>
 
@@ -1360,6 +1391,15 @@ document.addEventListener('DOMContentLoaded', function () {
   function updateSelectedCount() {
     const count = document.querySelectorAll('.row-check:checked').length;
     if (selectedCountSpan) selectedCountSpan.textContent = count;
+       const bulkToolbar = document.getElementById('bulkToolbar');
+
+if (bulkToolbar) {
+  if (count > 0) {
+    bulkToolbar.classList.remove('d-none');
+  } else {
+    bulkToolbar.classList.add('d-none');
+  }
+}
     const total = rowChecks.length;
     const allChecked = total > 0 && count === total;
     if (checkAllToolbar) checkAllToolbar.checked = allChecked;
