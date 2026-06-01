@@ -89,6 +89,20 @@
 
 @media(max-width:768px){
 
+.card.p-2.mt-2 .col-md-2,
+.card.p-2.mt-2 .col-md-3,
+.card.p-2.mt-2 .col-md-4{
+  width:100%;
+}
+
+.card.p-2.mt-2 .btn{
+  width:100%;
+}
+
+.card.p-2.mt-2 .btn + .btn{
+  margin-top:8px;
+}
+
   .cash-shell{
     padding:0 8px;
   }
@@ -138,22 +152,66 @@
     transition:.18s ease;
   }
 
-  .mobile-cash-card{
-    background:#fff;
-    border:1px solid #eee;
-    border-radius:18px;
-    padding:16px;
-    margin-bottom:14px;
-    box-shadow:0 2px 8px rgba(0,0,0,.04);
-  }
-
+.mobile-row-grid{
+  display:grid;
+  grid-template-columns:70px 1fr 48px;
+  gap:12px;
+  align-items:start;
 }
 
+.mobile-info-col{
+  min-width:0;
+}
 
+.mobile-amount-col{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 
+.mobile-amount{
+  font-size:1.05rem;
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
 
+.mobile-row-grid .dropdown{
+  width:48px;
+}
 
+.mobile-row-grid .dropdown .btn{
+  width:44px;
+  height:44px;
+  border-radius:12px;
+}
 
+.mobile-transaction{
+  background:#fff;
+  border-bottom:1px solid #ececec;
+  padding:12px;
+}
+
+.mobile-amount{
+  font-size:1.08rem;
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+
+.mobile-category{
+  font-size:1rem;
+  font-weight:700;
+  color:#0b2d5c;
+  line-height:1.4;
+}
+
+.mobile-balance{
+  font-size:.8rem;
+  color:#8a8f98;
+}
+
+}
 
 
 
@@ -225,7 +283,46 @@
   {{ "{:,.0f}".format((x or 0)|float) }}
 {%- endmacro %}
 
-<div class="cash-shell"><h4 class="mb-3 fw-bold">💰 الخزنة</h4>
+<div class="cash-shell">
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-row-reverse">
+
+  <div class="d-flex gap-2">
+
+  <button
+    class="btn btn-outline-success d-md-none"
+    type="button"
+    onclick="toggleAddCash()"
+    style="
+      width:48px;
+      height:48px;
+      border-radius:14px;
+      padding:0;
+      font-size:1.3rem;
+    ">
+    ➕
+  </button>
+
+  <button
+    class="btn btn-outline-secondary d-md-none"
+    type="button"
+    onclick="toggleCashFilters()"
+    style="
+      width:48px;
+      height:48px;
+      border-radius:14px;
+      padding:0;
+    ">
+    🔍
+  </button>
+
+</div>
+
+  <h4 class="m-0 fw-bold">
+    💰 الخزنة
+  </h4>
+
+</div>
 
 {% if request.query_params.get("msg") %}
   <div class="alert alert-info">{{ request.query_params.get("msg") }}</div>
@@ -430,7 +527,7 @@
 
 <div class="d-block d-md-none mt-2">
 
-  <div class="page-card stat-card text-center">
+  <div class="page-card stat-card text-center mobile-net-cash">
 
     <div class="stat-label">
       صافي الخزنة
@@ -444,14 +541,6 @@
 
 </div>
 
-<!-- Mobile Filters Toggle -->
-<button class="mobile-collapse-toggle d-md-none"
-        type="button"
-        onclick="toggleCashFilters()">
-
-  🔍 البحث والفلاتر
-
-</button>
 
 <!-- فلاتر -->
 
@@ -466,8 +555,8 @@
       <label class="form-label small">إلى</label>
       <input type="date" class="form-control form-control-sm" name="date_to" value="{{ date_to }}">
     </div>
-    <div class="col-md-3">
-      <label class="form-label small">البند</label>
+    <div class="col-12 col-md-3">
+  <label class="form-label small">البند</label>
       <select name="category" class="form-select form-select-sm">
         <option value="">— الكل —</option>
         {% for c in categories %}
@@ -490,8 +579,9 @@
   </form>
 </div>
 
-<!-- إضافة حركة -->
-<div class="card p-2 mt-2">
+
+<div class="card p-2 mt-2 mobile-collapse-box d-md-block"
+     id="addCashBox">
   <form class="row g-2 align-items-end" method="post" action="/cash/add">
     <div class="col-md-2">
       <label class="form-label small">النوع</label>
@@ -500,7 +590,7 @@
         <option value="OUT">مصروف</option>
       </select>
     </div>
-    <div class="col-md-3">
+    <div class="col-12">
       <label class="form-label small">البند</label>
       <input name="category" class="form-control form-control-sm" list="cats" placeholder="اكتب أو اختر" required>
       <datalist id="cats">
@@ -522,8 +612,8 @@
       <label class="form-label small">التاريخ</label>
       <input name="date" type="date" class="form-control form-control-sm" value="">
     </div>
-    <div class="col-12 col-md-3">
-      <label class="form-label small">ملاحظة</label>
+    <div class="col-12">
+  <label class="form-label small">ملاحظة</label>
       <input name="note" class="form-control form-control-sm">
     </div>
     <div class="col-12">
@@ -606,7 +696,7 @@
 /* ===== Cleaner Cash Summary ===== */
 
 .stat-card{
-  min-height:135px;
+  min-height:70px;
 }
 
 .stat-card .stat-label{
@@ -621,6 +711,19 @@
 
   .stat-card .stat-value{
     font-size:1.55rem !important;
+  }
+
+  .mobile-net-cash{
+    padding:12px !important;
+    border-radius:9px !important;
+  }
+
+  .mobile-net-cash .stat-label{
+    font-size:.9rem;
+  }
+
+  .mobile-net-cash .stat-value{
+    font-size:1rem !important;
   }
 
 }
@@ -714,75 +817,95 @@
 </div>
 
 
-<!-- Mobile Cash Cards -->
+<!-- Mobile Transactions -->
 <div class="mobile-cards mt-3">
 
 {% for r in rows %}
 
-<div class="mobile-cash-card">
+<div class="mobile-transaction">
 
-  <div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="mobile-row-grid">
 
-    <div>
+  <!-- المبلغ -->
 
-      {% if r.type=='IN' %}
-        <span class="badge bg-success">إيراد</span>
-      {% else %}
-        <span class="badge bg-danger">مصروف</span>
-      {% endif %}
+  <div class="mobile-amount-col text-end">
 
-    </div>
+    <div class="mobile-amount {% if r.type=='IN' %}text-success{% else %}text-danger{% endif %}">
+  {{ n(r.amount) }}
+</div>
+
+  </div>
+
+  <!-- البيانات -->
+
+  <div class="mobile-info-col">
 
     <div class="small text-muted">
       {{ r.date }}
     </div>
 
+    <div class="mobile-category mt-1">
+      {{ r.category }}
+    </div>
+
+    <div class="mobile-balance mt-2">
+      الرصيد بعد الحركة:
+      <strong>{{ n(running_by_id.get(r.id)) }}</strong>
+    </div>
+
   </div>
 
-  <div class="fs-3 fw-bold mb-2 {% if r.type=='IN' %}text-success{% else %}text-danger{% endif %}">
-    {{ n(r.amount) }}
-  </div>
+  <!-- الاعدادات -->
 
-  <div class="fw-semibold mb-1">
-    {{ r.category }}
-  </div>
+  <div class="dropdown">
 
-  <div class="small text-muted mb-3">
-    {{ r.note or 'بدون ملاحظة' }}
-  </div>
-
-  <div class="small text-muted mb-3">
-    الرصيد بعد الحركة:
-    <strong>{{ n(running_by_id.get(r.id)) }}</strong>
-  </div>
-
-  <div class="d-grid gap-2">
-
-    <button
-      type="button"
-      class="btn btn-outline-primary btnEditCash"
-      data-bs-toggle="modal"
-      data-bs-target="#editCashModal"
-      data-eid="{{ r.id }}"
-      data-type="{{ r.type }}"
-      data-amount="{{ (r.amount or 0)|int }}"
-      data-date="{{ r.date }}"
-      data-note="{{ r.note or '' }}"
-    >
-      ✏️ تعديل
+    <button class="btn btn-sm btn-outline-secondary rounded-circle"
+            data-bs-toggle="dropdown">
+      ⚙️
     </button>
 
-    <form method="post"
-          action="/cash/delete"
-          onsubmit="return confirm('حذف الحركة؟');">
+    <ul class="dropdown-menu dropdown-menu-end">
 
-      <input type="hidden" name="eid" value="{{ r.id }}">
+        <li>
 
-      <button class="btn btn-outline-danger w-100">
-        🗑️ حذف
-      </button>
+          <button
+            type="button"
+            class="dropdown-item btnEditCash"
+            data-bs-toggle="modal"
+            data-bs-target="#editCashModal"
+            data-eid="{{ r.id }}"
+            data-type="{{ r.type }}"
+            data-amount="{{ (r.amount or 0)|int }}"
+            data-date="{{ r.date }}"
+            data-note="{{ r.note or '' }}">
 
-    </form>
+            تعديل
+
+          </button>
+
+        </li>
+
+        <li>
+
+          <form method="post"
+                action="/cash/delete"
+                onsubmit="return confirm('حذف الحركة؟');">
+
+            <input type="hidden"
+                   name="eid"
+                   value="{{ r.id }}">
+
+            <button class="dropdown-item text-danger">
+              حذف
+            </button>
+
+          </form>
+
+        </li>
+
+      </ul>
+
+    </div>
 
   </div>
 
@@ -938,6 +1061,13 @@ function toggleSubWallets(){
 
 function toggleCashFilters(){
   const el = document.getElementById('cashFilters');
+  if(el){
+    el.classList.toggle('open');
+  }
+}
+
+function toggleAddCash(){
+  const el = document.getElementById('addCashBox');
   if(el){
     el.classList.toggle('open');
   }
